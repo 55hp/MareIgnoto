@@ -17,12 +17,9 @@ public class RosaDeiVenti : MonoBehaviour
 
     private Punta puntaSelezionata = 0;
 
-    private bool alive;
-
     // Start is called before the first frame update
     void Start()
     {
-        alive = true;
         puntaSelezionata = 0;
         SelezionaPunta(puntaSelezionata);
     }
@@ -35,6 +32,15 @@ public class RosaDeiVenti : MonoBehaviour
     #endregion
 
     #region Public Fields
+
+    public void Setup(Punta p, Material playerBaseMaterial = null)
+    {
+        if (playerBaseMaterial != null)
+            baseMaterial = playerBaseMaterial;
+
+        puntaSelezionata = p;
+        SelezionaPunta(puntaSelezionata);
+    }
 
     public void SelezionaPunta(Punta nuovaPunta )
     {
