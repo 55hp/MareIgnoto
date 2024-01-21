@@ -7,7 +7,7 @@ public class Player : MonoBehaviour
 {
     public string playerName;
     public bool canMove;
-    public Card[] playerCards;
+    public UICard[] playerCards;
 
     public Player(string name)
     {
@@ -19,7 +19,7 @@ public class Player : MonoBehaviour
     {
         foreach(var card in playerCards)
         {
-            if(card.GetIsPlayable())
+            if(card.isPlayable)
                 return true;
         }
         return false; // Modifica questo in base alla tua logica
