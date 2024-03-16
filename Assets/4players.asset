@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 12fac1c11b5b89e4c92e15caa2167c60, type: 3}
   m_Name: 4players
   m_EditorClassIdentifier: 
-  player_amount: 2
+  playerNumber: 4
   spawnPoints:
-  - {x: 0, y: 0}
-  - {x: 0, y: 48}
-  - {x: 48, y: 0}
-  - {x: 48, y: 48}
+  - position: {x: 1, y: 0}
+  - position: {x: 2, y: 0}
+  - position: {x: 3, y: 0}
+  - position: {x: 4, y: 0}

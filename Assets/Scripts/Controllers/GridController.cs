@@ -5,24 +5,15 @@ using UnityEngine;
 public class GridController : MonoBehaviour
 {
     [SerializeField] MapNode nodePrefab;
-    [SerializeField] MapNode spawnerPrefab;
-
+    [SerializeField] PlayerPawn playerPrefab;
     public int numberOfNodes = 49;
     [SerializeField] Transform topLeftCorner;
     [SerializeField] Transform bottomRightCorner;
-    [SerializeField] StartingGameSetupSO start;
-
     private Dictionary<Vector2, MapNode> nodes = new Dictionary<Vector2, MapNode>();
 
+    private List<PlayerPawn> playerPawns;
 
-    // Start is called before the first frame update
-    void Start()
-    {
-        if(start != null)
-            InitGrid(start);
-    }
-
-    public void InitGrid(StartingGameSetupSO setup)
+    public void InitGrid()
     {
         //Calcola la distanza sull'asse x tra topLeftCorner e bottomRightCorner essendo quadrati non serve calcolare anche la distanza in verticale
         float horizontaDistance = Mathf.Abs(bottomRightCorner.position.x) + Mathf.Abs(topLeftCorner.position.x);
@@ -30,33 +21,63 @@ public class GridController : MonoBehaviour
         //Ora calcola la distanza che deve esserci tra ogni nodo
         float nodeDistance = horizontaDistance / (numberOfNodes - 1);
 
+        //Visto che è un quadrato faccio un ciclo per lato
         for (int i = 0; i < numberOfNodes; i++)
         {
             for (int k = 0; k < numberOfNodes; k++)
             {
-                MapNode prefabToUse = GetPrefabToUse(i, k , setup.spawnPoints);
+                //Cerco la posizione del nodo
                 Vector3 positionToPlaceTheNode = new Vector3(topLeftCorner.position.x + (nodeDistance * k), 0, topLeftCorner.position.z - (nodeDistance * i));
-                MapNode n = Instantiate(prefabToUse, positionToPlaceTheNode, Quaternion.identity);
-                n.gameObject.name = n.name + "_" + i.ToString() + "_" + k.ToString();
-                n.transform.parent = transform;
-                nodes.Add(new Vector2(i, k), n);
+
+                //Istanzio il nodo
+                MapNode instantiatedNode = Instantiate(nodePrefab, positionToPlaceTheNode, Quaternion.identity);
+
+                //Gli assegno un nome
+                instantiatedNode.gameObject.name = instantiatedNode.name + "_" + i.ToString() + "_" + k.ToString();
+                instantiatedNode.transform.parent = transform;
+                nodes.Add(new Vector2(i, k), instantiatedNode);
             }
         }
-        Debug.Log($"Istanziati ben {nodes.Count} nodi.");
+        
+        //Una volta pronta la griglia passiamo ad instanziare i giocatori
+        SpawnPlayers();
+
     }
 
-    private MapNode GetPrefabToUse(int i , int k , Vector2[] startingSetupSpawnPoints)
+    public MapNode PlaceBoat(Player boat , Vector2 position)
     {
-        MapNode prefabToUse = nodePrefab;
-        foreach (Vector2 sp in startingSetupSpawnPoints)
-        {
-            if (sp.x == i && sp.y == k)
-            {
-                prefabToUse = spawnerPrefab;
-                break;
-            }
-        }
-        return prefabToUse;
+        MapNode node = GetNodeBySpawnPointPosition(position);
+        node.HoldIt(boat);
+        return node;
     }
 
+    #region Private Methods
+
+    private void SpawnPlayers()
+    {
+        if (GameManager.Instance.players.Count != GameManager.Instance.start.spawnPoints.Count)
+            return;
+
+        playerPawns = new List<PlayerPawn>();
+
+
+        for (int i = 0; i < GameManager.Instance.players.Count; i++)
+        {
+            MapNode node = PlaceBoat(GameManager.Instance.players[i] , GameManager.Instance.start.spawnPoints[i].position);   
+
+            PlayerPawn pawn = Instantiate(playerPrefab, new Vector3(node.transform.position.x, node.transform.position.y + 1 , node.transform.position.z), Quaternion.identity);
+            playerPawns.Add(pawn);
+        }
+    }
+
+    private MapNode GetNodeBySpawnPointPosition(Vector2 position)
+    {
+        return nodes[position];
+    }
+
+
+
+
+
+    #endregion
 }

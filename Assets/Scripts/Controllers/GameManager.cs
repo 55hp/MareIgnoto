@@ -4,27 +4,45 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    [Range(2,8)] public int numberOfPlayers = 2;
+    #region Singleton
+    public static GameManager Instance;
+
+    void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
+    #endregion
+
+    [SerializeField] public StartingGameSetupSO start;
+    [SerializeField] GridController gridController;
     public float turnDuration = 30f;
     public bool autoPlayEnabled = true;
 
-    private Player[] players;
+    public List<Player> players;
     private int currentPlayerIndex = 0;
     private bool isTakingTurn = false;
 
     void Start()
     {
-        InitializePlayers();
-        StartCoroutine(StartTurn());
+        RandomizePlayers();
+        gridController.InitGrid();
+        //StartCoroutine(StartTurn());
     }
 
-    void InitializePlayers()
+    void RandomizePlayers()
     {
-        players = new Player[numberOfPlayers];
+        players = new List<Player>();
 
-        for (int i = 0; i < numberOfPlayers; i++)
+        for (int i = 0; i < start.playerNumber; i++)
         {
-            players[i] = new Player("Player " + (i + 1));
+            players.Add( new Player("Player " + (i + 1)));
         }
     }
 
@@ -74,7 +92,7 @@ public class GameManager : MonoBehaviour
     public void PassTurn()
     {
         isTakingTurn = false;
-        currentPlayerIndex = (currentPlayerIndex + 1) % numberOfPlayers;
+        currentPlayerIndex = (currentPlayerIndex + 1) % players.Count;
         StartCoroutine(StartTurn());
     }
 }

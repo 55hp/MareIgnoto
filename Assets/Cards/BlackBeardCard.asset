@@ -12,11 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6ee192c9d676bc54a969562812185a06, type: 3}
   m_Name: BlackBeardCard
   m_EditorClassIdentifier: 
-  cardImage: {fileID: 21300000, guid: dfe8644aca4c31b4d8adfb7f20cc09de, type: 3}
-  cardType: 2
+  cardImage: {fileID: 21300000, guid: 31af5224e0965254e91524e87c5015bc, type: 3}
+  cardType: 4
   cardName: Barba Nera
   cardDescription: Il Temibile re dei pirati
-  cardActiveEffect:
-    effectDescription: adasdad
-  cardPassiveEffect:
-    effectDescription: asdasdasdasd
+  effects: []

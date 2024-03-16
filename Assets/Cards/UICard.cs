@@ -47,23 +47,23 @@ public class UICard : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
         cardName.text = cardSO.cardName;
 
 
-        if(cardSO.cardActiveEffect != null)
-        {
-            cardActive.gameObject.transform.parent.gameObject.SetActive(true);
-            cardActive.text = cardSO.cardActiveEffect?.effectDescription;
-        }
-
-        if (cardSO.cardPassiveEffect != null)
-        {
-            cardPassive.gameObject.transform.parent.gameObject.SetActive(true);
-            cardPassive.text = cardSO.cardPassiveEffect?.effectDescription;
-        }
-
-        if(cardSO.cardDescription != null && cardSO.cardPassiveEffect == null)
-        {
-            cardDescription.GetComponentInParent<Transform>().gameObject.SetActive(true);
-            cardDescription.text = cardSO.cardDescription;
-        }
+        //if(cardSO.cardActiveEffect != null)
+        //{
+        //    cardActive.gameObject.transform.parent.gameObject.SetActive(true);
+        //    cardActive.text = cardSO.cardActiveEffect?.effectDescription;
+        //}
+        //
+        //if (cardSO.cardPassiveEffect != null)
+        //{
+        //    cardPassive.gameObject.transform.parent.gameObject.SetActive(true);
+        //    cardPassive.text = cardSO.cardPassiveEffect?.effectDescription;
+        //}
+        //
+        //if(cardSO.cardDescription != null && cardSO.cardPassiveEffect == null)
+        //{
+        //    cardDescription.GetComponentInParent<Transform>().gameObject.SetActive(true);
+        //    cardDescription.text = cardSO.cardDescription;
+        //}
 
     }
 

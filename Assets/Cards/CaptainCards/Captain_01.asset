@@ -10,10 +10,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6ee192c9d676bc54a969562812185a06, type: 3}
-  m_Name: RedBeardCard
+  m_Name: Captain_01
   m_EditorClassIdentifier: 
-  cardImage: {fileID: 21300000, guid: d05d6156344eff7499b51a04cdc75f7a, type: 3}
-  cardType: 4
-  cardName: Barba Rossa
-  cardDescription: Leggendario capitano Barbarossa
-  effects: []
+  cardImage: {fileID: 21300000, guid: 31af5224e0965254e91524e87c5015bc, type: 3}
+  cardType: 0
+  cardName: Capitan Barba Nera
+  cardDescription: 
+  effects:
+  - effectType: 1
+    effectId: 101
+    effectDescription: Capitano della nave!
+  - effectType: 0
+    effectId: 102
+    effectDescription: Temi tu, la morte?
