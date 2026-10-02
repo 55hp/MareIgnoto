@@ -11,7 +11,7 @@ namespace hp55games.MareIgnoto.Rules.Engine
 {
     /// <summary>
     /// Ciò che i flussi di gioco usano per agire: stato, configurazione, casualità, emissione di eventi e
-    /// le operazioni comuni (pescare con riciclo degli scarti, tirare il dado, spostare monete, chiedere una decisione).
+    /// le operazioni comuni (pescare con riciclo degli scarti di Crew e Pirateria, tirare il dado, spostare monete, chiedere una decisione).
     /// Le regole nuove passano da qui, così eventi e casualità restano sempre coerenti.
     /// </summary>
     internal sealed class GameContext
@@ -74,7 +74,22 @@ namespace hp55games.MareIgnoto.Rules.Engine
         }
 
         /// <summary>
-        /// Pesca fino a <paramref name="count"/> carte dal mazzo (meno se carte e scarti non bastano, R-009) e le
+        /// Se dal mazzo si può pescare almeno una carta (R-009): Crew e Pirateria contano anche gli scarti da rimescolare,
+        /// Corsaro solo il mazzo. Per il Corsaro vuoto l'azione di porto "Missione" non è selezionabile.
+        /// </summary>
+        public bool CanDraw(DeckKind deck)
+        {
+            switch (deck)
+            {
+                case DeckKind.Crew: return State.Crew.DrawCount + State.Crew.DiscardCount > 0;
+                case DeckKind.Pirate: return State.Pirate.DrawCount + State.Pirate.DiscardCount > 0;
+                default: return State.Corsair.DrawCount > 0;
+            }
+        }
+
+        /// <summary>
+        /// Pesca fino a <paramref name="count"/> carte dal mazzo (meno se non bastano, R-009: per il Corsaro quelle
+        /// rimaste, per Crew e Pirateria anche gli scarti rimescolati) e le
         /// lascia "in transito" presso il giocatore, in attesa di una scelta. Emette l'evento di pesca.
         /// </summary>
         public IReadOnlyList<Card> DrawToTransit(PlayerState player, DeckKind deck, int count)
@@ -113,16 +128,17 @@ namespace hp55games.MareIgnoto.Rules.Engine
         {
             switch (deck)
             {
-                case DeckKind.Crew: return DrawOne(State.Crew, deck);
-                case DeckKind.Pirate: return DrawOne(State.Pirate, deck);
-                default: return DrawOne(State.Corsair, deck);
+                case DeckKind.Crew: return DrawOne(State.Crew, deck, true);
+                case DeckKind.Pirate: return DrawOne(State.Pirate, deck, true);
+                default: return DrawOne(State.Corsair, deck, false);
             }
         }
 
-        private Card DrawOne<T>(DeckState<T> deck, DeckKind kind) where T : Card
+        /// <summary>R-009: il Corsaro non si rimescola, i suoi scarti sono fuori dal gioco.</summary>
+        private Card DrawOne<T>(DeckState<T> deck, DeckKind kind, bool recyclesDiscard) where T : Card
         {
             T card = deck.TakeTop();
-            if (card == null && deck.DiscardCount > 0)
+            if (card == null && recyclesDiscard && deck.DiscardCount > 0)
             {
                 int recycled = deck.DiscardCount;
                 deck.RecycleDiscard(Random);

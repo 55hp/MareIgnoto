@@ -50,6 +50,9 @@ namespace hp55games.MareIgnoto.Rules.Events
     {
         /// <summary>Spareggio dell'ordine di turno (R-037, R-051).</summary>
         TurnOrderTiebreak,
+
+        /// <summary>Direzione iniziale del vento (R-038).</summary>
+        InitialWind,
     }
 
     /// <summary>Ogni tiro di dado produce un evento con il risultato (04_motore.md §4).</summary>

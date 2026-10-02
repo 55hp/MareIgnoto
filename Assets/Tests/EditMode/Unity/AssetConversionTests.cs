@@ -52,7 +52,7 @@ namespace hp55games.MareIgnoto.Unity.Tests
         }
 
         [Test]
-        public void NewMapLayoutAssetIsAnEmptyInvalidLayoutUntilFilled()
+        public void NewMapLayoutAssetHasDefaultPresetsButNoIslandsUntilFilled()
         {
             var asset = Create<MapLayoutAsset>();
             try
@@ -61,11 +61,12 @@ namespace hp55games.MareIgnoto.Unity.Tests
                 Assert.AreEqual(20, layout.width);
                 Assert.AreEqual(20, layout.height);
                 Assert.IsEmpty(layout.islandCells);
+                Assert.AreEqual(7, layout.spawnPresets.Count, "preset di default per N = 2..8 (05_mappa.md §4)");
 
                 MapValidationResult result = asset.Validate();
                 Assert.IsFalse(result.IsValid);
                 Assert.IsTrue(result.Has(MapValidationCode.NoSacredIsland));
-                Assert.IsTrue(result.Has(MapValidationCode.WrongSpawnCount));
+                Assert.AreEqual(1, result.Issues.Count, result.ToString());
             }
             finally
             {
@@ -79,8 +80,7 @@ namespace hp55games.MareIgnoto.Unity.Tests
             var source = new MapLayout();
             source.sacredIslandCells.Add(new LayoutCell(9, 9));
             source.islandCells.Add(new LayoutIslandCell(4, 4, 0));
-            int[,] spawns = { { 10, 0 }, { 10, 19 }, { 0, 10 }, { 19, 10 }, { 0, 3 }, { 19, 16 }, { 16, 0 }, { 3, 19 } };
-            for (int i = 0; i < 8; i++) source.spawnCells.Add(new LayoutCell(spawns[i, 0], spawns[i, 1]));
+            source.PresetFor(2).cells[1] = new LayoutCell(19, 18);
 
             var asset = Create<MapLayoutAsset>();
             try
@@ -90,8 +90,9 @@ namespace hp55games.MareIgnoto.Unity.Tests
                 MapLayout layout = asset.ToLayout();
                 Assert.AreEqual(1, layout.sacredIslandCells.Count);
                 Assert.AreEqual(4, layout.islandCells[0].x);
-                Assert.AreEqual(8, layout.spawnCells.Count);
-                Assert.AreEqual(new Coord(3, 19), layout.spawnCells[7].ToCoord());
+                Assert.AreEqual(7, layout.spawnPresets.Count);
+                Assert.AreEqual(new Coord(19, 18), layout.PresetFor(2).cells[1].ToCoord());
+                Assert.AreEqual(new Coord(19, 9), layout.PresetFor(8).cells[7].ToCoord());
                 Assert.IsTrue(asset.Validate().IsValid, asset.Validate().ToString());
             }
             finally
@@ -112,7 +113,7 @@ namespace hp55games.MareIgnoto.Unity.Tests
         public void ProjectMapLayoutAssetIsValidIfPresent()
         {
             MapLayoutAsset asset = FindProjectAsset<MapLayoutAsset>();
-            if (asset == null) Assert.Ignore("MapLayout.asset non ancora creato (spec 0005, dopo l'audit 0000).");
+            if (asset == null) Assert.Ignore("MapLayout.asset non ancora creato (spec 0005, quando il layout è approvato: 05_mappa.md §6).");
             MapValidationResult result = asset.Validate();
             Assert.IsTrue(result.IsValid, result.ToString());
         }

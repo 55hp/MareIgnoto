@@ -54,7 +54,7 @@ namespace hp55games.MareIgnoto.Rules.Tests
                 PlayerView view = session.State.ViewFor(id);
                 IReadOnlyPlayerState player = session.State.Player(id);
 
-                Assert.AreEqual(map.SpawnPoints[id], player.Position, "R-031 p" + id);
+                Assert.AreEqual(map.SpawnPointsFor(players)[id], player.Position, "R-031 p" + id);
                 Assert.AreEqual(Config.slotsAbove, player.CrewAbove.Count);
                 Assert.IsTrue(player.CrewAbove.All(c => c == null), "R-032: niente sopra coperta");
                 Assert.AreEqual(Config.startingCrewCards, view.CrewBelow.Count(c => c != null), "R-032 p" + id);
@@ -210,9 +210,29 @@ namespace hp55games.MareIgnoto.Rules.Tests
         public void WindAndZonesStartAsDefault_R038()
         {
             GameSession session = TestSupport.Start(2, 81);
-            Assert.IsTrue(Enum.IsDefined(typeof(Heading), session.State.Wind));
+            List<GameEvent> events = TestSupport.PlayWithBot(session);
+
+            DieRolledEvent roll = events.OfType<DieRolledEvent>().Single(e => e.Reason == DiceReason.InitialWind);
+            Assert.That(roll.Value, Is.InRange(1, 8));
+            Assert.AreEqual(Heading.N.Rotate(roll.Value), session.State.Wind);
+            Assert.AreEqual(session.State.Wind, events.OfType<WindChangedEvent>().Single().Wind);
             Assert.AreEqual(36, session.State.Zones.Count);
             Assert.IsTrue(session.State.Zones.All(z => z == WeatherState.Normal));
+        }
+
+        [TestCase(1, Heading.NE)]
+        [TestCase(2, Heading.E)]
+        [TestCase(4, Heading.S)]
+        [TestCase(7, Heading.NO)]
+        [TestCase(8, Heading.N)]
+        public void InitialWindIsTheD8InClockwiseStepsFromNorth_R038(int roll, Heading expected)
+        {
+            // Un solo tiro nel setup a 2 senza pareggi d'offerta: quello del vento.
+            var random = new ScriptedRandomSource(new[] { roll }, new SeededRandom(82));
+            GameSession session = TestSupport.Start(2, 82, null, random);
+            TestSupport.Play(session, TestSupport.WithOffers(3, 1));
+            Assert.AreEqual(expected, session.State.Wind);
+            Assert.AreEqual(0, random.RemainingScripted);
         }
 
         [Test]
@@ -325,6 +345,47 @@ namespace hp55games.MareIgnoto.Rules.Tests
         }
 
         [Test]
+        public void TheCorsairDeckNeverRecyclesItsDiscardPile_R009()
+        {
+            GameContext context = BareContext(out GameState state);
+
+            // Restano 2 missioni, il resto è negli scarti: se ne pescano solo 2, senza rimescolare.
+            while (state.Corsair.DrawCount > 2) state.Corsair.Discard(state.Corsair.TakeTop());
+            int discarded = state.CorsairDeck.DiscardCount;
+
+            IReadOnlyList<Card> drawn = context.DrawToTransit(state.Players[0], DeckKind.Corsair, Config.startingMissionsDrawn);
+            Assert.AreEqual(2, drawn.Count);
+            Assert.AreEqual(0, state.CorsairDeck.DrawCount);
+            Assert.AreEqual(discarded, state.CorsairDeck.DiscardCount, "gli scarti Corsaro restano fuori dal gioco");
+            Assert.IsFalse(context.TakeEvents().OfType<DeckShuffledEvent>().Any());
+
+            // Mazzo vuoto: niente da pescare, e l'azione "Missione" non è selezionabile.
+            Assert.IsFalse(context.CanDraw(DeckKind.Corsair));
+            Assert.IsEmpty(context.DrawToTransit(state.Players[0], DeckKind.Corsair, 1));
+            Assert.IsEmpty(context.TakeEvents());
+        }
+
+        [Test]
+        public void CrewAndPirateCanDrawWhileTheirDiscardIsNotEmpty_R009()
+        {
+            GameContext context = BareContext(out GameState state);
+            while (state.Pirate.DrawCount > 0) state.Pirate.Discard(state.Pirate.TakeTop());
+            while (state.Crew.DrawCount > 0) state.Crew.Discard(state.Crew.TakeTop());
+            Assert.IsTrue(context.CanDraw(DeckKind.Pirate));
+            Assert.IsTrue(context.CanDraw(DeckKind.Crew));
+            Assert.IsTrue(context.CanDraw(DeckKind.Corsair));
+        }
+
+        private static GameContext BareContext(out GameState state)
+        {
+            var map = GameMap.Create(TestSupport.StandardMap(), Config);
+            state = new GameState(Config, map);
+            state.BuildDecks();
+            state.Players.Add(new PlayerState(0, "P1", Config.slotsAbove, Config.slotsBelow));
+            return new GameContext(state, Config, new SeededRandom(1), GameSetup.ForPlayers(2, 1));
+        }
+
+        [Test]
         public void StartRejectsInvalidInput()
         {
             Assert.Throws<ArgumentException>(() => TestSupport.Start(1, 1), "meno di 2 giocatori");
@@ -341,6 +402,10 @@ namespace hp55games.MareIgnoto.Rules.Tests
             brokenMap.sacredIslandCells.Clear();
             Assert.Throws<ArgumentException>(() => GameSession.Start(GameSetup.ForPlayers(2, 1), Config, brokenMap, new SeededRandom(1)));
 
+            // Senza preset per 9 la mappa non è valida con maxPlayers = 9.
+            var ninePlayers = new RulesConfig { maxPlayers = 9 };
+            Assert.Throws<ArgumentException>(() => GameSession.Start(GameSetup.ForPlayers(9, 1), ninePlayers, TestSupport.StandardMap(), new SeededRandom(1)));
+
             var brokenConfig = new RulesConfig { startingCoins = -1 };
             Assert.Throws<ArgumentException>(() => TestSupport.Start(2, 1, brokenConfig));
         }
@@ -352,8 +417,17 @@ namespace hp55games.MareIgnoto.Rules.Tests
             GameSession session = GameSession.Start(new GameSetup(players, 5), Config, TestSupport.StandardMap());
             Assert.AreEqual("Prima", session.State.Player(0).Name);
             Assert.AreEqual("Seconda", session.State.Player(1).Name);
-            Assert.AreEqual(new Coord(10, 0), session.State.Player(0).Position);
-            Assert.AreEqual(new Coord(10, 19), session.State.Player(1).Position);
+            Assert.AreEqual(new Coord(0, 0), session.State.Player(0).Position);
+            Assert.AreEqual(new Coord(19, 19), session.State.Player(1).Position);
+        }
+
+        [Test]
+        public void StartingPointsComeFromThePresetForThePlayerCount_R031()
+        {
+            GameSession session = TestSupport.Start(3, 6);
+            Assert.AreEqual(new Coord(0, 0), session.State.Player(0).Position);
+            Assert.AreEqual(new Coord(19, 0), session.State.Player(1).Position);
+            Assert.AreEqual(new Coord(9, 19), session.State.Player(2).Position);
         }
 
         [Test]

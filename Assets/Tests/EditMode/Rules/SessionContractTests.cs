@@ -284,9 +284,8 @@ namespace hp55games.MareIgnoto.Rules.Tests
             List<GameEvent> events = TestSupport.Play(session, TestSupport.WithOffers(5, 5, 7));
 
             CollectionAssert.AreEqual(new[] { 2, 1, 0 }, session.State.TurnOrder);
-            var rolls = events.OfType<DieRolledEvent>().ToList();
+            var rolls = TiebreakRolls(events);
             Assert.AreEqual(2, rolls.Count);
-            Assert.IsTrue(rolls.All(r => r.Reason == DiceReason.TurnOrderTiebreak));
             CollectionAssert.AreEqual(new[] { 0, 1 }, rolls.Select(r => r.Player));
             CollectionAssert.AreEqual(new[] { 3, 6 }, rolls.Select(r => r.Value));
         }
@@ -300,8 +299,8 @@ namespace hp55games.MareIgnoto.Rules.Tests
             List<GameEvent> events = TestSupport.Play(session, TestSupport.WithOffers(5, 5, 7));
 
             CollectionAssert.AreEqual(new[] { 2, 1, 0 }, session.State.TurnOrder);
-            CollectionAssert.AreEqual(new[] { 4, 4, 2, 7 }, events.OfType<DieRolledEvent>().Select(r => r.Value));
-            CollectionAssert.AreEqual(new[] { 0, 1, 0, 1 }, events.OfType<DieRolledEvent>().Select(r => r.Player));
+            CollectionAssert.AreEqual(new[] { 4, 4, 2, 7 }, TiebreakRolls(events).Select(r => r.Value));
+            CollectionAssert.AreEqual(new[] { 0, 1, 0, 1 }, TiebreakRolls(events).Select(r => r.Player));
         }
 
         [Test]
@@ -313,17 +312,22 @@ namespace hp55games.MareIgnoto.Rules.Tests
             List<GameEvent> events = TestSupport.Play(session, TestSupport.WithOffers(0, 0, 0, 0));
 
             CollectionAssert.AreEqual(new[] { 3, 1, 0, 2 }, session.State.TurnOrder);
-            Assert.AreEqual(9, events.OfType<DieRolledEvent>().Count());
+            Assert.AreEqual(9, TiebreakRolls(events).Count);
             Assert.AreEqual(0, ((ScriptedRandomSource)random).RemainingScripted);
         }
 
         [Test]
-        public void NoTiesMeansNoDiceAtSetup_R037()
+        public void NoTiesMeansNoTiebreakDiceAtSetup_R037()
         {
+            // Senza pareggi l'unico tiro del setup è quello del vento (R-038).
             GameSession session = TestSupport.Start(3, 18);
             List<GameEvent> events = TestSupport.Play(session, TestSupport.WithOffers(1, 2, 3));
-            Assert.IsFalse(events.OfType<DieRolledEvent>().Any());
+            Assert.IsEmpty(TiebreakRolls(events));
+            Assert.AreEqual(DiceReason.InitialWind, events.OfType<DieRolledEvent>().Single().Reason);
         }
+
+        private static List<DieRolledEvent> TiebreakRolls(IEnumerable<GameEvent> events) =>
+            events.OfType<DieRolledEvent>().Where(r => r.Reason == DiceReason.TurnOrderTiebreak).ToList();
 
         [Test]
         public void TurnOrderIsAPermutationForAnyOffers()

@@ -13,15 +13,16 @@ namespace hp55games.MareIgnoto.Rules.Map
         private readonly CellKind[,] kinds;
         private readonly int[,] islandIds;
         private readonly int[,] zones;
-        private readonly Coord[] spawnPoints;
+        private readonly Dictionary<int, Coord[]> spawnPresets = new Dictionary<int, Coord[]>();
         private readonly int zonesPerSide;
 
         public int Width { get; }
         public int Height { get; }
         public int ZoneCount { get; }
 
-        /// <summary>Punti di partenza in ordine di posto (R-031).</summary>
-        public IReadOnlyList<Coord> SpawnPoints => spawnPoints;
+        /// <summary>Punti di partenza per <paramref name="playerCount"/> giocatori, in ordine di posto (R-031); vuoto se il preset manca.</summary>
+        public IReadOnlyList<Coord> SpawnPointsFor(int playerCount) =>
+            spawnPresets.TryGetValue(playerCount, out Coord[] points) ? points : Array.Empty<Coord>();
 
         private GameMap(MapLayout layout, RulesConfig config)
         {
@@ -59,9 +60,13 @@ namespace hp55games.MareIgnoto.Rules.Map
                 zones[cell.x, cell.y] = -1;
             }
 
-            spawnPoints = new Coord[layout.spawnCells.Count];
-            for (int i = 0; i < spawnPoints.Length; i++)
-                spawnPoints[i] = layout.spawnCells[i].ToCoord();
+            foreach (SpawnPreset preset in layout.spawnPresets)
+            {
+                if (preset == null) continue;
+                var points = new Coord[preset.cells.Count];
+                for (int i = 0; i < points.Length; i++) points[i] = preset.cells[i].ToCoord();
+                spawnPresets[preset.playerCount] = points;
+            }
         }
 
         /// <summary>Costruisce la mappa; lancia ArgumentException se il layout non è valido.</summary>

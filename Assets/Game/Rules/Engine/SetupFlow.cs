@@ -24,10 +24,11 @@ namespace hp55games.MareIgnoto.Rules.Engine
             // R-030
             ShuffleDecks(ctx);
 
-            // R-031: la nave del posto N parte dal punto di partenza N.
+            // R-031: la nave del posto k parte dal k-esimo punto del preset per questo numero di giocatori.
+            IReadOnlyList<Coord> spawnPoints = state.Map.SpawnPointsFor(state.PlayerCount);
             foreach (PlayerState player in state.Players)
             {
-                player.Position = state.Map.SpawnPoints[player.Id];
+                player.Position = spawnPoints[player.Id];
                 ctx.Emit(new ShipPlacedEvent(player.Id, player.Position));
             }
 
@@ -82,11 +83,11 @@ namespace hp55games.MareIgnoto.Rules.Engine
             state.TurnOrderList.AddRange(TurnOrder.FromOffers(ctx, offers));
             ctx.Emit(new TurnOrderSetEvent(1, state.TurnOrderList.ToArray()));
 
-            // R-038
+            // R-038: d8 → la lancetta fa r scatti in senso orario da Nord (8 = Nord). Le zone partono Normali.
             TutorialOptions tutorial = ctx.Setup.Tutorial;
             state.Wind = tutorial != null && tutorial.InitialWind.HasValue
                 ? tutorial.InitialWind.Value
-                : (Heading)ctx.Random.Range(0, HeadingExtensions.Count);
+                : Heading.N.Rotate(ctx.RollD8(-1, DiceReason.InitialWind));
             ctx.Emit(new WindChangedEvent(state.Wind));
 
             if (tutorial != null && tutorial.InitialZones != null)
@@ -219,8 +220,8 @@ namespace hp55games.MareIgnoto.Rules.Engine
                 }
             }
 
-            // TODO R-130: 02_regole.md non dice se le missioni scartate sono visibili agli altri. Per ora restano segrete
-            // (gli altri vedono solo quante); se diventano pubbliche basta passare cards pubbliche all'evento.
+            // R-034/R-130: le scartate escono dal gioco coperte (pila degli scarti Corsaro, che non si rimescola, R-009):
+            // gli altri vedono solo quante sono.
             if (discarded.Count > 0) ctx.Emit(new CardsDiscardedEvent(player.Id, DeckKind.Corsair, discarded));
         }
 

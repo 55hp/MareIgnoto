@@ -31,11 +31,7 @@ namespace hp55games.MareIgnoto.Rules.Tests
                 new LayoutIslandCell(4, 14, 2),
                 new LayoutIslandCell(14, 14, 3), new LayoutIslandCell(15, 14, 3),
             });
-            map.spawnCells.AddRange(new[]
-            {
-                new LayoutCell(10, 0), new LayoutCell(10, 19), new LayoutCell(0, 10), new LayoutCell(19, 10),
-                new LayoutCell(0, 3), new LayoutCell(19, 16), new LayoutCell(16, 0), new LayoutCell(3, 19),
-            });
+            // Punti di partenza: i preset di default (05_mappa.md §4).
             return map;
         }
 

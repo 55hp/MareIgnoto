@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using hp55games.MareIgnoto.Rules.Config;
 using hp55games.MareIgnoto.Rules.Map;
 using NUnit.Framework;
@@ -83,9 +84,11 @@ namespace hp55games.MareIgnoto.Rules.Tests
         [Test]
         public void ValidatesAgainstTheGivenConfig()
         {
-            var config = new RulesConfig { maxPlayers = 4 };
-            MapValidationResult result = TestSupport.StandardMap().Validate(config);
-            Assert.IsTrue(result.Has(MapValidationCode.WrongSpawnCount));
+            // Con al massimo 4 giocatori i preset per 5–8 sono di troppo; con 9 manca quello per 9.
+            MapValidationResult fewer = TestSupport.StandardMap().Validate(new RulesConfig { maxPlayers = 4 });
+            Assert.IsTrue(fewer.Has(MapValidationCode.SpawnPresetOutOfRange));
+            MapValidationResult more = TestSupport.StandardMap().Validate(new RulesConfig { maxPlayers = 9 });
+            Assert.IsTrue(more.Has(MapValidationCode.MissingSpawnPreset));
         }
 
         [Test]
@@ -136,14 +139,48 @@ namespace hp55games.MareIgnoto.Rules.Tests
         }
 
         [Test]
+        public void DefaultSpawnPresetsAreThoseOf05Section4()
+        {
+            var layout = new MapLayout();
+            CollectionAssert.AreEqual(new[] { 2, 3, 4, 5, 6, 7, 8 }, layout.spawnPresets.Select(p => p.playerCount));
+            CollectionAssert.AreEqual(new[] { new Coord(0, 0), new Coord(19, 19) }, layout.PresetFor(2).cells.Select(c => c.ToCoord()));
+            CollectionAssert.AreEqual(new[] { new Coord(0, 0), new Coord(19, 0), new Coord(9, 19) }, layout.PresetFor(3).cells.Select(c => c.ToCoord()));
+            CollectionAssert.AreEqual(new[] { new Coord(0, 0), new Coord(19, 0), new Coord(0, 19), new Coord(19, 19) },
+                layout.PresetFor(4).cells.Select(c => c.ToCoord()));
+            CollectionAssert.AreEqual(new[]
+                {
+                    new Coord(0, 0), new Coord(19, 0), new Coord(0, 19), new Coord(19, 19),
+                    new Coord(9, 19), new Coord(9, 0), new Coord(0, 9), new Coord(19, 9),
+                },
+                layout.PresetFor(8).cells.Select(c => c.ToCoord()));
+            for (int n = 2; n <= 8; n++) Assert.AreEqual(n, layout.PresetFor(n).cells.Count, "preset " + n);
+        }
+
+        [Test]
+        public void MissingSpawnPresetIsRejected()
+        {
+            MapLayout map = TestSupport.StandardMap();
+            map.spawnPresets.RemoveAll(p => p.playerCount == 5);
+            Assert.IsTrue(map.Validate().Has(MapValidationCode.MissingSpawnPreset));
+        }
+
+        [Test]
+        public void DuplicateSpawnPresetIsRejected()
+        {
+            MapLayout map = TestSupport.StandardMap();
+            map.spawnPresets.Add(new SpawnPreset(2, new LayoutCell(0, 5), new LayoutCell(19, 5)));
+            Assert.IsTrue(map.Validate().Has(MapValidationCode.DuplicateSpawnPreset));
+        }
+
+        [Test]
         public void WrongNumberOfSpawnPointsIsRejected()
         {
             MapLayout fewer = TestSupport.StandardMap();
-            fewer.spawnCells.RemoveAt(7);
+            fewer.PresetFor(8).cells.RemoveAt(7);
             Assert.IsTrue(fewer.Validate().Has(MapValidationCode.WrongSpawnCount));
 
             MapLayout more = TestSupport.StandardMap();
-            more.spawnCells.Add(new LayoutCell(7, 0));
+            more.PresetFor(3).cells.Add(new LayoutCell(7, 0));
             Assert.IsTrue(more.Validate().Has(MapValidationCode.WrongSpawnCount));
         }
 
@@ -151,7 +188,7 @@ namespace hp55games.MareIgnoto.Rules.Tests
         public void SpawnOffBorderIsRejected()
         {
             MapLayout map = TestSupport.StandardMap();
-            map.spawnCells[2] = new LayoutCell(5, 5);
+            map.PresetFor(4).cells[2] = new LayoutCell(5, 5);
             Assert.IsTrue(map.Validate().Has(MapValidationCode.SpawnNotOnBorder));
         }
 
@@ -159,18 +196,25 @@ namespace hp55games.MareIgnoto.Rules.Tests
         public void DuplicateSpawnIsRejected()
         {
             MapLayout map = TestSupport.StandardMap();
-            map.spawnCells[3] = map.spawnCells[0];
+            SpawnPreset preset = map.PresetFor(6);
+            preset.cells[3] = preset.cells[0];
             Assert.IsTrue(map.Validate().Has(MapValidationCode.DuplicateSpawn));
+        }
+
+        [Test]
+        public void SameCellInDifferentPresetsIsAllowed()
+        {
+            // I preset sono alternativi: (0,0) sta in tutti.
+            Assert.IsTrue(TestSupport.StandardMap().Validate().IsValid);
+            Assert.IsTrue(TestSupport.StandardMap().spawnPresets.All(p => p.cells.Contains(new LayoutCell(0, 0))));
         }
 
         [Test]
         public void SpawnWithoutAdjacentSeaIsRejected()
         {
-            // Il punto (10,0) ha mare solo in (9,1), (10,1), (11,1): si coprono con isole.
+            // L'angolo (0,0) ha mare solo in (1,1): si copre con un'isola.
             MapLayout map = TestSupport.StandardMap();
-            map.islandCells.Add(new LayoutIslandCell(9, 1, 8));
-            map.islandCells.Add(new LayoutIslandCell(10, 1, 8));
-            map.islandCells.Add(new LayoutIslandCell(11, 1, 8));
+            map.islandCells.Add(new LayoutIslandCell(1, 1, 8));
             MapValidationResult result = map.Validate();
             Assert.IsTrue(result.Has(MapValidationCode.SpawnWithoutSea), result.ToString());
         }
@@ -248,11 +292,13 @@ namespace hp55games.MareIgnoto.Rules.Tests
         }
 
         [Test]
-        public void SpawnPointsKeepTheLayoutOrder_R031()
+        public void SpawnPointsDependOnThePlayerCountAndKeepTheLayoutOrder_R031()
         {
-            Assert.AreEqual(new Coord(10, 0), map.SpawnPoints[0]);
-            Assert.AreEqual(new Coord(10, 19), map.SpawnPoints[1]);
-            Assert.AreEqual(8, map.SpawnPoints.Count);
+            CollectionAssert.AreEqual(new[] { new Coord(0, 0), new Coord(19, 19) }, map.SpawnPointsFor(2));
+            Assert.AreEqual(new Coord(9, 19), map.SpawnPointsFor(3)[2]);
+            Assert.AreEqual(new Coord(19, 9), map.SpawnPointsFor(8)[7]);
+            for (int n = 2; n <= 8; n++) Assert.AreEqual(n, map.SpawnPointsFor(n).Count);
+            Assert.IsEmpty(map.SpawnPointsFor(9));
         }
 
         [Test]

@@ -117,8 +117,8 @@ namespace hp55games.MareIgnoto.Rules.Engine
             if (count < config.minPlayers || count > config.maxPlayers)
                 throw new ArgumentException("I giocatori devono essere da " + config.minPlayers + " a " + config.maxPlayers +
                                             " (trovati " + count + ").", nameof(setup));
-            if (count > map.SpawnPoints.Count)
-                throw new ArgumentException("La mappa ha meno punti di partenza dei giocatori.", nameof(setup));
+            if (map.SpawnPointsFor(count).Count != count)
+                throw new ArgumentException("La mappa non ha un preset di punti di partenza per " + count + " giocatori.", nameof(setup));
 
             var seats = new HashSet<int>();
             foreach (PlayerSetup player in setup.Players)

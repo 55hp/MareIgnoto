@@ -19,7 +19,7 @@ namespace hp55games.MareIgnoto.Rules.State
         }
     }
 
-    /// <summary>Un mazzo con la sua pila degli scarti (R-009). La cima del mazzo è l'ultimo elemento.</summary>
+    /// <summary>Un mazzo con la sua pila degli scarti (R-009; per il Corsaro la pila è fuori dal gioco). La cima del mazzo è l'ultimo elemento.</summary>
     internal sealed class DeckState<T> where T : Card
     {
         private readonly List<T> pile = new List<T>();
