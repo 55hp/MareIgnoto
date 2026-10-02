@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using hp55games.MareIgnoto.Rules.Cards;
 using hp55games.MareIgnoto.Rules.Decisions;
 using hp55games.MareIgnoto.Rules.Events;
 using hp55games.MareIgnoto.Rules.Map;
@@ -7,10 +8,21 @@ using hp55games.MareIgnoto.Rules.State;
 
 namespace hp55games.MareIgnoto.Rules.Engine
 {
-    /// <summary>Un round (02_regole.md §4). Per ora arriva fino alla rivelazione delle rotte (R-040, R-041).</summary>
+    /// <summary>Un round (02_regole.md §4): Fase 1 (rotte, meteo, movimento, Abbordaggi), poi Fase 2 a turno.</summary>
     internal static class RoundFlow
     {
-        /// <summary>Fase 1 — Preparazione: rotte segrete scelte da ogni giocatore, poi rivelate insieme.</summary>
+        public static IEnumerable<FlowStep> Run(GameContext ctx)
+        {
+            GameState state = ctx.State;
+
+            // R-042, R-050: dal round 2 l'ordine si calcola all'inizio del round e vale per le scelte della Fase 1.
+            if (state.Round > 1) SetTurnOrder(ctx, TurnOrder.FromCrew(ctx));
+
+            yield return Flow.Call(Preparation(ctx));
+            yield return Flow.Call(Active(ctx));
+        }
+
+        /// <summary>Fase 1 — Preparazione (R-040–R-045). In Fase 1 non si gioca nessuna carta (R-044).</summary>
         public static IEnumerable<FlowStep> Preparation(GameContext ctx)
         {
             GameState state = ctx.State;
@@ -23,10 +35,12 @@ namespace hp55games.MareIgnoto.Rules.Engine
                 player.HeadingRevealed = false;
             }
 
-            // R-040: scelta segreta e obbligatoria, da confermare sempre. TODO R-045 (spec 0002): chi ha scelto Svago non sceglie.
-            foreach (int id in state.TurnOrderList)
+            // R-040: scelta segreta e obbligatoria, da confermare sempre. R-045: chi è in Svago non sceglie.
+            foreach (int id in state.TurnOrderList.ToList())
             {
                 PlayerState player = state.PlayerById(id);
+                if (player.LeisureRound == state.Round) continue;
+
                 var options = new List<DecisionOption>();
                 for (int h = 0; h < HeadingExtensions.Count; h++) options.Add(new HeadingOption((Heading)h));
 
@@ -39,9 +53,62 @@ namespace hp55games.MareIgnoto.Rules.Engine
 
             // R-041
             foreach (PlayerState player in state.Players) player.HeadingRevealed = true;
-            ctx.Emit(new HeadingsRevealedEvent(state.Players.Select(p => p.ChosenHeading.Value).ToArray()));
+            ctx.Emit(new HeadingsRevealedEvent(state.Players.Select(p => p.ChosenHeading).ToArray()));
 
-            // TODO R-042–R-045 (spec 0002): meteo, movimento cella per cella, Abbordaggi fortuiti.
+            // R-042, R-043
+            state.MovementInProgress = true;
+            state.SharedSeaCellsAllowed.Clear();
+            yield return Flow.Call(WeatherFlow.Run(ctx));
+            yield return Flow.Call(MovementFlow.Run(ctx));
+            yield return Flow.Call(BoardingFlow.Run(ctx));
+            state.MovementInProgress = false;
+        }
+
+        /// <summary>
+        /// Fase 2 — Attiva: ordine di turno (R-050, R-051; nel round 1 resta quello delle offerte, R-037), poi un turno
+        /// a testa. Per ora il turno fa solo ciò che spetta a questa spec: cornice (R-053) e Mozzo (R-052).
+        /// </summary>
+        public static IEnumerable<FlowStep> Active(GameContext ctx)
+        {
+            GameState state = ctx.State;
+            state.Phase = GamePhase.Active;
+            ctx.Emit(new PhaseStartedEvent(state.Round, GamePhase.Active));
+
+            // R-050: un Abbordaggio può aver cambiato la ciurma, quindi l'ordine si ricalcola.
+            if (state.Round > 1) SetTurnOrder(ctx, TurnOrder.FromCrew(ctx));
+
+            state.TurnsPlayed.Clear();
+            foreach (int id in state.TurnOrderList.ToList())
+            {
+                PlayerState player = state.PlayerById(id);
+                state.ActivePlayer = id;
+                state.TurnsPlayed.Add(id);
+                ctx.Emit(new TurnStartedEvent(state.Round, id));
+
+                if (state.Map.KindAt(player.Position) == CellKind.Border)
+                {
+                    ctx.Emit(new TurnSkippedEvent(id)); // R-053, e niente Mozzo (R-052)
+                }
+                else
+                {
+                    int coins = CrewEffects.EffectiveCount(player.CrewAbove, CrewCardId.Mozzo) * ctx.Config.cabinBoyCoins;
+                    if (coins > 0) ctx.ChangeCoins(player, coins, CoinReason.CabinBoy);
+
+                    // TODO spec 0003: turno in mare o in porto (R-054–R-058), Svago (R-091). Per ora il giocatore passa.
+                }
+
+                ctx.Emit(new TurnEndedEvent(state.Round, id));
+            }
+
+            state.ActivePlayer = -1;
+            yield break; // finché il turno non chiede decisioni (spec 0003)
+        }
+
+        private static void SetTurnOrder(GameContext ctx, List<int> order)
+        {
+            ctx.State.TurnOrderList.Clear();
+            ctx.State.TurnOrderList.AddRange(order);
+            ctx.Emit(new TurnOrderSetEvent(ctx.State.Round, order.ToArray()));
         }
     }
 }

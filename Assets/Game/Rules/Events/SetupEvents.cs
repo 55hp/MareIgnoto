@@ -86,8 +86,9 @@ namespace hp55games.MareIgnoto.Rules.Events
     }
 
     /// <summary>
-    /// Carte finite negli scarti. Per ora solo le missioni scartate al setup (R-034): il contenuto resta segreto
-    /// perché le missioni in mano sono segrete (R-130); gli altri vedono quante.
+    /// Carte finite negli scarti dalla mano o dalle carte in transito: missioni scartate (R-034, segrete per R-130),
+    /// carte Pirateria perse per meteo o Abbordaggio (R-083, R-070, R-071). Il contenuto lo vede solo il proprietario;
+    /// gli altri vedono quante.
     /// </summary>
     public sealed class CardsDiscardedEvent : GameEvent
     {
@@ -163,6 +164,8 @@ namespace hp55games.MareIgnoto.Rules.Events
         Setup,
         /// <summary>Offerta a Gartya (R-036): le monete passano al Tesoro.</summary>
         GartyaOffer,
+        /// <summary>Mozzo sopra coperta a inizio turno (R-052).</summary>
+        CabinBoy,
     }
 
     public sealed class CoinsChangedEvent : GameEvent

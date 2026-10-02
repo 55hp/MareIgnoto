@@ -1,0 +1,186 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using hp55games.MareIgnoto.Rules.Bots;
+using hp55games.MareIgnoto.Rules.Cards;
+using hp55games.MareIgnoto.Rules.Config;
+using hp55games.MareIgnoto.Rules.Decisions;
+using hp55games.MareIgnoto.Rules.Engine;
+using hp55games.MareIgnoto.Rules.Events;
+using hp55games.MareIgnoto.Rules.Map;
+using hp55games.MareIgnoto.Rules.Random;
+using hp55games.MareIgnoto.Rules.State;
+
+namespace hp55games.MareIgnoto.Rules.Tests
+{
+    /// <summary>
+    /// Sorgente casuale con tiri di d8 accodabili durante la partita: finché la coda è vuota usa quella seedata.
+    /// Così uno scenario fissa i tiri di un round senza toccare quelli del setup.
+    /// </summary>
+    internal sealed class QueuedRandom : IRandomSource
+    {
+        private readonly Queue<int> rolls = new Queue<int>();
+        private readonly SeededRandom fallback;
+
+        public QueuedRandom(int seed)
+        {
+            fallback = new SeededRandom(seed);
+        }
+
+        public int Pending => rolls.Count;
+
+        public void Enqueue(params int[] values)
+        {
+            foreach (int value in values) rolls.Enqueue(value);
+        }
+
+        public int RollD8() => rolls.Count > 0 ? rolls.Dequeue() : fallback.RollD8();
+
+        public int Range(int minInclusive, int maxExclusive) => fallback.Range(minInclusive, maxExclusive);
+
+        public void Shuffle<T>(IList<T> list) => fallback.Shuffle(list);
+    }
+
+    /// <summary>
+    /// Uno scenario di round sulla mappa di <see cref="TestSupport.StandardMap"/>: dopo il setup (giocato dal bot) svuota
+    /// ciurme e mani, poi il test mette navi, carte, vento e zone dove gli servono e gioca un round con rotte date.
+    /// Le carte si prendono dai mazzi e tornano negli scarti, così la conservazione resta vera.
+    /// Mappa: isole 0 (4,4),(5,4),(4,5); 1 (14,4),(14,5); 2 (4,14); 3 (14,14),(15,14); Isola Sacra (9..10, 9..10).
+    /// </summary>
+    internal sealed class RoundScenario
+    {
+        public GameSession Session { get; }
+        public QueuedRandom Random { get; }
+        public RulesConfig Config { get; }
+        public List<PendingDecision> Decisions { get; } = new List<PendingDecision>();
+
+        internal GameState State => Session.InternalState;
+
+        private RoundScenario(GameSession session, QueuedRandom random, RulesConfig config)
+        {
+            Session = session;
+            Random = random;
+            Config = config;
+        }
+
+        public static RoundScenario Create(int players, RulesConfig config = null, int seed = 1)
+        {
+            config = config ?? new RulesConfig();
+            var random = new QueuedRandom(seed);
+            GameSession session = TestSupport.Start(players, seed, config, random);
+            TestSupport.PlayWithBot(session, seed);
+            var scenario = new RoundScenario(session, random, config);
+
+            GameState state = scenario.State;
+            foreach (PlayerState player in state.Players)
+            {
+                for (int slot = 0; slot < player.Crew.Count; slot++) scenario.ClearSlot(player.Id, slot);
+                foreach (PirateCard card in player.Hand.ToList()) state.Pirate.Discard(card);
+                player.Hand.Clear();
+            }
+
+            state.Wind = Heading.N;
+            for (int zone = 0; zone < state.ZoneStates.Length; zone++) state.ZoneStates[zone] = WeatherState.Normal;
+            return scenario;
+        }
+
+        internal PlayerState P(int id) => State.PlayerById(id);
+
+        public RoundScenario At(int player, int x, int y)
+        {
+            P(player).Position = new Coord(x, y);
+            return this;
+        }
+
+        public RoundScenario Order(params int[] order)
+        {
+            State.TurnOrderList.Clear();
+            State.TurnOrderList.AddRange(order);
+            return this;
+        }
+
+        public RoundScenario Wind(Heading wind)
+        {
+            State.Wind = wind;
+            return this;
+        }
+
+        public RoundScenario ZoneAt(int x, int y, WeatherState weather)
+        {
+            State.ZoneStates[State.Map.ZoneOf(new Coord(x, y))] = weather;
+            return this;
+        }
+
+        /// <summary>Mette nello slot una carta crew del tipo dato, presa dal mazzo o dagli scarti Crew.</summary>
+        public CrewCard Crew(int player, int slot, CrewCardId kind)
+        {
+            ClearSlot(player, slot);
+            CrewCard card = State.Crew.DrawPile.Concat(State.Crew.DiscardPile).First(c => c.Kind == kind);
+            State.Crew.Remove(card);
+            P(player).Crew.Set(slot, card);
+            return card;
+        }
+
+        public void ClearSlot(int player, int slot)
+        {
+            CrewCard old = P(player).Crew.Take(slot);
+            if (old != null) State.Crew.Discard(old);
+        }
+
+        /// <summary>Aggiunge alla mano carte Pirateria degli id dati.</summary>
+        public RoundScenario Hand(int player, params PirateCardId[] ids)
+        {
+            foreach (PirateCardId id in ids)
+            {
+                PirateCard card = State.Pirate.DrawPile.Concat(State.Pirate.DiscardPile).First(c => c.Id == id);
+                State.Pirate.Remove(card);
+                P(player).Hand.Add(card);
+            }
+
+            return this;
+        }
+
+        public int AboveSlot(int index) => index;
+
+        public int BelowSlot(int index) => Config.slotsAbove + index;
+
+        /// <summary>
+        /// Gioca il round in corso: rotte da <paramref name="headings"/> (per id), le altre decisioni con
+        /// <paramref name="chooser"/> (default: la prima opzione). Si ferma alla prima decisione del round dopo.
+        /// Restituisce gli eventi del round (fino a quella decisione).
+        /// </summary>
+        public List<GameEvent> PlayRound(Heading[] headings, Func<PendingDecision, DecisionAnswer> chooser = null)
+        {
+            chooser = chooser ?? (d => d.Choose(0));
+            int round = Session.State.Round;
+            var events = new List<GameEvent>();
+            int guard = 0;
+            while (Session.Pending != null && Session.State.Round == round)
+            {
+                if (guard++ > 1000) throw new InvalidOperationException("Il round non finisce.");
+                PendingDecision pending = Session.Pending;
+                Decisions.Add(pending);
+                DecisionAnswer answer = pending.Kind == DecisionKind.ChooseHeading
+                    ? pending.Choose(pending.Options.Cast<HeadingOption>().ToList().FindIndex(o => o.Heading == headings[pending.Player]))
+                    : chooser(pending);
+                events.AddRange(Session.Submit(answer));
+            }
+
+            TestSupport.AssertInvariants(Session);
+            return events;
+        }
+
+        /// <summary>Risponde con la prima opzione che soddisfa il criterio, altrimenti con la prima.</summary>
+        public static Func<PendingDecision, DecisionAnswer> Prefer(Func<PendingDecision, DecisionOption, bool> wanted)
+        {
+            return d =>
+            {
+                for (int i = 0; i < d.Options.Count; i++)
+                    if (wanted(d, d.Options[i])) return d.Choose(i);
+                return d.Choose(0);
+            };
+        }
+
+        public static RandomBot Bot(int seed) => new RandomBot(new SeededRandom(seed));
+    }
+}

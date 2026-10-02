@@ -44,8 +44,8 @@ namespace hp55games.MareIgnoto.Rules.Tests
         }
 
         /// <summary>
-        /// Risponde a tutte le decisioni con il bot casuale finché non ce ne sono più, verificando gli invarianti
-        /// dopo ogni risposta. Restituisce tutti gli eventi (iniziali compresi).
+        /// Risponde con il bot casuale fino alla fine della preparazione (prima scelta della rotta), verificando gli
+        /// invarianti dopo ogni risposta. Restituisce tutti gli eventi (iniziali compresi).
         /// </summary>
         public static List<GameEvent> PlayWithBot(GameSession session, int botSeed = 99)
         {
@@ -53,12 +53,37 @@ namespace hp55games.MareIgnoto.Rules.Tests
             return Play(session, bot.Choose);
         }
 
-        public static List<GameEvent> Play(GameSession session, Func<PendingDecision, DecisionAnswer> chooser)
+        /// <summary>Il bot gioca fino all'inizio del round <paramref name="rounds"/> + 1 (o alla fine della partita).</summary>
+        public static List<GameEvent> PlayRounds(GameSession session, int rounds, int botSeed = 99)
         {
-            var events = new List<GameEvent>(session.InitialEvents);
+            var bot = new RandomBot(new SeededRandom(botSeed));
+            return Play(session, bot.Choose, s => s.State.Round > rounds);
+        }
+
+        /// <summary>Il bot gioca finché la partita non finisce (serve maxRounds &gt; 0).</summary>
+        public static List<GameEvent> PlayToEnd(GameSession session, int botSeed = 99)
+        {
+            var bot = new RandomBot(new SeededRandom(botSeed));
+            return Play(session, bot.Choose, s => false);
+        }
+
+        /// <summary>Vero alla prima scelta della rotta del round 1: la preparazione della partita è finita.</summary>
+        public static bool SetupDone(GameSession session) =>
+            session.Pending.Kind == DecisionKind.ChooseHeading && session.State.Round == 1;
+
+        /// <summary>
+        /// Risponde con <paramref name="chooser"/> finché <paramref name="stop"/> (default: fine della preparazione)
+        /// non è vero o la partita non finisce, verificando gli invarianti dopo ogni risposta.
+        /// Restituisce gli eventi dall'inizio della partita se <paramref name="includeInitial"/>.
+        /// </summary>
+        public static List<GameEvent> Play(GameSession session, Func<PendingDecision, DecisionAnswer> chooser,
+            Func<GameSession, bool> stop = null, bool includeInitial = true)
+        {
+            stop = stop ?? SetupDone;
+            var events = includeInitial ? new List<GameEvent>(session.InitialEvents) : new List<GameEvent>();
             AssertInvariants(session);
             int guard = 0;
-            while (session.Pending != null)
+            while (session.Pending != null && !stop(session))
             {
                 Assert.Less(guard++, 10000, "Il gioco non si ferma.");
                 events.AddRange(session.Submit(chooser(session.Pending)));

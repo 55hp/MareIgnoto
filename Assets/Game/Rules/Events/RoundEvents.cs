@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using hp55games.MareIgnoto.Rules.Map;
 using hp55games.MareIgnoto.Rules.State;
 
@@ -53,6 +54,12 @@ namespace hp55games.MareIgnoto.Rules.Events
 
         /// <summary>Direzione iniziale del vento (R-038).</summary>
         InitialWind,
+
+        /// <summary>Rotazione della rotta per Mare Mosso o Tempesta (R-083, R-084).</summary>
+        WeatherRotation,
+
+        /// <summary>Riposizionamento dopo un Abbordaggio fortuito (R-070–R-072).</summary>
+        BoardingReposition,
     }
 
     /// <summary>Ogni tiro di dado produce un evento con il risultato (04_motore.md §4).</summary>
@@ -124,16 +131,16 @@ namespace hp55games.MareIgnoto.Rules.Events
         public override string Describe() => "HeadingChosen p" + Player + (Heading.HasValue ? " " + Heading.Value : "");
     }
 
-    /// <summary>Le rotte rivelate tutte insieme (R-041), una per giocatore, per id.</summary>
+    /// <summary>Le rotte rivelate tutte insieme (R-041), una per giocatore, per id; null per chi è in Svago (R-045).</summary>
     public sealed class HeadingsRevealedEvent : GameEvent
     {
-        public IReadOnlyList<Heading> Headings { get; }
+        public IReadOnlyList<Heading?> Headings { get; }
 
-        public HeadingsRevealedEvent(IReadOnlyList<Heading> headings)
+        public HeadingsRevealedEvent(IReadOnlyList<Heading?> headings)
         {
             Headings = headings;
         }
 
-        public override string Describe() => "HeadingsRevealed [" + Join(Headings) + "]";
+        public override string Describe() => "HeadingsRevealed [" + Join(Headings.Select(h => h.HasValue ? h.Value.ToString() : "-")) + "]";
     }
 }

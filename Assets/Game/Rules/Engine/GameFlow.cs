@@ -7,19 +7,35 @@ namespace hp55games.MareIgnoto.Rules.Engine
     /// <summary>
     /// Il flusso principale della partita: preparazione, poi i round. Ogni parte della partita è un flusso
     /// (<see cref="FlowStep"/>) richiamato da qui; le specifiche successive aggiungono i passi mancanti
-    /// (Fase 1 completa, Fase 2, fine partita) senza cambiare la struttura.
+    /// (Fase 2, fine partita) senza cambiare la struttura.
     /// </summary>
     internal static class GameFlow
     {
         public static IEnumerable<FlowStep> Run(GameContext ctx)
         {
+            GameState state = ctx.State;
             yield return Flow.Call(SetupFlow.Run(ctx));
 
-            // TODO spec 0002–0004: ciclo dei round fino alla fine partita (R-140, R-142), con il limite maxRounds (R-150).
-            // Per ora si gioca il solo primo round, fermandosi alla rivelazione delle rotte.
-            ctx.State.Round = 1;
-            ctx.Emit(new RoundStartedEvent(1));
-            yield return Flow.Call(RoundFlow.Preparation(ctx));
+            // TODO R-140/R-142 (spec 0004): la partita finisce con l'Isola Sacra. Per ora solo il limite di R-150.
+            for (int round = 1; ; round++)
+            {
+                if (ctx.Config.maxRounds > 0 && round > ctx.Config.maxRounds)
+                {
+                    End(ctx, GameEndReason.RoundLimit, round - 1);
+                    yield break;
+                }
+
+                state.Round = round;
+                ctx.Emit(new RoundStartedEvent(round));
+                yield return Flow.Call(RoundFlow.Run(ctx));
+            }
+        }
+
+        private static void End(GameContext ctx, GameEndReason reason, int roundsPlayed)
+        {
+            ctx.State.Phase = GamePhase.Ended;
+            ctx.State.Result = new GameResult(reason == GameEndReason.RoundLimit, roundsPlayed);
+            ctx.Emit(new GameEndedEvent(reason, roundsPlayed));
         }
     }
 }

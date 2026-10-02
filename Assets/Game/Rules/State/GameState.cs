@@ -23,6 +23,21 @@ namespace hp55games.MareIgnoto.Rules.State
         public WeatherState[] ZoneStates { get; }
         public List<int> TurnOrderList { get; } = new List<int>();
 
+        /// <summary>Vero dal movimento alla fine degli Abbordaggi: intanto le navi possono condividere celle di mare.</summary>
+        public bool MovementInProgress { get; set; }
+
+        /// <summary>
+        /// Celle di mare che possono ospitare più navi fino al prossimo movimento: esito di un Abbordaggio a 3+ navi
+        /// (R-071) o del limite della catena (R-073a).
+        /// </summary>
+        public HashSet<Coord> SharedSeaCellsAllowed { get; } = new HashSet<Coord>();
+
+        /// <summary>Chi ha già giocato il turno nella Fase 2 del round, in ordine; si azzera all'inizio di ogni Fase 2.</summary>
+        public List<int> TurnsPlayed { get; } = new List<int>();
+
+        /// <summary>L'esito, quando la partita finisce.</summary>
+        public Engine.GameResult Result { get; set; }
+
         public int Round { get; set; }
         public GamePhase Phase { get; set; } = GamePhase.Setup;
         public int ActivePlayer { get; set; } = -1;

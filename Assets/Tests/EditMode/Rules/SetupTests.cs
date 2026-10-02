@@ -115,7 +115,7 @@ namespace hp55games.MareIgnoto.Rules.Tests
             GameSession session = TestSupport.Start(2, 41);
             var seen = new List<(DecisionKind kind, int player)>();
             var bot = new hp55games.MareIgnoto.Rules.Bots.RandomBot(new SeededRandom(1));
-            while (session.Pending != null)
+            while (seen.Count(s => s.kind == DecisionKind.ChooseHeading) < 2)
             {
                 Assert.IsTrue(session.Pending.IsSecret, session.Pending.ToString());
                 Assert.IsNotEmpty(session.Pending.Options);
@@ -266,9 +266,7 @@ namespace hp55games.MareIgnoto.Rules.Tests
             Assert.IsNull(session.State.ViewFor(second).ChosenHeading);
             IReadOnlyList<GameEvent> revealEvents = session.Submit(session.Pending.Choose((int)Heading.SO));
 
-            Assert.IsNull(session.Pending);
-            Assert.AreEqual(Heading.E, session.State.Player(first).RevealedHeading);
-            Assert.AreEqual(Heading.SO, session.State.Player(second).RevealedHeading);
+            // La stessa risposta porta il round fino in fondo (la Fase 2 non chiede ancora nulla): le rotte rivelate si leggono dall'evento.
             var revealed = revealEvents.OfType<HeadingsRevealedEvent>().Single();
             Assert.AreEqual(Heading.E, revealed.Headings[first]);
             Assert.AreEqual(Heading.SO, revealed.Headings[second]);

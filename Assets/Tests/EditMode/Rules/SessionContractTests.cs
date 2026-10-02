@@ -46,8 +46,9 @@ namespace hp55games.MareIgnoto.Rules.Tests
         [Test]
         public void SubmittingWithNoPendingDecisionIsRejected()
         {
-            GameSession session = TestSupport.Start(2, 3);
-            TestSupport.PlayWithBot(session);
+            GameSession session = TestSupport.Start(2, 3, new RulesConfig { maxRounds = 1 });
+            TestSupport.PlayToEnd(session);
+            Assert.IsTrue(session.IsOver);
             Assert.IsNull(session.Pending);
             Assert.Throws<InvalidDecisionException>(() => session.Submit(new DecisionAnswer(1, 0)));
         }
@@ -66,7 +67,7 @@ namespace hp55games.MareIgnoto.Rules.Tests
         [Test]
         public void DecisionIdsIncrease()
         {
-            GameSession session = TestSupport.Start(2, 5);
+            GameSession session = TestSupport.Start(2, 5, new RulesConfig { maxRounds = 3 });
             var bot = new RandomBot(new SeededRandom(5));
             int last = 0;
             while (session.Pending != null)
@@ -82,8 +83,8 @@ namespace hp55games.MareIgnoto.Rules.Tests
         {
             foreach (int players in new[] { 2, 4, 8 })
             {
-                string first = TestSupport.Log(TestSupport.PlayWithBot(TestSupport.Start(players, 77), 5));
-                string second = TestSupport.Log(TestSupport.PlayWithBot(TestSupport.Start(players, 77), 5));
+                string first = TestSupport.Log(TestSupport.PlayRounds(TestSupport.Start(players, 77), 10, 5));
+                string second = TestSupport.Log(TestSupport.PlayRounds(TestSupport.Start(players, 77), 10, 5));
                 Assert.AreEqual(first, second, players + " giocatori");
                 Assert.IsNotEmpty(first);
             }
@@ -115,16 +116,16 @@ namespace hp55games.MareIgnoto.Rules.Tests
         }
 
         [Test]
-        public void RandomBotCanAnswerEverySetupDecisionForAnyPlayerCountAndSeed()
+        public void RandomBotCanAnswerEveryDecisionOfTheFirstRoundForAnyPlayerCountAndSeed()
         {
             for (int players = 2; players <= 8; players++)
             {
                 for (int seed = 1; seed <= 15; seed++)
                 {
-                    GameSession session = TestSupport.Start(players, seed);
-                    List<GameEvent> events = TestSupport.PlayWithBot(session, seed);
+                    GameSession session = TestSupport.Start(players, seed, new RulesConfig { maxRounds = 1 });
+                    List<GameEvent> events = TestSupport.PlayToEnd(session, seed);
 
-                    Assert.IsNull(session.Pending);
+                    Assert.IsTrue(session.IsOver);
                     Assert.AreEqual(1, events.OfType<HeadingsRevealedEvent>().Count());
                     Assert.AreEqual(players, session.State.Players.Count(p => p.RevealedHeading.HasValue));
                 }
@@ -166,7 +167,7 @@ namespace hp55games.MareIgnoto.Rules.Tests
         public void EventsAreRedactedAndNeverLeakSecretsToOtherViewers()
         {
             GameSession session = TestSupport.Start(3, 7);
-            List<GameEvent> events = TestSupport.PlayWithBot(session, 7);
+            List<GameEvent> events = TestSupport.PlayRounds(session, 20, 7);
 
             for (int viewer = 0; viewer < 3; viewer++)
             {
@@ -185,6 +186,9 @@ namespace hp55games.MareIgnoto.Rules.Tests
                             break;
                         case CrewSlotChangedEvent s when !s.Above && s.Player != viewer:
                             Assert.IsNull(s.Card);
+                            break;
+                        case CrewLostEvent l when !l.Above && l.Player != viewer:
+                            Assert.IsNull(l.Card);
                             break;
                         case OfferMadeEvent o when o.Player != viewer:
                             Assert.AreEqual(0, o.Amount);

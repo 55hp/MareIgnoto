@@ -19,6 +19,20 @@ namespace hp55games.MareIgnoto.Rules.Decisions
         GartyaOffer,
         /// <summary>Scelta della rotta (R-040). Opzioni: <see cref="HeadingOption"/>.</summary>
         ChooseHeading,
+        /// <summary>Timoniere: rotazione della rotta per il meteo invece del d8 (R-086). Opzioni: <see cref="DieValueOption"/>.</summary>
+        WeatherRotation,
+        /// <summary>Mare Mosso: carta Pirateria da perdere (R-083). Opzioni: <see cref="PirateCardOption"/>.</summary>
+        WeatherPirateLoss,
+        /// <summary>Tempesta: crew sotto coperta da perdere (R-084). Opzioni: <see cref="CrewSlotOption"/>.</summary>
+        StormCrewLoss,
+        /// <summary>Attraversamento: cella dove si fermano le due navi (R-067). Opzioni: <see cref="CellOption"/>.</summary>
+        CrossingCell,
+        /// <summary>Abbordaggio fortuito: cosa perdere (R-070, R-071, R-073c). Opzioni: <see cref="BoardingLossOption"/>.</summary>
+        BoardingLoss,
+        /// <summary>Usare il Medico al posto della carta minacciata? (R-023, R-073d). Opzioni: <see cref="MedicoOption"/>.</summary>
+        UseMedico,
+        /// <summary>Timoniere: risultato del riposizionamento invece del d8 (R-073b). Opzioni: <see cref="DieValueOption"/>.</summary>
+        BoardingReposition,
     }
 
     /// <summary>Una scelta legale. Ogni tipo di decisione usa la sua sottoclasse.</summary>
@@ -93,6 +107,93 @@ namespace hp55games.MareIgnoto.Rules.Decisions
         }
 
         public override string Describe() => "Place [" + string.Join(",", Placements) + "]";
+    }
+
+    /// <summary>Un risultato del d8 scelto invece di tirare (Timoniere, R-086, R-073b): 1..8.</summary>
+    public sealed class DieValueOption : DecisionOption
+    {
+        public int Value { get; }
+
+        public DieValueOption(int value)
+        {
+            Value = value;
+        }
+
+        public override string Describe() => "Die " + Value;
+    }
+
+    /// <summary>Una carta Pirateria della mano (per le carte uguali il motore offre una sola opzione).</summary>
+    public sealed class PirateCardOption : DecisionOption
+    {
+        public PirateCard Card { get; }
+
+        public PirateCardOption(PirateCard card)
+        {
+            Card = card;
+        }
+
+        public override string Describe() => "Pirate " + Card;
+    }
+
+    /// <summary>Uno slot della propria ciurma e la carta che contiene.</summary>
+    public sealed class CrewSlotOption : DecisionOption
+    {
+        public int Slot { get; }
+        public CrewCard Card { get; }
+
+        public CrewSlotOption(int slot, CrewCard card)
+        {
+            Slot = slot;
+            Card = card;
+        }
+
+        public override string Describe() => "Slot " + Slot + " " + Card;
+    }
+
+    public sealed class CellOption : DecisionOption
+    {
+        public Coord Cell { get; }
+
+        public CellOption(Coord cell)
+        {
+            Cell = cell;
+        }
+
+        public override string Describe() => "Cell " + Cell;
+    }
+
+    /// <summary>
+    /// Cosa perde un giocatore in un Abbordaggio fortuito: carte crew (per slot) e/o carte Pirateria. A due navi è
+    /// l'una o le altre (R-070), a 3+ entrambe (R-071); con meno carte del dovuto si perde ciò che si ha (R-073c).
+    /// </summary>
+    public sealed class BoardingLossOption : DecisionOption
+    {
+        public IReadOnlyList<int> CrewSlots { get; }
+        public IReadOnlyList<PirateCard> PirateCards { get; }
+
+        public BoardingLossOption(IReadOnlyList<int> crewSlots, IReadOnlyList<PirateCard> pirateCards)
+        {
+            CrewSlots = crewSlots;
+            PirateCards = pirateCards;
+        }
+
+        public override string Describe() =>
+            "Lose crew=[" + string.Join(",", CrewSlots) + "] pirate=[" + string.Join(",", PirateCards) + "]";
+    }
+
+    /// <summary>Il Medico da usare (slot sotto coperta), oppure -1 per lasciar perdere la carta minacciata (R-023).</summary>
+    public sealed class MedicoOption : DecisionOption
+    {
+        public int MedicoSlot { get; }
+
+        public bool Use => MedicoSlot >= 0;
+
+        public MedicoOption(int medicoSlot)
+        {
+            MedicoSlot = medicoSlot;
+        }
+
+        public override string Describe() => Use ? "Medico " + MedicoSlot : "Medico no";
     }
 
     /// <summary>

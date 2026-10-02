@@ -57,6 +57,9 @@ namespace hp55games.MareIgnoto.Rules.State
             return card;
         }
 
+        /// <summary>Toglie una carta precisa dal mazzo o dagli scarti (per gli scenari dei test); falso se non c'è.</summary>
+        public bool Remove(T card) => pile.Remove(card) || discard.Remove(card);
+
         public void Discard(T card)
         {
             discard.Add(card);

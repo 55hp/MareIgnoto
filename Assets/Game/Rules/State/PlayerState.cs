@@ -28,6 +28,12 @@ namespace hp55games.MareIgnoto.Rules.State
         public Heading? ChosenHeading { get; set; }
         public bool HeadingRevealed { get; set; }
 
+        /// <summary>Round in cui la nave resta in porto per Svago (R-045, R-091); 0 se nessuno.</summary>
+        public int LeisureRound { get; set; }
+
+        /// <summary>Round nella cui Fase 1 la nave è immune al meteo per Vento in Poppa (R-087); 0 se nessuno.</summary>
+        public int TailwindRound { get; set; }
+
         public PlayerState(int id, string name, int slotsAbove, int slotsBelow)
         {
             Id = id;

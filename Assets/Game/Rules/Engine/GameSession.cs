@@ -23,16 +23,16 @@ namespace hp55games.MareIgnoto.Rules.Engine
 
         public IReadOnlyGameState State => state;
 
-        /// <summary>
-        /// La decisione in attesa. Provvisorio fino alla spec 0002: dopo la rivelazione delle rotte del primo
-        /// round il motore non ha ancora altro da fare e <c>Pending</c> è null anche se la partita non è finita.
-        /// </summary>
+        /// <summary>Lo stato mutabile, per i test che costruiscono scenari (InternalsVisibleTo).</summary>
+        internal GameState InternalState => state;
+
+        /// <summary>La decisione in attesa; null solo a partita finita.</summary>
         public PendingDecision Pending => runner.Pending;
 
         public bool IsOver => state.Phase == GamePhase.Ended;
 
         /// <summary>Null finché <see cref="IsOver"/> è falso.</summary>
-        public GameResult Result { get; private set; }
+        public GameResult Result => state.Result;
 
         /// <summary>Gli eventi prodotti da <see cref="Start(GameSetup, RulesConfig, MapLayout, IRandomSource)"/> (preparazione e pescate).</summary>
         public IReadOnlyList<GameEvent> InitialEvents { get; }

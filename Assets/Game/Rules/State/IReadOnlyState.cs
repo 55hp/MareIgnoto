@@ -23,6 +23,10 @@ namespace hp55games.MareIgnoto.Rules.State
         IReadOnlyList<CrewCard> CrewAbove { get; }
         /// <summary>Per ogni slot sotto coperta se è occupato; l'identità della carta è segreta.</summary>
         IReadOnlyList<bool> CrewBelowOccupied { get; }
+        /// <summary>Round in cui la nave resta in porto per Svago (R-045); 0 se nessuno.</summary>
+        int LeisureRound { get; }
+        /// <summary>Round nella cui Fase 1 la nave è immune al meteo per Vento in Poppa (R-087); 0 se nessuno.</summary>
+        int TailwindRound { get; }
         int HandCount { get; }
         int MissionsInHandCount { get; }
         /// <summary>Missioni completate: rivelate al completamento (R-132).</summary>

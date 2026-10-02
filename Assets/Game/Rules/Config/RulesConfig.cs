@@ -118,6 +118,11 @@ namespace hp55games.MareIgnoto.Rules.Config
         public int boardingTwoShipsPirateLoss = 2;
         public int boardingManyShipsCrewLoss = 1;
         public int boardingManyShipsPirateLoss = 1;
+        /// <summary>
+        /// Protezione tecnica (R-073a): quanti Abbordaggi a catena, o ripetizioni per tiri uguali (R-070), si risolvono
+        /// al massimo in un round; oltre, le navi restano dove sono e il motore emette un evento di diagnostica.
+        /// </summary>
+        public int maxAbbordaggioChain = 50;
 
         // ---- Meteo (R-083–R-085) ----
         public int roughSeaPirateLoss = 1;
@@ -289,6 +294,8 @@ namespace hp55games.MareIgnoto.Rules.Config
                 errors.Add("startingMissionsMinKept deve stare tra 1 e startingMissionsDrawn (R-034).");
             if (startingCoins < 0) errors.Add("startingCoins non può essere negativo.");
             if (maxRounds < 0) errors.Add("maxRounds non può essere negativo.");
+            if (maxAbbordaggioChain < 1) errors.Add("maxAbbordaggioChain deve essere almeno 1.");
+            if (baseSpeed < 0) errors.Add("baseSpeed non può essere negativo.");
             if (coinsPerToken < 1) errors.Add("coinsPerToken deve essere almeno 1.");
 
             ValidateEntries(errors, "pirateCards", pirateCards, Enum.GetValues(typeof(PirateCardId)),
