@@ -33,6 +33,37 @@ namespace hp55games.MareIgnoto.Rules.Decisions
         UseMedico,
         /// <summary>Timoniere: risultato del riposizionamento invece del d8 (R-073b). Opzioni: <see cref="DieValueOption"/>.</summary>
         BoardingReposition,
+
+        // ---- Fase 2 (spec 0003) ----
+
+        /// <summary>Vedetta: turno in porto o in mare (R-058). Opzioni: <see cref="TurnKindOption"/>.</summary>
+        LookoutChoice,
+        /// <summary>Turno in porto: l'azione (R-054, R-090–R-096). Opzioni: <see cref="PortActionOption"/>.</summary>
+        PortAction,
+        /// <summary>Reclutamento: quali crew tenere (R-092). Opzioni: <see cref="KeepCrewOption"/>.</summary>
+        RecruitKeep,
+        /// <summary>Ricevere una crew: slot, sostituzione o scarto (R-020). Opzioni: <see cref="ReceiveCrewOption"/>.</summary>
+        ReceiveCrew,
+        /// <summary>
+        /// Turno in mare (R-056): la prossima azione. Opzioni: <see cref="DrawCardsOption"/>, <see cref="SwapOption"/>,
+        /// <see cref="AttackOption"/>, <see cref="QuartermasterOption"/>, <see cref="PlayCardOption"/>, <see cref="EndTurnOption"/>.
+        /// </summary>
+        SeaAction,
+        /// <summary>
+        /// Bersaglio e parametri di una carta (§7.3). Opzioni: <see cref="TargetPlayerOption"/>, <see cref="SpyglassOption"/>,
+        /// <see cref="ZoneOption"/>, <see cref="WindStepOption"/>.
+        /// </summary>
+        CardTarget,
+        /// <summary>Uomo in mare!: il bersaglio sceglie la crew da scartare. Opzioni: <see cref="CrewSlotOption"/>.</summary>
+        ManOverboardDiscard,
+        /// <summary>Risposta nel botta e risposta (R-103, R-106). Opzioni: <see cref="CombatResponseOption"/>.</summary>
+        CombatResponse,
+        /// <summary>Difesa da Arrembaggio! (R-110). Opzioni: <see cref="BoardingDefenseOption"/>.</summary>
+        BoardingDefense,
+        /// <summary>Arrembaggio!: la crew sopra coperta da prendere (R-110). Opzioni: <see cref="CrewSlotOption"/>.</summary>
+        StealCrew,
+        /// <summary>Quartiermastro: quali carte scambiare (R-111). Opzioni: <see cref="QuartermasterSwapOption"/>.</summary>
+        QuartermasterSwap,
     }
 
     /// <summary>Una scelta legale. Ogni tipo di decisione usa la sua sottoclasse.</summary>

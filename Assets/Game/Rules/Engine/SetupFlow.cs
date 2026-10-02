@@ -53,12 +53,7 @@ namespace hp55games.MareIgnoto.Rules.Engine
                     ApplyPlaceCrew(ctx, player, placeCrew.Choice<PlaceCrewOption>());
                 }
 
-                AskStep keepMissions = AskKeepMissions(ctx, player);
-                if (keepMissions != null)
-                {
-                    yield return keepMissions;
-                    ApplyKeepMissions(ctx, player, keepMissions.Choice<KeepMissionsOption>());
-                }
+                yield return Flow.Call(CrewFlow.KeepMissions(ctx, player, cfg.startingMissionsMinKept)); // R-034
 
                 AskStep offer = AskOffer(ctx, player);
                 yield return offer;
@@ -180,49 +175,6 @@ namespace hp55games.MareIgnoto.Rules.Engine
                 player.Crew.Set(placement.Slot, placement.Card);
                 ctx.Emit(new CrewSlotChangedEvent(player.Id, placement.Slot, player.Crew.IsAbove(placement.Slot), placement.Card));
             }
-        }
-
-        // ---- R-034: missioni ----
-
-        private static AskStep AskKeepMissions(GameContext ctx, PlayerState player)
-        {
-            var missions = player.InTransit.OfType<MissionCard>().ToList();
-            if (missions.Count == 0) return null;
-
-            int minKept = Math.Min(ctx.Config.startingMissionsMinKept, missions.Count);
-            var options = new List<DecisionOption>();
-            for (int mask = 1; mask < (1 << missions.Count); mask++)
-            {
-                var kept = new List<MissionCard>();
-                for (int i = 0; i < missions.Count; i++)
-                    if ((mask & (1 << i)) != 0) kept.Add(missions[i]);
-                if (kept.Count >= minKept) options.Add(new KeepMissionsOption(kept));
-            }
-
-            return ctx.Ask(DecisionKind.KeepMissions, player.Id, true, options, missions.Cast<Card>().ToList());
-        }
-
-        private static void ApplyKeepMissions(GameContext ctx, PlayerState player, KeepMissionsOption option)
-        {
-            var drawn = player.InTransit.OfType<MissionCard>().ToList();
-            var discarded = new List<Card>();
-            foreach (MissionCard card in drawn)
-            {
-                player.InTransit.Remove(card);
-                if (option.Kept.Contains(card))
-                {
-                    player.Missions.Add(card);
-                }
-                else
-                {
-                    ctx.State.Corsair.Discard(card);
-                    discarded.Add(card);
-                }
-            }
-
-            // R-034/R-130: le scartate escono dal gioco coperte (pila degli scarti Corsaro, che non si rimescola, R-009):
-            // gli altri vedono solo quante sono.
-            if (discarded.Count > 0) ctx.Emit(new CardsDiscardedEvent(player.Id, DeckKind.Corsair, discarded));
         }
 
         // ---- R-036: offerta a Gartya ----

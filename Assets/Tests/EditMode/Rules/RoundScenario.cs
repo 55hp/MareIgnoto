@@ -118,6 +118,7 @@ namespace hp55games.MareIgnoto.Rules.Tests
             CrewCard card = State.Crew.DrawPile.Concat(State.Crew.DiscardPile).First(c => c.Kind == kind);
             State.Crew.Remove(card);
             P(player).Crew.Set(slot, card);
+            if (kind == CrewCardId.Nostromo && P(player).Crew.IsAbove(slot)) State.LockedNostromi.Add(card.Uid); // R-016
             return card;
         }
 
@@ -151,7 +152,7 @@ namespace hp55games.MareIgnoto.Rules.Tests
         /// </summary>
         public List<GameEvent> PlayRound(Heading[] headings, Func<PendingDecision, DecisionAnswer> chooser = null)
         {
-            chooser = chooser ?? (d => d.Choose(0));
+            chooser = chooser ?? Default;
             int round = Session.State.Round;
             var events = new List<GameEvent>();
             int guard = 0;
@@ -170,17 +171,58 @@ namespace hp55games.MareIgnoto.Rules.Tests
             return events;
         }
 
-        /// <summary>Risponde con la prima opzione che soddisfa il criterio, altrimenti con la prima.</summary>
+        /// <summary>
+        /// La risposta di default: nel turno in mare chiude il turno (così la Fase 2 non tocca mani e ciurme),
+        /// altrimenti la prima opzione.
+        /// </summary>
+        public static DecisionAnswer Default(PendingDecision d)
+        {
+            int end = d.Options.ToList().FindIndex(o => o is EndTurnOption);
+            return d.Choose(end >= 0 ? end : 0);
+        }
+
+        /// <summary>Risponde con la prima opzione che soddisfa il criterio, altrimenti con <see cref="Default"/>.</summary>
         public static Func<PendingDecision, DecisionAnswer> Prefer(Func<PendingDecision, DecisionOption, bool> wanted)
         {
             return d =>
             {
                 for (int i = 0; i < d.Options.Count; i++)
                     if (wanted(d, d.Options[i])) return d.Choose(i);
-                return d.Choose(0);
+                return Default(d);
             };
         }
 
         public static RandomBot Bot(int seed) => new RandomBot(new SeededRandom(seed));
+
+        /// <summary>
+        /// Gioca il round con tutte le rotte a Sud: col vento da Nord (default dello scenario) le navi in mare hanno
+        /// velocità 0 e restano dove sono, così il round serve solo per la Fase 2.
+        /// </summary>
+        public List<GameEvent> PlayTurns(Func<PendingDecision, DecisionAnswer> chooser = null)
+        {
+            return PlayRound(Enumerable.Repeat(Heading.S, Session.State.PlayerCount).ToArray(), chooser);
+        }
+
+        /// <summary>Il primo criterio che trova un'opzione decide; altrimenti <see cref="Default"/>.</summary>
+        public static Func<PendingDecision, DecisionAnswer> Pick(params Func<PendingDecision, DecisionOption, bool>[] wanted)
+        {
+            return d =>
+            {
+                foreach (Func<PendingDecision, DecisionOption, bool> rule in wanted)
+                    for (int i = 0; i < d.Options.Count; i++)
+                        if (rule(d, d.Options[i])) return d.Choose(i);
+                return Default(d);
+            };
+        }
+
+        /// <summary>Criterio: un'opzione di tipo <typeparamref name="T"/> per il giocatore dato, che soddisfa <paramref name="where"/>.</summary>
+        public static Func<PendingDecision, DecisionOption, bool> Opt<T>(int player, Func<T, bool> where = null) where T : DecisionOption
+        {
+            return (d, o) => d.Player == player && o is T t && (where == null || where(t));
+        }
+
+        /// <summary>Le decisioni di un tipo, per un giocatore.</summary>
+        public List<PendingDecision> DecisionsOf(DecisionKind kind, int player) =>
+            Decisions.Where(d => d.Kind == kind && d.Player == player).ToList();
     }
 }

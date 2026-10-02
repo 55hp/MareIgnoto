@@ -67,6 +67,48 @@ namespace hp55games.MareIgnoto.Rules.Engine
             Emit(new CoinsChangedEvent(player.Id, delta, player.Coins, reason));
         }
 
+        /// <summary>Cambia i segnalini taglia di un giocatore ed emette l'evento.</summary>
+        public void ChangeBounty(PlayerState player, int delta, BountyReason reason)
+        {
+            player.BountyTokens += delta;
+            Emit(new BountyChangedEvent(player.Id, delta, player.BountyTokens, reason));
+        }
+
+        /// <summary>
+        /// Mette una carta (o null) in uno slot della ciurma ed emette l'evento. Un Nostromo che arriva sopra coperta
+        /// resta bloccato sopra per il resto della partita (R-016).
+        /// </summary>
+        public void PutCrew(PlayerState player, int slot, CrewCard card)
+        {
+            player.Crew.Set(slot, card);
+            bool above = player.Crew.IsAbove(slot);
+            if (card != null && above && card.Kind == CrewCardId.Nostromo) State.LockedNostromi.Add(card.Uid);
+            Emit(new CrewSlotChangedEvent(player.Id, slot, above, card));
+        }
+
+        /// <summary>Falso per un Nostromo che è già stato sopra coperta (R-016): non può finire sotto.</summary>
+        public bool CanGoBelow(CrewCard card) => card == null || !State.LockedNostromi.Contains(card.Uid);
+
+        /// <summary>
+        /// Se si possono scambiare le carte di due slot dello stesso giocatore (o spostare in uno slot vuoto) senza
+        /// portare sotto coperta un Nostromo bloccato (R-016).
+        /// </summary>
+        public bool CanExchange(PlayerState player, int a, int b)
+        {
+            if (player.Crew.IsBelow(b) && !CanGoBelow(player.Crew[a])) return false;
+            if (player.Crew.IsBelow(a) && !CanGoBelow(player.Crew[b])) return false;
+            return true;
+        }
+
+        /// <summary>Scambia il contenuto di due slot dello stesso giocatore (uno può essere vuoto).</summary>
+        public void Exchange(PlayerState player, int a, int b)
+        {
+            CrewCard first = player.Crew[a];
+            CrewCard second = player.Crew[b];
+            PutCrew(player, a, second);
+            PutCrew(player, b, first);
+        }
+
         public void ChangeTreasure(int delta)
         {
             State.Treasure += delta;

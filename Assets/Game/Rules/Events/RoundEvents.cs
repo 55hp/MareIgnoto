@@ -60,6 +60,12 @@ namespace hp55games.MareIgnoto.Rules.Events
 
         /// <summary>Riposizionamento dopo un Abbordaggio fortuito (R-070–R-072).</summary>
         BoardingReposition,
+
+        /// <summary>Saccheggio (R-090).</summary>
+        Plunder,
+
+        /// <summary>Monete vinte in battaglia (R-104).</summary>
+        BattleLoot,
     }
 
     /// <summary>Ogni tiro di dado produce un evento con il risultato (04_motore.md §4).</summary>

@@ -66,7 +66,7 @@ namespace hp55games.MareIgnoto.Rules.Engine
 
         /// <summary>
         /// Fase 2 — Attiva: ordine di turno (R-050, R-051; nel round 1 resta quello delle offerte, R-037), poi un turno
-        /// a testa. Per ora il turno fa solo ciò che spetta a questa spec: cornice (R-053) e Mozzo (R-052).
+        /// a testa: cornice (R-053), Mozzo (R-052), poi porto o mare (<see cref="TurnFlow"/>).
         /// </summary>
         public static IEnumerable<FlowStep> Active(GameContext ctx)
         {
@@ -93,15 +93,13 @@ namespace hp55games.MareIgnoto.Rules.Engine
                 {
                     int coins = CrewEffects.EffectiveCount(player.CrewAbove, CrewCardId.Mozzo) * ctx.Config.cabinBoyCoins;
                     if (coins > 0) ctx.ChangeCoins(player, coins, CoinReason.CabinBoy);
-
-                    // TODO spec 0003: turno in mare o in porto (R-054–R-058), Svago (R-091). Per ora il giocatore passa.
+                    yield return Flow.Call(TurnFlow.Play(ctx, player));
                 }
 
                 ctx.Emit(new TurnEndedEvent(state.Round, id));
             }
 
             state.ActivePlayer = -1;
-            yield break; // finché il turno non chiede decisioni (spec 0003)
         }
 
         private static void SetTurnOrder(GameContext ctx, List<int> order)

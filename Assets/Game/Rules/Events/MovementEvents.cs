@@ -283,6 +283,12 @@ namespace hp55games.MareIgnoto.Rules.Events
         Storm,
         /// <summary>Abbordaggio fortuito (R-070, R-071).</summary>
         Boarding,
+        /// <summary>Uomo in mare! (03 §2.1).</summary>
+        ManOverboard,
+        /// <summary>Arrembaggio! riuscito (R-110): la carta passa all'attaccante.</summary>
+        Arrembaggio,
+        /// <summary>Sostituita da una carta ricevuta (R-020).</summary>
+        Replaced,
     }
 
     /// <summary>
@@ -363,17 +369,27 @@ namespace hp55games.MareIgnoto.Rules.Events
         public override string Describe() => "TurnStarted r" + Round + " p" + Player;
     }
 
-    /// <summary>Il turno termina subito perché la nave è sulla cornice (R-053).</summary>
+    public enum TurnSkipReason
+    {
+        /// <summary>Nave sulla cornice (R-053).</summary>
+        Border,
+        /// <summary>Nave sull'Isola Sacra: nessuna azione di porto (R-055).</summary>
+        SacredIsland,
+    }
+
+    /// <summary>Il turno termina subito (R-053, R-055).</summary>
     public sealed class TurnSkippedEvent : GameEvent
     {
         public int Player { get; }
+        public TurnSkipReason Reason { get; }
 
-        public TurnSkippedEvent(int player)
+        public TurnSkippedEvent(int player, TurnSkipReason reason = TurnSkipReason.Border)
         {
             Player = player;
+            Reason = reason;
         }
 
-        public override string Describe() => "TurnSkipped p" + Player;
+        public override string Describe() => "TurnSkipped p" + Player + " " + Reason;
     }
 
     public sealed class TurnEndedEvent : GameEvent

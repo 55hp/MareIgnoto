@@ -35,6 +35,9 @@ namespace hp55games.MareIgnoto.Rules.State
         /// <summary>Chi ha già giocato il turno nella Fase 2 del round, in ordine; si azzera all'inizio di ogni Fase 2.</summary>
         public List<int> TurnsPlayed { get; } = new List<int>();
 
+        /// <summary>Uid dei Nostromi che sono stati sopra coperta: non possono più tornare sotto (R-016).</summary>
+        public HashSet<int> LockedNostromi { get; } = new HashSet<int>();
+
         /// <summary>L'esito, quando la partita finisce.</summary>
         public Engine.GameResult Result { get; set; }
 

@@ -166,6 +166,20 @@ namespace hp55games.MareIgnoto.Rules.Events
         GartyaOffer,
         /// <summary>Mozzo sopra coperta a inizio turno (R-052).</summary>
         CabinBoy,
+        /// <summary>Saccheggio (R-090).</summary>
+        Plunder,
+        /// <summary>Costo di un'azione di porto (R-091, R-092): le monete escono dal gioco.</summary>
+        PortCost,
+        /// <summary>Commercio (R-094).</summary>
+        Commerce,
+        /// <summary>Pesca Fortunata! (R-122).</summary>
+        FortunateCatch,
+        /// <summary>Costo di una carta Meteo, pagato al Tesoro (R-121).</summary>
+        WeatherCard,
+        /// <summary>Monete passate dal perdente al vincitore di una battaglia (R-104).</summary>
+        BattleLoot,
+        /// <summary>Monete pagate per evitare Arrembaggio! (R-110).</summary>
+        BoardingRansom,
     }
 
     public sealed class CoinsChangedEvent : GameEvent

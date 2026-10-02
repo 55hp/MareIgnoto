@@ -246,6 +246,29 @@ namespace hp55games.MareIgnoto.Rules.Tests
             }
         }
 
+        /// <summary>
+        /// Criterio della spec 0003: partite di 60 round con la Fase 2 completa (porti, carte, combattimento) a 2, 4 e 8
+        /// giocatori, invarianti dopo ogni risposta. Verifica anche che i bot usino davvero la Fase 2.
+        /// </summary>
+        [TestCase(2)]
+        [TestCase(4)]
+        [TestCase(8)]
+        public void Simulation60RoundsWithFullPhase2(int players)
+        {
+            var config = new RulesConfig { maxRounds = 60 };
+            var events = new List<GameEvent>();
+            for (int seed = 1; seed <= 10; seed++)
+            {
+                GameSession session = TestSupport.Start(players, seed, config);
+                events.AddRange(TestSupport.PlayToEnd(session, seed));
+                Assert.AreEqual(config.maxRounds, session.Result.RoundsPlayed, "seed " + seed);
+            }
+
+            Assert.Greater(events.OfType<PortActionEvent>().Count(), 0);
+            Assert.Greater(events.OfType<CardPlayedEvent>().Count(), 0);
+            if (players > 2) Assert.Greater(events.OfType<AttackStartedEvent>().Count(), 0);
+        }
+
         /// <summary>Gate di 08 §3 su seed 1–1000: lungo, si lancia a mano.</summary>
         [Test, Explicit("Lungo: simulazione 1000 seed × 2/4/8 giocatori × 200 round")]
         public void Simulation1000Seeds()

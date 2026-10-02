@@ -7,7 +7,7 @@ namespace hp55games.MareIgnoto.Rules.Engine
 {
     /// <summary>
     /// Gli invarianti di 04_motore.md §6 che si possono verificare sullo stato in ogni momento. I test e la simulazione
-    /// li controllano dopo ogni Submit. Quello sul Nostromo arriva con gli scambi di ciurma (spec 0003).
+    /// li controllano dopo ogni Submit.
     /// </summary>
     internal static class Invariants
     {
@@ -27,6 +27,7 @@ namespace hp55games.MareIgnoto.Rules.Engine
             if (state.Treasure < 0) errors.Add("Il Tesoro è negativo: " + state.Treasure);
 
             CheckShipsOnSeaCells(state, errors);
+            CheckNostromo(state, errors);
             CheckTurnsPlayed(state, errors);
 
             if (state.TurnOrderList.Count > 0 &&
@@ -48,6 +49,18 @@ namespace hp55games.MareIgnoto.Rules.Engine
                 if (state.Map.KindAt(cell.Key) != Map.CellKind.Sea || state.SharedSeaCellsAllowed.Contains(cell.Key)) continue;
                 errors.Add("Navi " + string.Join(",", cell.Select(p => "p" + p.Id)) + " sulla stessa cella di mare " + cell.Key + ".");
             }
+        }
+
+        /// <summary>Il Nostromo, una volta sopra coperta, non torna mai sotto (R-016).</summary>
+        private static void CheckNostromo(GameState state, List<string> errors)
+        {
+            foreach (PlayerState player in state.Players)
+                foreach (int slot in player.Crew.BelowSlots())
+                {
+                    CrewCard card = player.Crew[slot];
+                    if (card != null && state.LockedNostromi.Contains(card.Uid))
+                        errors.Add("p" + player.Id + ": il Nostromo " + card + " è tornato sotto coperta (slot " + slot + ").");
+                }
         }
 
         /// <summary>La Fase 2 dà un turno a ogni giocatore esattamente una volta (completa quando il round dopo è iniziato).</summary>

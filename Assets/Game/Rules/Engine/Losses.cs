@@ -19,7 +19,9 @@ namespace hp55games.MareIgnoto.Rules.Engine
         /// il Nostromo e c'è un Medico sotto coperta, il giocatore può usarlo (R-023): il Medico sale al posto della carta
         /// minacciata, che scende nel suo slot, e la perdita è annullata.
         /// </summary>
-        public static IEnumerable<FlowStep> LoseCrew(GameContext ctx, PlayerState player, int slot, CrewLossCause cause)
+        /// <param name="takenBy">Se dato, la carta persa finisce qui invece che negli scarti (Arrembaggio!, R-110).</param>
+        public static IEnumerable<FlowStep> LoseCrew(GameContext ctx, PlayerState player, int slot, CrewLossCause cause,
+            List<CrewCard> takenBy = null)
         {
             CrewCard card = player.Crew[slot];
             if (card == null) yield break;
@@ -38,19 +40,18 @@ namespace hp55games.MareIgnoto.Rules.Engine
                     MedicoOption choice = ask.Choice<MedicoOption>();
                     if (choice.Use)
                     {
-                        CrewCard medico = player.Crew.Take(choice.MedicoSlot);
-                        player.Crew.Set(slot, medico);
-                        player.Crew.Set(choice.MedicoSlot, card);
+                        CrewCard medico = player.Crew[choice.MedicoSlot];
                         ctx.Emit(new MedicoUsedEvent(player.Id, choice.MedicoSlot, slot, medico));
-                        ctx.Emit(new CrewSlotChangedEvent(player.Id, slot, true, medico));
-                        ctx.Emit(new CrewSlotChangedEvent(player.Id, choice.MedicoSlot, false, card));
+                        ctx.PutCrew(player, slot, medico);
+                        ctx.PutCrew(player, choice.MedicoSlot, card);
                         yield break;
                     }
                 }
             }
 
             player.Crew.Take(slot);
-            ctx.State.Crew.Discard(card);
+            if (takenBy != null) takenBy.Add(card);
+            else ctx.State.Crew.Discard(card);
             bool atSea = ctx.State.Map.KindAt(player.Position) == CellKind.Sea;
             ctx.Emit(new CrewLostEvent(player.Id, slot, above, cause, atSea, card));
             ctx.Emit(new CrewSlotChangedEvent(player.Id, slot, above, null));
@@ -98,6 +99,32 @@ namespace hp55games.MareIgnoto.Rules.Engine
                 for (int i = 0; i < take; i++) current.Add(cards[i]);
                 Collect(byId, group + 1, left - take, current, result);
                 current.RemoveRange(current.Count - take, take);
+            }
+        }
+
+        /// <summary>Tutti i sottoinsiemi di <paramref name="count"/> elementi (meno se non bastano), nell'ordine della lista.</summary>
+        public static List<IReadOnlyList<T>> Combinations<T>(IReadOnlyList<T> items, int count)
+        {
+            int k = System.Math.Min(count, items.Count);
+            var result = new List<IReadOnlyList<T>>();
+            CollectCombinations(items, 0, k, new List<T>(), result);
+            return result;
+        }
+
+        private static void CollectCombinations<T>(IReadOnlyList<T> items, int start, int left, List<T> current,
+            List<IReadOnlyList<T>> result)
+        {
+            if (left == 0)
+            {
+                result.Add(current.ToArray());
+                return;
+            }
+
+            for (int i = start; i <= items.Count - left; i++)
+            {
+                current.Add(items[i]);
+                CollectCombinations(items, i + 1, left - 1, current, result);
+                current.RemoveAt(current.Count - 1);
             }
         }
 
