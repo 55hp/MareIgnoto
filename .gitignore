@@ -40,3 +40,6 @@ Thumbs.db
 
 # Bezi AI plugin
 /Packages/com.bezi.sidekick/
+# Harness .NET (Tools/RulesHarness)
+/Tools/**/bin/
+/Tools/**/obj/

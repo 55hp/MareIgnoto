@@ -1,0 +1,25 @@
+{
+    "name": "hp55games.MareIgnoto.Unity.Tests",
+    "rootNamespace": "hp55games.MareIgnoto.Unity.Tests",
+    "references": [
+        "hp55games.MareIgnoto.Rules",
+        "hp55games.MareIgnoto.Unity",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,136 @@
+using System.Collections.Generic;
+using hp55games.MareIgnoto.Rules.Cards;
+using hp55games.MareIgnoto.Rules.Config;
+using hp55games.MareIgnoto.Rules.Decisions;
+using hp55games.MareIgnoto.Rules.Events;
+using hp55games.MareIgnoto.Rules.Random;
+using hp55games.MareIgnoto.Rules.Setup;
+using hp55games.MareIgnoto.Rules.State;
+
+namespace hp55games.MareIgnoto.Rules.Engine
+{
+    /// <summary>
+    /// Ciò che i flussi di gioco usano per agire: stato, configurazione, casualità, emissione di eventi e
+    /// le operazioni comuni (pescare con riciclo degli scarti, tirare il dado, spostare monete, chiedere una decisione).
+    /// Le regole nuove passano da qui, così eventi e casualità restano sempre coerenti.
+    /// </summary>
+    internal sealed class GameContext
+    {
+        private readonly List<GameEvent> events = new List<GameEvent>();
+        private int nextDecisionId = 1;
+
+        public GameState State { get; }
+        public RulesConfig Config { get; }
+        public IRandomSource Random { get; }
+        public GameSetup Setup { get; }
+
+        public GameContext(GameState state, RulesConfig config, IRandomSource random, GameSetup setup)
+        {
+            State = state;
+            Config = config;
+            Random = random;
+            Setup = setup;
+        }
+
+        public void Emit(GameEvent gameEvent)
+        {
+            events.Add(gameEvent);
+        }
+
+        /// <summary>Gli eventi emessi dall'ultima chiamata, nell'ordine in cui sono successi.</summary>
+        public IReadOnlyList<GameEvent> TakeEvents()
+        {
+            var taken = events.ToArray();
+            events.Clear();
+            return taken;
+        }
+
+        /// <summary>Prepara la richiesta di una decisione; il flusso la rende con <c>yield return</c>.</summary>
+        public AskStep Ask(DecisionKind kind, int player, bool isSecret, IReadOnlyList<DecisionOption> options,
+            IReadOnlyList<Card> cards = null, bool requiresConfirmation = false)
+        {
+            return new AskStep(new PendingDecision(nextDecisionId++, kind, player, isSecret, requiresConfirmation, options, cards));
+        }
+
+        /// <summary>Tira un d8 dalla sorgente del motore e ne emette l'evento (04_motore.md §4).</summary>
+        public int RollD8(int player, DiceReason reason)
+        {
+            int value = Random.RollD8();
+            Emit(new DieRolledEvent(player, value, reason));
+            return value;
+        }
+
+        /// <summary>Cambia le monete di un giocatore (mai sotto zero, R-006) ed emette l'evento.</summary>
+        public void ChangeCoins(PlayerState player, int delta, CoinReason reason)
+        {
+            player.Coins += delta;
+            Emit(new CoinsChangedEvent(player.Id, delta, player.Coins, reason));
+        }
+
+        public void ChangeTreasure(int delta)
+        {
+            State.Treasure += delta;
+            Emit(new TreasureChangedEvent(delta, State.Treasure));
+        }
+
+        /// <summary>
+        /// Pesca fino a <paramref name="count"/> carte dal mazzo (meno se carte e scarti non bastano, R-009) e le
+        /// lascia "in transito" presso il giocatore, in attesa di una scelta. Emette l'evento di pesca.
+        /// </summary>
+        public IReadOnlyList<Card> DrawToTransit(PlayerState player, DeckKind deck, int count)
+        {
+            var drawn = DrawCards(deck, count);
+            player.InTransit.AddRange(drawn);
+            if (drawn.Count > 0) Emit(new CardsDrawnEvent(player.Id, deck, drawn));
+            return drawn;
+        }
+
+        /// <summary>Pesca carte Pirateria direttamente nella mano del giocatore.</summary>
+        public IReadOnlyList<PirateCard> DrawToHand(PlayerState player, int count)
+        {
+            var drawn = DrawCards(DeckKind.Pirate, count);
+            var cards = new List<PirateCard>();
+            foreach (Card card in drawn) cards.Add((PirateCard)card);
+            player.Hand.AddRange(cards);
+            if (drawn.Count > 0) Emit(new CardsDrawnEvent(player.Id, DeckKind.Pirate, drawn));
+            return cards;
+        }
+
+        private List<Card> DrawCards(DeckKind deck, int count)
+        {
+            var drawn = new List<Card>();
+            for (int i = 0; i < count; i++)
+            {
+                Card card = DrawOne(deck);
+                if (card == null) break;
+                drawn.Add(card);
+            }
+
+            return drawn;
+        }
+
+        private Card DrawOne(DeckKind deck)
+        {
+            switch (deck)
+            {
+                case DeckKind.Crew: return DrawOne(State.Crew, deck);
+                case DeckKind.Pirate: return DrawOne(State.Pirate, deck);
+                default: return DrawOne(State.Corsair, deck);
+            }
+        }
+
+        private Card DrawOne<T>(DeckState<T> deck, DeckKind kind) where T : Card
+        {
+            T card = deck.TakeTop();
+            if (card == null && deck.DiscardCount > 0)
+            {
+                int recycled = deck.DiscardCount;
+                deck.RecycleDiscard(Random);
+                Emit(new DeckShuffledEvent(kind, recycled, true));
+                card = deck.TakeTop();
+            }
+
+            return card;
+        }
+    }
+}

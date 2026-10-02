@@ -1,0 +1,19 @@
+{
+    "name": "hp55games.MareIgnoto.Editor",
+    "rootNamespace": "hp55games.MareIgnoto.Editor",
+    "references": [
+        "hp55games.MareIgnoto.Rules",
+        "hp55games.MareIgnoto.Unity"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
