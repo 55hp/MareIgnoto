@@ -1,7 +1,7 @@
 # 0003 — Fase 2: turno in mare, porti, carte Pirateria, combattimento
 
 Stato: bozza
-Commit di riferimento: `b3def3e`
+Commit di riferimento: `299e983`
 Regole coinvolte: R-010–R-023, R-050–R-058, R-090–R-123
 Documenti: `tech/02_regole.md` §2, §4, §7; `tech/03_contenuti.md` §1–2
 
@@ -52,7 +52,7 @@ Solo assembly Rules e test: nessun lavoro Editor, nessun `[SerializeField]`.
 
 ## Report
 
-### Claude Code — 2026-10-02 — commit b3def3e
+### Claude Code — 2026-10-02 — commit 299e983
 
 La Fase 2 è completa: porti, Vedetta, turno in mare, tutte le carte Pirateria, combattimento con tutti gli effetti crew e il Jolly. `dotnet test Tools/RulesHarness` verde (280 test); simulazione 60 round × 2/4/8 verde. Dettaglio in "Lato codice".
 
