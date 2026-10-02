@@ -8,7 +8,7 @@ Riferimenti alle regole: `02_regole.md`.
 
 ## 1. Mazzo Crew — 54 carte
 
-4 semi × 13 ranghi + 2 Jolly. Semi: **[DEFAULT]** Cuori, Quadri, Fiori, Picche (servono solo al poker, R-144).
+4 semi × 13 ranghi + 2 Jolly. Semi: Cuori, Quadri, Fiori, Picche (servono solo al poker, R-144).
 
 | Rango | Id | Nome | Posizione effetto | Effetto | Regole |
 |---|---|---|---|---|---|
@@ -16,7 +16,7 @@ Riferimenti alle regole: `02_regole.md`.
 | 2 | `Bucaniere` | Bucaniere | Sopra | +1 carta Pirateria giocabile nel turno | §7.3 |
 | 3 | `Vedetta` | Vedetta | Sopra | "Terra!!!": attracca a un porto anche da 1 cella di distanza | R-058 |
 | 4 | `Cuoco` | Cuoco di bordo | Sopra | −1 moneta su ogni azione di porto a pagamento; +1 risorsa alle carte pesca giocate nel turno | R-095, R-122 |
-| 5 | `Medico` | Medico di bordo | **Sotto** | Si sacrifica al posto di una carta sopra coperta che si sta per perdere, bloccando l'effetto | R-023 |
+| 5 | `Medico` | Medico di bordo | **Sotto** | Sale sopra coperta al posto di una carta sopra coperta che si sta per perdere (questa scende sotto); la perdita è annullata | R-023 |
 | 6 | `Navigatore` | Navigatore | Sopra | −1 intensità meteo percepita | R-085 |
 | 7 | `Cannoniere` | Cannoniere | Sopra | Una Bordata! gratuita per combattimento | R-105 |
 | 8 | `Timoniere` | Timoniere | Sopra | +1 velocità; sceglie l'esito invece di tirare il dado (rotazione meteo, riposizionamento); nell'Abbordaggio sceglie per ultimo | R-063, R-086, R-073b |
@@ -39,7 +39,7 @@ Riferimenti alle regole: `02_regole.md`.
 | `ReteAStrascico` | Rete a Strascico! | 8 | Carta del turno | Scartala e pesca 3 carte Pirateria | R-122 |
 | `Arrembaggio` | Arrembaggio! | 8 | Apertura di un attacco | Ruba 1 carta crew sopra coperta; il difensore può pagare 5 monete o giocare Parlè! per evitarlo | R-110 |
 | `UomoInMare` | Uomo in mare! | 8 | Carta del turno, a tiro | Il bersaglio scarta 1 carta crew a sua scelta | R-120 |
-| `Spyglass` | Spyglass! | 4 | Carta del turno, a tiro | Scambia di posizione due carte crew della nave avversaria bersaglio (scelte da chi gioca la carta; le carte sotto coperta si scelgono alla cieca, per slot) **[DEFAULT]** | R-120, R-016 |
+| `Spyglass` | Spyglass! | 4 | Carta del turno, a tiro | Scambia di posizione due carte crew della nave avversaria bersaglio (scelte da chi gioca la carta; le carte sotto coperta si scelgono alla cieca, per slot) | R-120, R-016 |
 
 ### 2.2 Meteo — 30 carte
 
@@ -56,7 +56,7 @@ Costo pagato al Tesoro (R-121). Bersaglio: qualsiasi zona, da qualsiasi posizion
 
 Controllo: 6+6+3+5+5+5 = 30; 20+20+12+8+8+8+4 = 80; totale 110.
 
-## 3. Mazzo Corsaro — missioni
+## 3. Mazzo Corsaro — 17 missioni, 2 copie ciascuna (34 carte), non si rimescola (R-009)
 
 Ricompense in segnalini taglia. "Contatore" indica cosa il motore deve tracciare per giocatore. Tutte rispettano R-131 (contano gli eventi dopo la pesca) salvo dove indicato.
 
@@ -97,7 +97,7 @@ Esclusa dal mazzo: **Magellano x3** (bozza nel GDD, "Visita due isole specifiche
 | Scala Reale | 10 |
 | Scala Reale Massima | 12 |
 
-**[DEFAULT]** sui dettagli non scritti nel GDD:
+Dettagli confermati da Franci (non scritti nel GDD):
 - Il Mozzo (rango 1) è l'asso: vale sia come 1 (scala 1-2-3-4-5) sia come carta più alta dopo il K (scala 10-J-Q-K-1). Niente scale "che girano" (Q-K-1-2-3).
 - **Scala Reale** = scala dello stesso seme. **Scala Reale Massima** = 10-J-Q-K-1 dello stesso seme.
 - Tris e Doppia Coppia valgono uguale (2), come da GDD.

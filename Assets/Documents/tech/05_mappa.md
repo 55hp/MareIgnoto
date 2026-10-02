@@ -28,8 +28,19 @@ Un'isola può occupare più celle: ogni cella isola ha un `islandId` (le celle c
 
 ## 4. Punti di partenza
 
-- Il layout definisce 8 celle `Border` come punti di partenza, in ordine (posto 1 → punto 1, R-031).
-- Con meno di 8 giocatori si usano i primi N punti. **[DEFAULT]**: l'ordine dei punti nel layout va scelto in modo che i primi N siano ben distribuiti per ogni N (per esempio 1 e 2 su lati opposti).
+I punti dipendono dal numero di giocatori: `MapLayout` contiene un **preset** per ogni N da 2 a 8, cioè una lista ordinata di N celle `Border`. Il giocatore del posto *k* parte dal *k*-esimo punto del preset (R-031).
+
+| N | Punti (x, y) | Origine |
+|---|---|---|
+| 2 | (0,0), (19,19) | Franci |
+| 3 | (0,0), (19,0), (9,19) | Franci |
+| 4 | (0,0), (19,0), (0,19), (19,19) | Franci |
+| 5 | i 4 angoli + (9,19) | **[DEFAULT]** estensione |
+| 6 | i 4 angoli + (9,19), (9,0) | **[DEFAULT]** estensione |
+| 7 | i 4 angoli + (9,19), (9,0), (0,9) | **[DEFAULT]** estensione |
+| 8 | i 4 angoli + (9,19), (9,0), (0,9), (19,9) | **[DEFAULT]** estensione |
+
+Gli angoli sono celle di cornice: una nave che parte da un angolo e punta lungo il bordo si ferma sulla cella di cornice successiva (arenata, R-066/R-069). È normale. Le mezzerie sono sulla riga/colonna 9 perché 20 è pari.
 
 ## 5. Il layout come dato: `MapLayoutAsset`
 
@@ -42,17 +53,17 @@ Campi:
 | `width`, `height` | int | 20, 20 |
 | `islandCells` | lista di `(x, y, islandId)` | Celle isola, escluse quelle dell'Isola Sacra |
 | `sacredIslandCells` | lista di `(x, y)` | Celle dell'Isola Sacra |
-| `spawnCells` | lista ordinata di `(x, y)` | 8 celle di cornice (§4) |
+| `spawnPresets` | per ogni N in 2..8: lista ordinata di N `(x, y)` | Celle di cornice, valori di §4 |
 
 Validazione (metodo `Validate()` sull'oggetto puro, usato anche da un pulsante/inspector Editor e dai test):
 - dimensioni ≥ 5 e quadrate;
 - isole e Isola Sacra solo dentro l'area navigabile, senza sovrapposizioni;
 - almeno 1 cella Isola Sacra;
-- esattamente 8 punti di partenza, tutti su `Border`, distinti;
+- per ogni N da 2 a 8, un preset di esattamente N punti, tutti su `Border` e distinti;
 - ogni punto di partenza ha almeno una cella `Sea` adiacente.
 
-## 6. Mappa esistente nel prototipo
+## 6. Layout delle isole — DA DEFINIRE
 
-Franci ha detto che mappa 20×20 e disposizione delle isole sono già fatte nel prototipo. Sul repo (`develop` @ `489e865`) **non risultano**: `GRID_CONTROLLER.numberOfNodes` vale 49 in `MainScene`, il prefab `Isola` non è istanziato in scena, gli spawn point degli asset `2players`/`4players` sono su una griglia 49×49. Probabilmente il lavoro è in locale e non pushato.
+Il prototipo del 2024 **non contiene** nessuna mappa 20×20: verificato sul repo (`develop` @ `489e865`: griglia 49×49, nessuna isola istanziata) e confermato da Franci il 02/10/2026. Posizioni delle isole (`x`, `y`, `islandId`) e celle dell'Isola Sacra vanno quindi **decise**.
 
-Procedura (spec 0000 e 0005): Bezi legge la mappa esistente nel progetto locale e riporta le coordinate delle isole nel sistema di §1; poi crea `MapLayout.asset` con quei valori. Se la mappa non si trova, Bezi si ferma e lo segnala: **non si inventa una disposizione**.
+Finché questa sezione non contiene un layout approvato da Franci, `MapLayout.asset` non può essere compilato (STEP 6a del piano). **Non inventare una disposizione.** Quando esiste, la sezione elenca le celle isola per `islandId`, le celle dell'Isola Sacra e un'immagine ASCII 20×20 per controllo.

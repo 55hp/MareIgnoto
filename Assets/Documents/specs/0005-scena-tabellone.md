@@ -15,7 +15,7 @@ Prefab: `Tile_Sea`, `Tile_Island`, `Tile_Sacred`, `Tile_Border`, `Ship` in `Asse
 `GameBootstrap` con "avvio diretto di test": tutti i posti bot casuali, seed nell'Inspector, numero giocatori nell'Inspector.
 
 Il lavoro si divide in tre passi:
-- **A (Bezi, in parallelo a 0002–0004)**: `MapLayout.asset` dai dati del report 0000; scena `Board.unity` con la gerarchia vuota del contratto; prefab placeholder delle tile e della nave (cubi/quad con materiali URP Lit colorati, `06` §6); camera e luce.
+- **A (Bezi, in parallelo a 0002–0004)**: `MapLayout.asset` dal layout approvato in `05_mappa.md` §6; scena `Board.unity` con la gerarchia vuota del contratto; prefab placeholder delle tile e della nave (cubi/quad con materiali URP Lit colorati, `06` §6); camera e luce.
 - **B (Claude Code, dopo 0004)**: `GameBootstrap`, `GameFlowController`, `EventPlayer`, `BoardView`, `ZoneOverlayView`, `ShipsView`, `CellHighlightView`, `WindRoseView`, `LogView`, `UiText` (prima versione).
 - **C (Bezi)**: aggiunta dei componenti agli oggetti del contratto e wiring dei `[SerializeField]`.
 
@@ -26,7 +26,7 @@ _da compilare (passo B)_
 ## Lato Editor (Bezi) — checklist
 
 Passo A:
-- [ ] `Assets/Game/Content/Config/MapLayout.asset` (`Create/MareIgnoto/Map Layout`) con isole, Isola Sacra e 8 punti di partenza dal report 0000. Esito di `Validate()` riportato.
+- [ ] `Assets/Game/Content/Config/MapLayout.asset` (`Create/MareIgnoto/Map Layout`) con le isole e l'Isola Sacra del layout approvato (`05_mappa.md` §6) e i preset di partenza di `05` §4. Esito di `Validate()` riportato.
 - [ ] `Assets/Scenes/Board.unity` con la gerarchia del contratto (oggetti vuoti, nomi esatti).
 - [ ] Prefab placeholder in `Assets/Game/Content/Prefabs/` e materiali in `Assets/Game/Content/Materials/`.
 - [ ] Camera ortografica dall'alto, inclinata, che inquadra tutta la mappa a 1920×1080.
