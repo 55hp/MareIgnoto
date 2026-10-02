@@ -34,7 +34,8 @@ Motore delle regole in C# puro (`Assets/Game/Rules/`, nessun riferimento a Unity
 
 > Sezione mantenuta da Claude Code. Aggiornarla a ogni task chiuso.
 
-- **02/10/2026** — Documentazione e piano di lavoro aggiunti. Il codice presente è il prototipo del 2024 (`Assets/Scripts/`, `Assets/Cards/*.cs`, singleton, griglia 49×49): **non si riusa** e verrà rimosso nella Fase 0. Nessun codice del nuovo motore ancora scritto.
+- **02/10/2026** — **Spec 0001 (motore: fondamenta) chiusa lato codice**, in attesa di Bezi (`RulesConfig.asset`) e della verifica di Franci in Unity. Esistono: assembly `Rules` (config, carte, mappa, casualità seedata, decisioni, eventi con visibilità, `GameSession`), il setup completo R-030–R-038 e la scelta/rivelazione delle rotte di Fase 1, `RulesConfigAsset`/`MapLayoutAsset` con inspector di validazione, bot casuale e `Tools/RulesHarness` (`dotnet test Tools/RulesHarness`: 112 test verdi; il .NET SDK 8 è installato sul PC di Franci). Provvisorio: dopo la rivelazione delle rotte del round 1 il motore si ferma (`Pending` nullo senza partita finita) fino alla spec 0002. Il codice Unity non è ancora stato compilato in Unity (solo contro stub). Ancora da fare: 0002 (movimento e meteo), 0003 (Fase 2), 0004 (missioni e fine partita), poi le scene.
+- **02/10/2026** — Documentazione e piano di lavoro aggiunti. Il codice presente è il prototipo del 2024 (`Assets/Scripts/`, `Assets/Cards/*.cs`, singleton, griglia 49×49): **non si riusa** e verrà rimosso nella Fase 0.
 
 ## 5. Comandi
 
