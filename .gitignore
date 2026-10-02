@@ -43,3 +43,4 @@ Thumbs.db
 # Harness .NET (Tools/RulesHarness)
 /Tools/**/bin/
 /Tools/**/obj/
+!/Tools/RulesHarness/*.csproj

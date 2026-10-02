@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Compila i sorgenti di Assets/Game/Rules e i test di Assets/Tests/EditMode/Rules come file collegati,
+       così le regole si provano senza aprire Unity (tech/08_test-e-simulazione.md). -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <RootNamespace>hp55games.MareIgnoto.Rules</RootNamespace>
+    <AssemblyName>MareIgnoto.RulesHarness</AssemblyName>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="../../Assets/Game/Rules/**/*.cs" Link="Rules/%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="../../Assets/Tests/EditMode/Rules/**/*.cs" Link="Tests/%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="NUnit" Version="3.14.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.6.0" />
+  </ItemGroup>
+
+</Project>
