@@ -34,6 +34,8 @@ Motore delle regole in C# puro (`Assets/Game/Rules/`, nessun riferimento a Unity
 
 > Sezione mantenuta da Claude Code. Aggiornarla a ogni task chiuso.
 
+- **02/10/2026** — **Spec 0001 emendata** con le risposte di Franci: il mazzo Corsaro non si rimescola (R-009), i punti di partenza sono preset per N=2..8 in `MapLayout` con i valori di `tech/05_mappa.md` §4 (R-031), il vento iniziale si tira col d8 (R-038), le missioni scartate restano coperte (R-130). `dotnet test Tools/RulesHarness`: 124 test verdi. Il resto dello stato è invariato (voce sotto). `MapLayout.asset` resta bloccato finché il layout delle isole non è deciso.
+
 - **02/10/2026** — **Spec 0001 (motore: fondamenta) chiusa lato codice**, in attesa di Bezi (`RulesConfig.asset`) e della verifica di Franci in Unity. Esistono: assembly `Rules` (config, carte, mappa, casualità seedata, decisioni, eventi con visibilità, `GameSession`), il setup completo R-030–R-038 e la scelta/rivelazione delle rotte di Fase 1, `RulesConfigAsset`/`MapLayoutAsset` con inspector di validazione, bot casuale e `Tools/RulesHarness` (`dotnet test Tools/RulesHarness`: 112 test verdi; il .NET SDK 8 è installato sul PC di Franci). Provvisorio: dopo la rivelazione delle rotte del round 1 il motore si ferma (`Pending` nullo senza partita finita) fino alla spec 0002. Il codice Unity non è ancora stato compilato in Unity (solo contro stub). Ancora da fare: 0002 (movimento e meteo), 0003 (Fase 2), 0004 (missioni e fine partita), poi le scene.
 - **02/10/2026** — Documentazione e piano di lavoro aggiunti. Il codice presente è il prototipo del 2024 (`Assets/Scripts/`, `Assets/Cards/*.cs`, singleton, griglia 49×49): **non si riusa** e verrà rimosso nella Fase 0.
 
@@ -46,5 +48,5 @@ Motore delle regole in C# puro (`Assets/Game/Rules/`, nessun riferimento a Unity
 
 ## 6. Aperti
 
-- Mappa 20×20 con isole: secondo Franci esiste nel prototipo, ma sul repo non c'è (vedi `tech/05_mappa.md` §6). Da recuperare nella spec 0000.
+- Mappa 20×20 con isole: non esiste, il layout va deciso (`tech/05_mappa.md` §6). Blocca la creazione di `MapLayout.asset`.
 - Le scelte marcate **[DEFAULT]** in `tech/` attendono conferma di Franci.
