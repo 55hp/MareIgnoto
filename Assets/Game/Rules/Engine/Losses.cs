@@ -15,9 +15,10 @@ namespace hp55games.MareIgnoto.Rules.Engine
     internal static class Losses
     {
         /// <summary>
-        /// Il giocatore perde la carta crew dello slot (R-021): va negli scarti Crew. Se la carta è sopra coperta, non è
-        /// il Nostromo e c'è un Medico sotto coperta, il giocatore può usarlo (R-023): il Medico sale al posto della carta
-        /// minacciata, che scende nel suo slot, e la perdita è annullata.
+        /// Il giocatore perde la carta crew dello slot (R-021): va negli scarti Crew. Se la carta è sopra coperta e c'è un
+        /// Medico sotto coperta, il giocatore può usarlo (R-023): il Medico sale al posto della carta minacciata, che scende
+        /// nel suo slot, e la perdita è annullata. Vale anche per il Nostromo, unica eccezione al blocco di R-016.
+        /// Le perdite sotto coperta (Tempesta) e gli scambi (swap, Spyglass!, Quartiermastro) non passano dal Medico.
         /// </summary>
         /// <param name="takenBy">Se dato, la carta persa finisce qui invece che negli scarti (Arrembaggio!, R-110).</param>
         public static IEnumerable<FlowStep> LoseCrew(GameContext ctx, PlayerState player, int slot, CrewLossCause cause,
@@ -27,7 +28,7 @@ namespace hp55games.MareIgnoto.Rules.Engine
             if (card == null) yield break;
 
             bool above = player.Crew.IsAbove(slot);
-            if (above && card.Kind != CrewCardId.Nostromo)
+            if (above)
             {
                 var medici = player.Crew.BelowSlots().Where(s => player.Crew[s] != null && player.Crew[s].Kind == CrewCardId.Medico).ToList();
                 if (medici.Count > 0)
@@ -42,6 +43,7 @@ namespace hp55games.MareIgnoto.Rules.Engine
                     {
                         CrewCard medico = player.Crew[choice.MedicoSlot];
                         ctx.Emit(new MedicoUsedEvent(player.Id, choice.MedicoSlot, slot, medico));
+                        ctx.FreeNostromoByMedico(card); // R-016/R-023: solo qui un Nostromo bloccato torna sotto
                         ctx.PutCrew(player, slot, medico);
                         ctx.PutCrew(player, choice.MedicoSlot, card);
                         yield break;

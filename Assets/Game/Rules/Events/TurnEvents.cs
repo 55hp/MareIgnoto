@@ -325,6 +325,10 @@ namespace hp55games.MareIgnoto.Rules.Events
     {
         /// <summary>Battaglia vinta (R-104, R-107).</summary>
         Battle,
+        /// <summary>Missione Corsaro completata (R-132).</summary>
+        Mission,
+        /// <summary>Tesoro dell'Isola Sacra (R-140, R-141).</summary>
+        Treasure,
     }
 
     public sealed class BountyChangedEvent : GameEvent

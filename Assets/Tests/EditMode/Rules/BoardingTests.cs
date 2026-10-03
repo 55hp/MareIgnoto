@@ -275,20 +275,6 @@ namespace hp55games.MareIgnoto.Rules.Tests
         }
 
         [Test]
-        public void TheMedicoCannotSaveTheNostromo_R023()
-        {
-            RoundScenario s = Meet(2);
-            s.Crew(0, s.AboveSlot(0), CrewCardId.Nostromo);
-            s.Crew(0, s.BelowSlot(0), CrewCardId.Medico);
-            s.Random.Enqueue(1, 5);
-            List<GameEvent> events = s.PlayRound(TwoHeadings, RoundScenario.Prefer((d, o) =>
-                o is BoardingLossOption l && l.CrewSlots.Contains(0)));
-
-            Assert.IsFalse(s.Decisions.Any(d => d.Kind == DecisionKind.UseMedico));
-            Assert.AreEqual(CrewCardId.Nostromo, events.OfType<CrewLostEvent>().Single().Card.Kind);
-        }
-
-        [Test]
         public void BelowDeckLossesAreSecretToTheOthers_R010()
         {
             RoundScenario s = Meet(2);

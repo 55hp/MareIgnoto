@@ -180,6 +180,8 @@ namespace hp55games.MareIgnoto.Rules.Events
         BattleLoot,
         /// <summary>Monete pagate per evitare Arrembaggio! (R-110).</summary>
         BoardingRansom,
+        /// <summary>Monete del Tesoro dell'Isola Sacra (R-140, R-141).</summary>
+        Treasure,
     }
 
     public sealed class CoinsChangedEvent : GameEvent

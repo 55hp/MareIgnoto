@@ -32,9 +32,11 @@ namespace hp55games.MareIgnoto.Rules.Engine
             Setup = setup;
         }
 
+        /// <summary>Registra l'evento; le missioni in mano ne aggiornano i contatori (R-131, <see cref="Missions.Observe"/>).</summary>
         public void Emit(GameEvent gameEvent)
         {
             events.Add(gameEvent);
+            Missions.Observe(State, gameEvent);
         }
 
         /// <summary>Gli eventi emessi dall'ultima chiamata, nell'ordine in cui sono successi.</summary>
@@ -71,22 +73,42 @@ namespace hp55games.MareIgnoto.Rules.Engine
         public void ChangeBounty(PlayerState player, int delta, BountyReason reason)
         {
             player.BountyTokens += delta;
+            player.BountyBySource[reason] = player.BountyFrom(reason) + delta;
             Emit(new BountyChangedEvent(player.Id, delta, player.BountyTokens, reason));
         }
 
         /// <summary>
         /// Mette una carta (o null) in uno slot della ciurma ed emette l'evento. Un Nostromo che arriva sopra coperta
-        /// resta bloccato sopra per il resto della partita (R-016).
+        /// resta bloccato sopra (R-016) finché il Medico non lo libera (<see cref="FreeNostromoByMedico"/>). Portare
+        /// sotto un Nostromo bloccato è un errore del motore: nessun flusso deve chiederlo.
         /// </summary>
         public void PutCrew(PlayerState player, int slot, CrewCard card)
         {
-            player.Crew.Set(slot, card);
             bool above = player.Crew.IsAbove(slot);
-            if (card != null && above && card.Kind == CrewCardId.Nostromo) State.LockedNostromi.Add(card.Uid);
+            if (card != null && !above && !CanGoBelow(card))
+                throw new System.InvalidOperationException("R-016: il Nostromo " + card + " è bloccato sopra coperta (p" +
+                                                           player.Id + ", slot " + slot + ").");
+            player.Crew.Set(slot, card);
+            if (card != null && above && card.Kind == CrewCardId.Nostromo)
+            {
+                State.LockedNostromi.Add(card.Uid);
+                State.NostromiFreedByMedico.Remove(card.Uid);
+            }
+
             Emit(new CrewSlotChangedEvent(player.Id, slot, above, card));
         }
 
-        /// <summary>Falso per un Nostromo che è già stato sopra coperta (R-016): non può finire sotto.</summary>
+        /// <summary>
+        /// R-023: il Medico è l'unico effetto che può riportare sotto coperta un Nostromo bloccato (eccezione a R-016).
+        /// Chiamato solo da <see cref="Losses.LoseCrew"/>, prima di scambiare Medico e Nostromo.
+        /// </summary>
+        public void FreeNostromoByMedico(CrewCard card)
+        {
+            if (!State.LockedNostromi.Remove(card.Uid)) return;
+            State.NostromiFreedByMedico.Add(card.Uid);
+        }
+
+        /// <summary>Falso per un Nostromo bloccato sopra coperta (R-016): non può finire sotto.</summary>
         public bool CanGoBelow(CrewCard card) => card == null || !State.LockedNostromi.Contains(card.Uid);
 
         /// <summary>

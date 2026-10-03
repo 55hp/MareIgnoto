@@ -297,6 +297,7 @@ namespace hp55games.MareIgnoto.Rules.Config
             if (maxAbbordaggioChain < 1) errors.Add("maxAbbordaggioChain deve essere almeno 1.");
             if (baseSpeed < 0) errors.Add("baseSpeed non può essere negativo.");
             if (coinsPerToken < 1) errors.Add("coinsPerToken deve essere almeno 1.");
+            if (singleJokerPokerDivisor < 1) errors.Add("singleJokerPokerDivisor deve essere almeno 1.");
 
             ValidateEntries(errors, "pirateCards", pirateCards, Enum.GetValues(typeof(PirateCardId)),
                 e => e.id, e => e.copies < 0 || e.cost < 0);

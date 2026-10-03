@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using hp55games.MareIgnoto.Rules.Cards;
+using hp55games.MareIgnoto.Rules.Events;
 using hp55games.MareIgnoto.Rules.Map;
 
 namespace hp55games.MareIgnoto.Rules.State
@@ -13,6 +14,11 @@ namespace hp55games.MareIgnoto.Rules.State
         public Coord Position { get; set; }
         public int Coins { get; set; }
         public int BountyTokens { get; set; }
+
+        /// <summary>Segnalini per fonte (battaglie, missioni, Tesoro): la somma è <see cref="BountyTokens"/>.</summary>
+        public Dictionary<BountyReason, int> BountyBySource { get; } = new Dictionary<BountyReason, int>();
+
+        public int BountyFrom(BountyReason reason) => BountyBySource.TryGetValue(reason, out int tokens) ? tokens : 0;
         public CrewSlots Crew { get; }
         public List<PirateCard> Hand { get; } = new List<PirateCard>();
         public List<MissionCard> Missions { get; } = new List<MissionCard>();

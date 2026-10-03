@@ -49,10 +49,14 @@ namespace hp55games.MareIgnoto.Rules.Engine
         public static CallStep Call(IEnumerable<FlowStep> flow) => new CallStep(flow.GetEnumerator());
     }
 
-    /// <summary>Pilota una pila di flussi: avanza fino alla prossima decisione che richiede un giocatore.</summary>
+    /// <summary>
+    /// Pilota una pila di flussi: avanza fino alla prossima decisione che richiede un giocatore. Prima di fermarsi chiama
+    /// <c>beforePause</c>: è il punto sicuro in cui lo stato è coerente (le missioni immediate si completano lì).
+    /// </summary>
     internal sealed class FlowRunner
     {
         private readonly Stack<IEnumerator<FlowStep>> stack = new Stack<IEnumerator<FlowStep>>();
+        private readonly Action beforePause;
         private AskStep current;
 
         /// <summary>La decisione in attesa, null se il flusso è terminato.</summary>
@@ -60,9 +64,10 @@ namespace hp55games.MareIgnoto.Rules.Engine
 
         public bool IsFinished => stack.Count == 0;
 
-        public FlowRunner(IEnumerable<FlowStep> root)
+        public FlowRunner(IEnumerable<FlowStep> root, Action beforePause = null)
         {
             stack.Push(root.GetEnumerator());
+            this.beforePause = beforePause;
         }
 
         /// <summary>Avanza il flusso fino alla prossima decisione o alla fine.</summary>
@@ -90,6 +95,7 @@ namespace hp55games.MareIgnoto.Rules.Engine
                             break;
                         }
 
+                        beforePause?.Invoke();
                         current = ask;
                         return;
                     default:

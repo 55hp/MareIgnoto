@@ -226,8 +226,8 @@ namespace hp55games.MareIgnoto.Rules.Tests
         }
 
         /// <summary>
-        /// Criterio della spec 0002: 200 round con bot casuali a 2, 4 e 8 giocatori, invarianti verificati dopo ogni
-        /// risposta (TestSupport.Play), senza eccezioni.
+        /// Criterio della spec 0002, aggiornato dalla 0004: con bot casuali a 2, 4 e 8 giocatori la partita finisce (Isola Sacra
+        /// o, al più, 200 round), con gli invarianti verificati dopo ogni risposta (TestSupport.Play), senza eccezioni.
         /// </summary>
         [TestCase(2)]
         [TestCase(4)]
@@ -241,14 +241,16 @@ namespace hp55games.MareIgnoto.Rules.Tests
                 List<GameEvent> events = TestSupport.PlayToEnd(session, seed);
 
                 Assert.IsTrue(session.IsOver, "seed " + seed);
-                Assert.AreEqual(config.maxRounds, session.Result.RoundsPlayed, "seed " + seed);
+                Assert.LessOrEqual(session.Result.RoundsPlayed, config.maxRounds, "seed " + seed);
+                if (!session.Result.EndedByRoundLimit)
+                    Assert.AreEqual(session.Result.RoundsPlayed, events.OfType<RoundStartedEvent>().Count(), "R-142: nessun round dopo");
                 Assert.Greater(events.OfType<ShipMovedEvent>().Count(), 0);
             }
         }
 
         /// <summary>
-        /// Criterio della spec 0003: partite di 60 round con la Fase 2 completa (porti, carte, combattimento) a 2, 4 e 8
-        /// giocatori, invarianti dopo ogni risposta. Verifica anche che i bot usino davvero la Fase 2.
+        /// Criterio della spec 0003: partite con la Fase 2 completa (porti, carte, combattimento) a 2, 4 e 8 giocatori,
+        /// invarianti dopo ogni risposta. Verifica anche che i bot usino davvero la Fase 2 e che le partite arrivino al punteggio.
         /// </summary>
         [TestCase(2)]
         [TestCase(4)]
@@ -261,22 +263,53 @@ namespace hp55games.MareIgnoto.Rules.Tests
             {
                 GameSession session = TestSupport.Start(players, seed, config);
                 events.AddRange(TestSupport.PlayToEnd(session, seed));
-                Assert.AreEqual(config.maxRounds, session.Result.RoundsPlayed, "seed " + seed);
+                Assert.IsTrue(session.IsOver, "seed " + seed);
+                Assert.AreEqual(players, session.Result.Ranking.Count, "seed " + seed);
             }
 
             Assert.Greater(events.OfType<PortActionEvent>().Count(), 0);
             Assert.Greater(events.OfType<CardPlayedEvent>().Count(), 0);
+            Assert.Greater(events.OfType<FinalScoreEvent>().Count(), 0);
             if (players > 2) Assert.Greater(events.OfType<AttackStartedEvent>().Count(), 0);
         }
 
-        /// <summary>Gate di 08 §3 su seed 1–1000: lungo, si lancia a mano.</summary>
-        [Test, Explicit("Lungo: simulazione 1000 seed × 2/4/8 giocatori × 200 round")]
+        /// <summary>
+        /// La simulazione di 08 §3 su pochi seed, nella suite normale: nessun errore, le partite finiscono con l'Isola Sacra
+        /// e il report elenca le partite interrotte con il loro seed.
+        /// </summary>
+        [Test]
+        public void SimulationRunnerFinishesGamesAndReports()
+        {
+            SimulationReport report = SimulationRunner.Run(new SimulationOptions
+            {
+                FirstSeed = 1, LastSeed = 15, Config = new RulesConfig { maxRounds = SimulationMaxRounds }, Map = TestSupport.StandardMap(),
+            });
+
+            Assert.IsTrue(report.Clean, report.ToText());
+            foreach (SimulationGroup group in report.Groups)
+            {
+                Assert.AreEqual(15, group.Games);
+                Assert.Greater(group.Completed, 0, report.ToText());
+                Assert.AreEqual(group.Games, group.Completed + group.StoppedSeeds.Count);
+            }
+
+            StringAssert.Contains("interrotte da maxRounds", report.ToText());
+        }
+
+        /// <summary>Limite di round della simulazione (R-150): solo per scoprire le partite che non finiscono.</summary>
+        private const int SimulationMaxRounds = 500;
+
+        /// <summary>Gate di 08 §3 (fine Fase 1 del piano) su seed 1–1000 × 2/4/8: lungo, si lancia a mano. Stampa il report.</summary>
+        [Test, Explicit("Lungo: simulazione 1000 seed × 2/4/8 giocatori")]
         public void Simulation1000Seeds()
         {
-            var config = new RulesConfig { maxRounds = 200 };
-            foreach (int players in new[] { 2, 4, 8 })
-                for (int seed = 1; seed <= 1000; seed++)
-                    TestSupport.PlayToEnd(TestSupport.Start(players, seed, config), seed);
+            SimulationReport report = SimulationRunner.Run(new SimulationOptions
+            {
+                FirstSeed = 1, LastSeed = 1000, Config = new RulesConfig { maxRounds = SimulationMaxRounds }, Map = TestSupport.StandardMap(),
+            });
+
+            TestContext.Out.WriteLine(report.ToText());
+            Assert.IsTrue(report.Clean, report.ToText());
         }
     }
 }

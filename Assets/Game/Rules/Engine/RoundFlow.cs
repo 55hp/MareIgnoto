@@ -60,6 +60,7 @@ namespace hp55games.MareIgnoto.Rules.Engine
             state.SharedSeaCellsAllowed.Clear();
             yield return Flow.Call(WeatherFlow.Run(ctx));
             yield return Flow.Call(MovementFlow.Run(ctx));
+            EndFlow.TakeTreasure(ctx); // R-140, R-141
             yield return Flow.Call(BoardingFlow.Run(ctx));
             state.MovementInProgress = false;
         }

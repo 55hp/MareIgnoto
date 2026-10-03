@@ -77,7 +77,12 @@ namespace hp55games.MareIgnoto.Rules.Tests
                 for (int slot = 0; slot < player.Crew.Count; slot++) scenario.ClearSlot(player.Id, slot);
                 foreach (PirateCard card in player.Hand.ToList()) state.Pirate.Discard(card);
                 player.Hand.Clear();
+                // Le missioni del setup escono: ogni test dà quelle che gli servono (Mission).
+                foreach (MissionCard card in player.Missions.ToList()) state.Corsair.Discard(card);
+                player.Missions.Clear();
             }
+
+            state.MissionProgress.Clear();
 
             state.Wind = Heading.N;
             for (int zone = 0; zone < state.ZoneStates.Length; zone++) state.ZoneStates[zone] = WeatherState.Normal;
@@ -126,6 +131,25 @@ namespace hp55games.MareIgnoto.Rules.Tests
         {
             CrewCard old = P(player).Crew.Take(slot);
             if (old != null) State.Crew.Discard(old);
+        }
+
+        /// <summary>
+        /// Il giocatore tiene una missione dell'id dato, presa dal mazzo Corsaro o dagli scarti, come se l'avesse appena
+        /// pescata (R-131: conta da qui).
+        /// </summary>
+        public MissionCard Mission(int player, MissionId id)
+        {
+            MissionCard card = State.Corsair.DrawPile.Concat(State.Corsair.DiscardPile).First(c => c.Id == id);
+            State.Corsair.Remove(card);
+            Missions.Track(State, P(player), card);
+            return card;
+        }
+
+        /// <summary>Segnalini taglia già guadagnati, per fonte (tengono allineato il totale).</summary>
+        public void Bounty(int player, BountyReason reason, int tokens)
+        {
+            P(player).BountyBySource[reason] = P(player).BountyFrom(reason) + tokens;
+            P(player).BountyTokens += tokens;
         }
 
         /// <summary>Aggiunge alla mano carte Pirateria degli id dati.</summary>

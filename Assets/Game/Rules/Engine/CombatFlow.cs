@@ -218,7 +218,7 @@ namespace hp55games.MareIgnoto.Rules.Engine
                     ctx.Emit(new CombatPlayEvent(defender.Id, CombatPlay.Parle, defense.Card));
                     yield break;
                 case BoardingDefense.Paid:
-                    // TODO R-110: 02 non dice a chi vanno le monete; le riceve l'attaccante (domanda nel report della spec 0003).
+                    // R-110: le monete vanno all'attaccante (lettura confermata da Franci, report della spec 0003).
                     ctx.ChangeCoins(defender, -ransom, CoinReason.BoardingRansom);
                     ctx.ChangeCoins(attacker, ransom, CoinReason.BoardingRansom);
                     yield break;

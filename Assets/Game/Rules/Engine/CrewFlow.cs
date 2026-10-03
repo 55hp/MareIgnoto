@@ -85,7 +85,7 @@ namespace hp55games.MareIgnoto.Rules.Engine
                 player.InTransit.Remove(card);
                 if (option.Kept.Contains(card))
                 {
-                    player.Missions.Add(card);
+                    Missions.Track(ctx.State, player, card); // R-131: conta da qui
                 }
                 else
                 {

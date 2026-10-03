@@ -26,6 +26,9 @@ namespace hp55games.MareIgnoto.Rules.Engine
 
             if (state.Treasure < 0) errors.Add("Il Tesoro è negativo: " + state.Treasure);
 
+            CheckBountyAndMissions(state, errors);
+            if (state.Phase == GamePhase.Ended && state.Result == null) errors.Add("Partita finita senza esito.");
+
             CheckShipsOnSeaCells(state, errors);
             CheckNostromo(state, errors);
             CheckTurnsPlayed(state, errors);
@@ -51,16 +54,53 @@ namespace hp55games.MareIgnoto.Rules.Engine
             }
         }
 
-        /// <summary>Il Nostromo, una volta sopra coperta, non torna mai sotto (R-016).</summary>
+        /// <summary>
+        /// Il Nostromo, una volta sopra coperta, torna sotto solo col Medico (R-016, R-023): un Nostromo sopra coperta è
+        /// bloccato; sotto coperta è bloccato mai, e se ci arriva da sopra è perché il Medico l'ha liberato (l'unico
+        /// scrittore di <see cref="GameState.NostromiFreedByMedico"/>). Quando risale, il blocco vale di nuovo.
+        /// </summary>
         private static void CheckNostromo(GameState state, List<string> errors)
         {
             foreach (PlayerState player in state.Players)
-                foreach (int slot in player.Crew.BelowSlots())
+                for (int slot = 0; slot < player.Crew.Count; slot++)
                 {
                     CrewCard card = player.Crew[slot];
-                    if (card != null && state.LockedNostromi.Contains(card.Uid))
-                        errors.Add("p" + player.Id + ": il Nostromo " + card + " è tornato sotto coperta (slot " + slot + ").");
+                    if (card == null || card.Kind != CrewCardId.Nostromo) continue;
+                    bool locked = state.LockedNostromi.Contains(card.Uid);
+                    if (player.Crew.IsBelow(slot) && locked)
+                        errors.Add("p" + player.Id + ": il Nostromo " + card + " è tornato sotto coperta senza il Medico (slot " + slot + ").");
+                    if (player.Crew.IsAbove(slot) && !locked)
+                        errors.Add("p" + player.Id + ": il Nostromo " + card + " è sopra coperta ma non è bloccato (slot " + slot + ").");
                 }
+
+            foreach (int uid in state.NostromiFreedByMedico)
+                if (state.LockedNostromi.Contains(uid))
+                    errors.Add("Il Nostromo #" + uid + " risulta insieme bloccato e liberato dal Medico.");
+        }
+
+        /// <summary>
+        /// I segnalini sono la somma delle fonti (battaglie, missioni, Tesoro: servono al dettaglio di <see cref="GameResult"/>),
+        /// e ogni missione in mano ha il suo avanzamento (R-131), nessuna missione completata lo ha ancora.
+        /// </summary>
+        private static void CheckBountyAndMissions(GameState state, List<string> errors)
+        {
+            int tracked = 0;
+            foreach (PlayerState player in state.Players)
+            {
+                int sources = player.BountyBySource.Values.Sum();
+                if (sources != player.BountyTokens)
+                    errors.Add("p" + player.Id + ": segnalini " + player.BountyTokens + ", ma le fonti ne sommano " + sources + ".");
+
+                foreach (MissionCard card in player.Missions)
+                {
+                    tracked++;
+                    if (!state.MissionProgress.TryGetValue(card.Uid, out MissionProgress progress) || progress.Owner != player.Id)
+                        errors.Add("p" + player.Id + ": la missione " + card + " non è tracciata.");
+                }
+            }
+
+            if (state.MissionProgress.Count != tracked)
+                errors.Add("Avanzamento per " + state.MissionProgress.Count + " missioni, ma in mano ce ne sono " + tracked + ".");
         }
 
         /// <summary>La Fase 2 dà un turno a ogni giocatore esattamente una volta (completa quando il round dopo è iniziato).</summary>

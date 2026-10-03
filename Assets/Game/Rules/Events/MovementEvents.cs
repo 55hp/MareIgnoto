@@ -186,7 +186,7 @@ namespace hp55games.MareIgnoto.Rules.Events
         public override string Describe() => "ShipStranded p" + Player + " " + Cell;
     }
 
-    /// <summary>La nave è entrata nell'Isola Sacra al passo <see cref="Step"/> (R-140, R-141; la fine partita arriva con la spec 0004).</summary>
+    /// <summary>La nave è entrata nell'Isola Sacra al passo <see cref="Step"/> (R-140, R-141): la partita finisce a fine round (R-142).</summary>
     public sealed class SacredIslandEnteredEvent : GameEvent
     {
         public int Player { get; }
@@ -410,20 +410,26 @@ namespace hp55games.MareIgnoto.Rules.Events
     {
         /// <summary>Raggiunto <c>maxRounds</c> (R-150): solo nelle simulazioni.</summary>
         RoundLimit,
+        /// <summary>Una nave è entrata nell'Isola Sacra e il round di cortesia è finito (R-140, R-142).</summary>
+        SacredIsland,
     }
 
+    /// <summary>Fine della partita, dopo il punteggio (<see cref="FinalScoreEvent"/>): classifica e vincitori sono nel risultato.</summary>
     public sealed class GameEndedEvent : GameEvent
     {
         public GameEndReason Reason { get; }
         /// <summary>Round completati.</summary>
         public int RoundsPlayed { get; }
+        /// <summary>Vincitori (R-147): più di uno solo in caso di parità.</summary>
+        public IReadOnlyList<int> Winners { get; }
 
-        public GameEndedEvent(GameEndReason reason, int roundsPlayed)
+        public GameEndedEvent(GameEndReason reason, int roundsPlayed, IReadOnlyList<int> winners)
         {
             Reason = reason;
             RoundsPlayed = roundsPlayed;
+            Winners = winners;
         }
 
-        public override string Describe() => "GameEnded " + Reason + " rounds=" + RoundsPlayed;
+        public override string Describe() => "GameEnded " + Reason + " rounds=" + RoundsPlayed + " winners=[" + Join(Winners) + "]";
     }
 }

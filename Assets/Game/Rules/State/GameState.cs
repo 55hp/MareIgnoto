@@ -35,8 +35,29 @@ namespace hp55games.MareIgnoto.Rules.State
         /// <summary>Chi ha già giocato il turno nella Fase 2 del round, in ordine; si azzera all'inizio di ogni Fase 2.</summary>
         public List<int> TurnsPlayed { get; } = new List<int>();
 
-        /// <summary>Uid dei Nostromi che sono stati sopra coperta: non possono più tornare sotto (R-016).</summary>
+        /// <summary>
+        /// Uid dei Nostromi saliti sopra coperta: non possono più tornare sotto (R-016), salvo il Medico (R-023), che li
+        /// sposta in <see cref="NostromiFreedByMedico"/>.
+        /// </summary>
         public HashSet<int> LockedNostromi { get; } = new HashSet<int>();
+
+        /// <summary>
+        /// Uid dei Nostromi riportati sotto coperta dal Medico (R-023), l'unica via d'uscita dal blocco di R-016. Quando
+        /// risalgono sopra coperta tornano in <see cref="LockedNostromi"/>.
+        /// </summary>
+        public HashSet<int> NostromiFreedByMedico { get; } = new HashSet<int>();
+
+        /// <summary>Avanzamento delle missioni in mano, per Uid della carta (R-131: nasce quando la missione si tiene).</summary>
+        public Dictionary<int, Engine.MissionProgress> MissionProgress { get; } = new Dictionary<int, Engine.MissionProgress>();
+
+        /// <summary>
+        /// Navi entrate nell'Isola Sacra nel movimento di questo round, col passo (R-140, R-141). Non vuoto: la partita
+        /// finisce alla fine del round (R-142).
+        /// </summary>
+        public Dictionary<int, int> SacredIslandArrivals { get; } = new Dictionary<int, int>();
+
+        /// <summary>Chi ha preso il Tesoro (R-140, R-141); vuoto finché nessuno è entrato nell'Isola Sacra.</summary>
+        public List<int> TreasureTakers { get; } = new List<int>();
 
         /// <summary>L'esito, quando la partita finisce.</summary>
         public Engine.GameResult Result { get; set; }

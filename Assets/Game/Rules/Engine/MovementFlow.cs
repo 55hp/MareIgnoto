@@ -79,7 +79,11 @@ namespace hp55games.MareIgnoto.Rules.Engine
                     if (kind != CellKind.Sea)
                     {
                         if (kind == CellKind.SacredIsland)
-                            ctx.Emit(new SacredIslandEnteredEvent(id, step, player.Position)); // TODO R-140 (spec 0004): fine partita.
+                        {
+                            // R-140, R-141: la partita finirà a fine round; conta il passo d'ingresso.
+                            if (!state.SacredIslandArrivals.ContainsKey(id)) state.SacredIslandArrivals[id] = step;
+                            ctx.Emit(new SacredIslandEnteredEvent(id, step, player.Position));
+                        }
                         if (remaining[id] > 0) ctx.Emit(new ShipStoppedEvent(id, step, player.Position, StopReason.Land));
                         remaining[id] = 0;
                     }

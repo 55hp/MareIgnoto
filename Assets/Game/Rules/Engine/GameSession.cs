@@ -70,7 +70,7 @@ namespace hp55games.MareIgnoto.Rules.Engine
                 state.Players.Add(new PlayerState(player.Seat, player.Name, config.slotsAbove, config.slotsBelow));
 
             var context = new GameContext(state, config, random, setup);
-            return new GameSession(state, context, new FlowRunner(GameFlow.Run(context)));
+            return new GameSession(state, context, new FlowRunner(GameFlow.Run(context), () => Missions.CompleteReady(context)));
         }
 
         /// <summary>Come sopra, con la sorgente standard seedata da <see cref="GameSetup.Seed"/>.</summary>
