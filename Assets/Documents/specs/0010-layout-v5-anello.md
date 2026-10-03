@@ -1,3 +1,25 @@
+# 0010 — Layout v5: anello a archi e nuvole riviste
+
+Stato: pronta per Claude Code
+Commit di riferimento: da compilare
+Regole coinvolte: R-080 (testo); `05` §3–§6 (nuova versione, §A1)
+Documenti: `tech/05_mappa.md`, `tech/02_regole.md`
+
+Un file per task. Sopra `## Report` scrivono Athena (intestazione, Obiettivo, Parte A) e Claude Code (Parte B). Sotto `## Report` ogni attore aggiunge voci in coda.
+
+## Obiettivo
+
+Sostituire il layout v4 con il v5 approvato da Franci il 03/10/2026: l'anello centrale diventa un insieme di 8 archi regolari (4 varchi diagonali a spigolo e 4 canali dritti larghi 1 sugli assi), le nuvole passano da 12 a 8. Cambia solo la mappa: le regole del gioco non cambiano (salvo il testo di R-080 che nomina le nuvole). Prima i documenti (Parte A), poi il motore e l'asset (Parte B).
+
+## Parte A — Patch di documentazione (testo esatto)
+
+Regole di applicazione (`CLAUDE.md`, "Patch di documentazione da Athena"): applica parola per parola, senza riformulare. Se un file, una riga o una sottostringa non esiste o è diversa da come la descrivo, fermati e riportalo. Un commit a parte "docs: patch Athena (layout v5)", solo documenti. Mostra `git diff --stat`.
+
+### A1. `Assets/Documents/tech/05_mappa.md`
+
+Sostituisci l'INTERO contenuto del file con il testo tra i marcatori (marcatori esclusi).
+
+<<<INIZIO 05_mappa.md>>>
 # 05 — Mappa: celle, coordinate, zone, layout
 
 ## 1. Coordinate
@@ -148,3 +170,51 @@ Approvato da Franci il 03/10/2026; sostituisce la v4, il cui anello a lobi risul
 - **Distanze minime**: anello–Isola Sacra 3, anello–isole 4, anello–nuvole 3, nuvole tra loro 2, nuvole–punti di partenza 3, spicchi non consecutivi 5.
 - **Copertura**: 120 celle di zona (48 di anello, 72 di nuvole) su 508 celle di mare, il 24%.
 - **Scostamenti noti**: la copertura è sotto il 30% indicativo, per non restringere le rotte dei lati; le nuvole possono toccare le isole; l'anello ha spessore 2–3.
+<<<FINE 05_mappa.md>>>
+
+### A2. `tech/02_regole.md`
+
+Sostituisci la riga di tabella la cui prima cella è R-080 con esattamente questa riga:
+
+| R-080 | Il meteo è una proprietà delle **zone**: gruppi fissi di celle di mare definiti nel layout (`05_mappa.md` §3), cioè le nuvole (N1–N8) e gli spicchi dell'anello centrale (R1–R8). Le celle di mare che non appartengono a nessuna zona sono mare libero: non hanno meteo e non cambiano mai. Le celle isola non appartengono a nessuna zona. |
+
+### A3. `specs/0005-scena-tabellone.md`, sostituzioni esatte di sottostringa (ognuna deve combaciare una sola volta)
+
+- "nell'Editor eseguire **MareIgnoto > Create MapLayout v4**. Il comando crea" → "nell'Editor eseguire **MareIgnoto > Create MapLayout v5**. Il comando crea"
+- "dal layout v4 (`LayoutV4`, `05` §3–§6); se il file esiste" → "dal layout v5 (`LayoutV5`, `05` §3–§6); se il file esiste"
+
+### A4. `tech/00_INDICE.md`
+
+Aggiungi in fondo alla tabella "Registro modifiche":
+
+| 03/10/2026 (4) | **`05`**: layout v5. L'anello diventa 8 archi regolari: 4 varchi diagonali a spigolo e 4 canali dritti larghi 1 sugli assi (prima: lobi irregolari con varchi diagonali). Nuvole da 12 a 8. Copertura 24%. **R-080**: nuvole N1–N8 | `05`, `02` |
+
+## Parte B — Lato codice (Claude Code)
+
+Leggi prima `tech/05_mappa.md` (nuova versione). Le regole del gioco non cambiano: cambiano i dati della mappa e le regole di costruzione delle zone.
+
+1. **Dati**: sostituisci `LayoutV4` con `LayoutV5` (stesso posto in Rules, UNA sola copia): isole, Isola Sacra, preset di partenza (invariati), 8 spicchi e 8 nuvole costruiti dagli elenchi di `05` §3 e §6 (senza duplicati). Tolti gli ex dati della v4 e ogni riferimento a "20 zone" o a nuvole N9–N12.
+2. **`Validate()`**: aggiorna le regole di costruzione delle zone come in `05` §3: nuvole a distanza ≥ 2 tra loro, ≥ 3 da ogni spicchio, ≥ 2 dai punti di partenza, possono toccare un'isola; 8 spicchi in ordine di angolo; tra due consecutivi esattamente uno di due casi (varco diagonale a un solo spigolo con le altre due celle del 2×2 di mare libero, oppure canale: nessun contatto e una fila dritta di mare libero larga 1); non consecutivi a distanza ≥ 2; spicchio a distanza ≥ 2 dall'Isola Sacra e ≥ 3 dalle altre isole. Test per ogni regola con un layout non valido.
+3. **Test sul layout**: verifica che `LayoutV5` superi `Validate()` e che valgano le proprietà di `05` §6: ogni punto di partenza a distanza 11 dall'Isola Sacra e con le due isole più vicine a 4 e 4; simmetria di rotazione e di specchio di isole, nuvole, anello e punti di partenza; conteggi (16 isole, 8+8 zone, 120 celle di zona). Aggiorna `ZoneGeometryTests` (ora 16 zone) e ogni test che nomina zone o conteggi della v4.
+4. **Comando Editor e test Unity**: rinomina il comando in `MareIgnoto/Create MapLayout v5` (costruisce l'asset da `LayoutV5`, sovrascrive `MapLayout.asset` in place dopo conferma, poi `Validate()`); rinomina `MapLayoutV4AssetTests` in `MapLayoutV5AssetTests`, che confronta l'asset con `LayoutV5` cella per cella.
+5. **Gate**: rilancia il gate da 1000 seed (2/4/8 giocatori) sul layout v5 e incolla il riepilogo: partite fermate da `maxRounds` con i seed, round minimo/mediano/massimo e cosa è cambiato rispetto alla v4.
+6. Aggiorna la sezione "Lato codice" e la checklist di `specs/0005-scena-tabellone.md` dove nomina il layout v4 o 20 zone, e lo stato in `README.md`.
+
+Se una regola non è chiara, non inventare: lascia un TODO con l'id della regola e scrivi la domanda sotto "#### Domande".
+
+## Lato Editor (Bezi) — checklist
+
+Nessuna in questo task. Le viste e i prefab non cambiano.
+
+## Per Franci — modifiche isolate
+
+- Dopo il task: aprire l'Editor, controllare la Console, eseguire **MareIgnoto > Create MapLayout v5** (conferma la sovrascrittura), controllare che la Console dica `Validate OK`, lanciare il Test Runner EditMode e committare `MapLayout.asset`.
+
+## Verifica
+
+- Parte A: `git diff --stat` mostra solo documenti.
+- Parte B: `dotnet test Tools/RulesHarness` verde; gate da 1000 seed senza eccezioni né violazioni di invarianti; `LayoutV5` supera `Validate()`.
+
+## Report
+
+<!-- Voci in coda. Intestazione: ### Claude Code — AAAA-MM-GG — commit abc1234 -->

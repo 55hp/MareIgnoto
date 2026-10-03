@@ -126,7 +126,7 @@ Si risolve dopo che tutte le navi hanno finito di muoversi, per ogni cella di ma
 
 | ID | Regola |
 |---|---|
-| R-080 | Il meteo è una proprietà delle **zone**: gruppi fissi di celle di mare definiti nel layout (`05_mappa.md` §3), cioè le nuvole (N1–N12) e gli spicchi dell'anello centrale (R1–R8). Le celle di mare che non appartengono a nessuna zona sono mare libero: non hanno meteo e non cambiano mai. Le celle isola non appartengono a nessuna zona. |
+| R-080 | Il meteo è una proprietà delle **zone**: gruppi fissi di celle di mare definiti nel layout (`05_mappa.md` §3), cioè le nuvole (N1–N8) e gli spicchi dell'anello centrale (R1–R8). Le celle di mare che non appartengono a nessuna zona sono mare libero: non hanno meteo e non cambiano mai. Le celle isola non appartengono a nessuna zona. |
 | R-081 | Ogni zona ha un **livello** intero ≥ 0: livello 0 = **Normale**, livello 1 = **Mare Mosso**, livello ≥ 2 = **Tempesta** (l'effetto è sempre quello di Tempesta, anche a livello 5). Nessun decadimento automatico: una zona cambia livello solo per una carta Meteo. Gli spicchi dell'anello partono a livello 5, le nuvole a 0. |
 | R-082 | Il meteo si applica nella Fase 1 (R-042), alla zona in cui la nave si trova prima di muoversi. Navi su isole, cornice o mare libero non subiscono il meteo. |
 | R-083 | **Mare Mosso**: si tira 1d8 e si ruota la rotta della nave di quel numero di scatti in senso orario (8 = nessun cambio). Poi il giocatore perde 1 carta Pirateria dalla mano (a sua scelta). |

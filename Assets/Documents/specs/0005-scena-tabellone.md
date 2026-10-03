@@ -93,7 +93,7 @@ Collegamenti:
 
 ## Per Franci — modifiche isolate
 
-- **`MapLayout.asset` (passo A, primo punto)**: nell'Editor eseguire **MareIgnoto > Create MapLayout v4**. Il comando crea `Assets/Game/Content/Config/MapLayout.asset` dal layout v4 (`LayoutV4`, `05` §3–§6); se il file esiste chiede prima di sovrascriverlo. Controllare che la Console dica `[MapLayout] … Validate OK`, poi committare `MapLayout.asset` e il suo `.meta`. Test Runner → EditMode: `MapLayoutV4AssetTests` non deve più risultare "Ignorato" ed essere verde.
+- **`MapLayout.asset` (passo A, primo punto)**: nell'Editor eseguire **MareIgnoto > Create MapLayout v5**. Il comando crea `Assets/Game/Content/Config/MapLayout.asset` dal layout v5 (`LayoutV5`, `05` §3–§6); se il file esiste chiede prima di sovrascriverlo. Controllare che la Console dica `[MapLayout] … Validate OK`, poi committare `MapLayout.asset` e il suo `.meta`. Test Runner → EditMode: `MapLayoutV4AssetTests` non deve più risultare "Ignorato" ed essere verde.
 - Aggiungere `Board.unity` alle Build Settings.
 - Dopo il passo B: tornare sull'Editor per i `.meta` dei file nuovi (in `Assets/Game/Unity/`: `UiText.cs`, `PlayerPaletteAsset.cs`, le cartelle `Flow/` e `Views/` con i loro file; in Rules `Map/ZoneGeometry.cs`; nei test `ZoneGeometryTests.cs`) e committarli.
 
