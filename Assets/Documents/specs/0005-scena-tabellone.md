@@ -1,7 +1,7 @@
 # 0005 — Scena tabellone: mappa, navi, zone, vento
 
 Stato: bozza
-Commit di riferimento: da compilare
+Commit di riferimento: `5013e61` (passo B)
 Documenti: `tech/05_mappa.md`, `tech/06_presentazione.md` §1–2, §4, §6
 
 ## Obiettivo
@@ -21,7 +21,28 @@ Il lavoro si divide in tre passi:
 
 ## Lato codice (Claude Code)
 
-_da compilare (passo B)_
+Passo B, commit `5013e61`. Assembly `hp55games.MareIgnoto.Unity` (cartelle `Flow/`, `Views/`), più una parte pura in Rules. Nessuna scena, prefab o asset toccati.
+
+**Avvio e ciclo** (`Assets/Game/Unity/Flow/`)
+- `GameBootstrap` (composition root, `/GAME_BOOTSTRAP`): avvio diretto di test, tutti i posti bot casuali, `playerCount` e `seed` nell'Inspector. Crea la `GameSession` da `RulesConfigAsset` + `MapLayoutAsset` (nomi dei posti da `UiText.BotName`) e la passa a `GameFlowController` con un `RandomBot` seedato. Configurazione o mappa non valide: errore in Console e componente disabilitato.
+- `GameFlowController` (`/GAME_FLOW`): fa riprodurre gli eventi, poi, quando `EventPlayer` è fermo, aspetta `botDelaySeconds` e risponde con il bot. Mostra gli eventi come li vede uno spettatore (`ViewFor(-1)`: degli eventi privati solo la forma pubblica). Nessuna UI di decisione, nessun passaggio del dispositivo (non servono con soli bot).
+- `EventPlayer` (`/GAME_FLOW`): coda di eventi, uno alla volta; ogni evento va a tutte le viste dell'array `views` e il successivo parte quando hanno finito. `secondsPerAnimation`, `speed`, `skipAnimations` nell'Inspector (il log resta completo anche senza animazioni).
+
+**Viste** (`Assets/Game/Unity/Views/`, tutte derivano da `GameView`: `Initialize(stato)` all'avvio, `Play(evento, durata)` per ogni evento; reagiscono ai dati degli eventi, non allo stato corrente, che è più avanti)
+- `BoardView` (`/BOARD/BOARD_Tiles`): una tile per cella dal prefab del tipo di cella, cella (x, y) in (x · `cellSize`, 0, y · `cellSize`) nello spazio dell'oggetto (`cellSize` = 1). Converte celle e spigoli in posizioni per le altre viste. Segnalini isola (R-097): un disco per giocatore dal prefab, colorato con la palette, sulla prima cella dell'isola, spostato di poco per posto; si sposta con `IslandMarkerPlacedEvent`.
+- `ZoneOverlayView` (`/BOARD/BOARD_Zones`): per ogni zona un riempimento (mesh delle sue celle sul prefab con `MeshFilter`), un contorno (`LineRenderer` dal prefab, chiuso, lungo il perimetro) e il livello come testo 3D TextMeshPro. Livello 0 invisibile, Mare Mosso giallo, Tempesta rosso (soglie da `RulesConfig.WeatherAt`); il numero compare dal livello 1. Si aggiorna con `ZoneChangedEvent`.
+- `ShipsView` (`/BOARD/BOARD_Ships`): una nave per giocatore dal prefab `Ship`, colorata con la palette; avanza una cella per `ShipMovedEvent` (animazione di `durata`), poi riposizionamenti, attraversamenti e allineamento con `MovementEndedEvent`. Più navi sulla stessa cella si dispongono in cerchio.
+- `CellHighlightView` (`/BOARD/BOARD_Highlights`, minima): le rotte rivelate, un segno del colore del giocatore sulla cella verso cui punta, girato nella direzione; segue le rotazioni del meteo e sparisce quando parte il movimento.
+- `WindRoseView` (`/UI_Canvas/UI_TopBar`): lancetta (Nord in alto, 45° per scatto orario) e scritta del vento.
+- `LogView` (`/UI_Canvas/UI_Log`): una riga per evento significativo, le ultime `maxLines`.
+
+**Testi e colori**
+- `UiText` (`Assets/Game/Unity/UiText.cs`): tutti i testi per il giocatore, in italiano: nomi dei bot, direzioni, vento, meteo, azioni di porto, livello delle zone, righe del log.
+- `PlayerPaletteAsset` (`Create/MareIgnoto/Player Palette`): gli 8 colori dei posti, unica fonte per navi, segnalini e rotte. I colori si applicano con `MaterialPropertyBlock` (`_BaseColor` e `_Color`), senza toccare i materiali.
+
+**Geometria pura e test**: `ZoneGeometry` (`Assets/Game/Rules/Map/`, assembly Rules): contorni chiusi lungo il perimetro delle celle (antiorari all'esterno, orari attorno ai buchi, senza vertici intermedi) e la cella dove scrivere il livello (la più vicina al baricentro, sempre dentro la zona). `ZoneGeometryTests`: casi base, buco, celle che si toccano per uno spigolo, e tutte le 20 zone v4 (un contorno ciascuna, area uguale al numero di celle). `dotnet test Tools/RulesHarness`: 405 verdi.
+
+**Regole del CLAUDE.md**: niente `Find`, `AddComponent`, `Camera.main`; gli oggetti generati (tile, navi, segnalini, zone) nascono da prefab assegnati in Inspector. Ogni riferimento mancante produce `Debug.LogError` con il nome del campo e disabilita il componente. Uniche letture di componenti a runtime: `GetComponentsInChildren<Renderer>` sulle istanze appena create (per colorarle) e `GetComponent<Renderer>` sul riempimento della zona istanziato.
 
 ## Lato Editor (Bezi) — checklist
 
@@ -31,12 +52,50 @@ Passo A (`MapLayout.asset` non è più un compito di Bezi: lo genera il comando 
 - [ ] Camera ortografica dall'alto, inclinata, che inquadra tutta la mappa **25×25** a 1920×1080 (centro della mappa in world (12, 0, 12) con celle da 1, `05` §1). La camera fatta nel passo A è tarata sulla 20×20 (centro (9.5, 0, 9.5), report di Bezi): va rifatta.
 - [ ] Pipeline URP: in `ProjectSettings/GraphicsSettings.asset` `m_CustomRenderPipeline` non è assegnato (nota del report di Bezi), quindi i materiali URP Lit restano magenta. Nel progetto non esiste nessun asset di pipeline URP (verificato nel repo e nella storia): va creato (URP Asset con Universal Renderer, in `Assets/Game/Content/Rendering/`) e assegnato in Graphics e in tutti i livelli di Quality.
 
-Passo C: _da compilare da Claude Code nel passo B_.
+Passo C (wiring, una riga per collegamento: oggetto → componente → campo → cosa assegnare). Prima crea gli oggetti nuovi:
+- [ ] `Assets/Game/Content/Config/PlayerPalette.asset` (`Create/MareIgnoto/Player Palette`): nasce con 8 colori, nessun valore da cambiare.
+- [ ] Prefab `Assets/Game/Content/Prefabs/IslandMarker.prefab`: disco (cilindro schiacciato, circa 0.3 × 0.05 × 0.3) con materiale URP Lit neutro (il colore lo mette il codice).
+- [ ] Prefab `RouteMarker.prefab`: segno piatto che punta lungo +Z (freccia o quad stretto), materiale URP Lit o Unlit neutro.
+- [ ] Prefab `ZoneFill.prefab`: `MeshFilter` (mesh vuota) + `MeshRenderer` con un materiale trasparente (URP Unlit, Surface Type Transparent).
+- [ ] Prefab `ZoneOutline.prefab`: `LineRenderer` con larghezza circa 0.06, `Use World Space` attivo, materiale URP Unlit; nessun punto (li mette il codice).
+- [ ] Prefab `ZoneLabel.prefab`: `TextMeshPro` 3D (non UGUI), ruotato di 90° su X per leggerlo dall'alto, centrato, testo `[ph]`.
+- [ ] In `/UI_Canvas/UI_TopBar`: un'immagine `WindNeedle` (la lancetta, che a rotazione 0 punta in alto) e un `TextMeshProUGUI` `WindLabel` con testo `[ph]`.
+- [ ] In `/UI_Canvas/UI_Log`: un `TextMeshProUGUI` `LogText` con testo `[ph]` (allineato in basso, a capo automatico).
+
+Collegamenti:
+- [ ] `/GAME_BOOTSTRAP` → `GameBootstrap` → `rulesConfig` → `Assets/Game/Content/Config/RulesConfig.asset`
+- [ ] `/GAME_BOOTSTRAP` → `GameBootstrap` → `mapLayout` → `Assets/Game/Content/Config/MapLayout.asset`
+- [ ] `/GAME_BOOTSTRAP` → `GameBootstrap` → `flow` → `/GAME_FLOW` (componente `GameFlowController`)
+- [ ] `/GAME_BOOTSTRAP` → `GameBootstrap` → `playerCount`, `seed` → lasciare i default (4, 1)
+- [ ] `/GAME_FLOW` → `GameFlowController` → `eventPlayer` → `/GAME_FLOW` (componente `EventPlayer`)
+- [ ] `/GAME_FLOW` → `EventPlayer` → `views` → 6 elementi: `/BOARD/BOARD_Tiles` (BoardView), `/BOARD/BOARD_Zones` (ZoneOverlayView), `/BOARD/BOARD_Ships` (ShipsView), `/BOARD/BOARD_Highlights` (CellHighlightView), `/UI_Canvas/UI_TopBar` (WindRoseView), `/UI_Canvas/UI_Log` (LogView)
+- [ ] `/BOARD/BOARD_Tiles` → `BoardView` → `seaTilePrefab` → `Prefabs/Tile_Sea.prefab`
+- [ ] `/BOARD/BOARD_Tiles` → `BoardView` → `islandTilePrefab` → `Prefabs/Tile_Island.prefab`
+- [ ] `/BOARD/BOARD_Tiles` → `BoardView` → `sacredTilePrefab` → `Prefabs/Tile_Sacred.prefab`
+- [ ] `/BOARD/BOARD_Tiles` → `BoardView` → `borderTilePrefab` → `Prefabs/Tile_Border.prefab`
+- [ ] `/BOARD/BOARD_Tiles` → `BoardView` → `islandMarkerPrefab` → `Prefabs/IslandMarker.prefab`
+- [ ] `/BOARD/BOARD_Tiles` → `BoardView` → `palette` → `Config/PlayerPalette.asset`
+- [ ] `/BOARD/BOARD_Zones` → `ZoneOverlayView` → `board` → `/BOARD/BOARD_Tiles` (BoardView)
+- [ ] `/BOARD/BOARD_Zones` → `ZoneOverlayView` → `fillPrefab` → `Prefabs/ZoneFill.prefab`
+- [ ] `/BOARD/BOARD_Zones` → `ZoneOverlayView` → `outlinePrefab` → `Prefabs/ZoneOutline.prefab`
+- [ ] `/BOARD/BOARD_Zones` → `ZoneOverlayView` → `labelPrefab` → `Prefabs/ZoneLabel.prefab`
+- [ ] `/BOARD/BOARD_Ships` → `ShipsView` → `board` → `/BOARD/BOARD_Tiles` (BoardView)
+- [ ] `/BOARD/BOARD_Ships` → `ShipsView` → `shipPrefab` → `Prefabs/Ship.prefab`
+- [ ] `/BOARD/BOARD_Ships` → `ShipsView` → `palette` → `Config/PlayerPalette.asset`
+- [ ] `/BOARD/BOARD_Highlights` → `CellHighlightView` → `board` → `/BOARD/BOARD_Tiles` (BoardView)
+- [ ] `/BOARD/BOARD_Highlights` → `CellHighlightView` → `ships` → `/BOARD/BOARD_Ships` (ShipsView)
+- [ ] `/BOARD/BOARD_Highlights` → `CellHighlightView` → `palette` → `Config/PlayerPalette.asset`
+- [ ] `/BOARD/BOARD_Highlights` → `CellHighlightView` → `routeMarkerPrefab` → `Prefabs/RouteMarker.prefab`
+- [ ] `/UI_Canvas/UI_TopBar` → `WindRoseView` → `needle` → `/UI_Canvas/UI_TopBar/WindNeedle` (RectTransform)
+- [ ] `/UI_Canvas/UI_TopBar` → `WindRoseView` → `label` → `/UI_Canvas/UI_TopBar/WindLabel` (TextMeshProUGUI)
+- [ ] `/UI_Canvas/UI_Log` → `LogView` → `text` → `/UI_Canvas/UI_Log/LogText` (TextMeshProUGUI)
+- [ ] `/BOARD` e figli con posizione (0, 0, 0), rotazione 0 e scala 1: la cella (x, y) va in (x, 0, y).
 
 ## Per Franci — modifiche isolate
 
 - **`MapLayout.asset` (passo A, primo punto)**: nell'Editor eseguire **MareIgnoto > Create MapLayout v4**. Il comando crea `Assets/Game/Content/Config/MapLayout.asset` dal layout v4 (`LayoutV4`, `05` §3–§6); se il file esiste chiede prima di sovrascriverlo. Controllare che la Console dica `[MapLayout] … Validate OK`, poi committare `MapLayout.asset` e il suo `.meta`. Test Runner → EditMode: `MapLayoutV4AssetTests` non deve più risultare "Ignorato" ed essere verde.
 - Aggiungere `Board.unity` alle Build Settings.
+- Dopo il passo B: tornare sull'Editor per i `.meta` dei file nuovi (in `Assets/Game/Unity/`: `UiText.cs`, `PlayerPaletteAsset.cs`, le cartelle `Flow/` e `Views/` con i loro file; in Rules `Map/ZoneGeometry.cs`; nei test `ZoneGeometryTests.cs`) e committarli.
 
 ## Verifica
 
@@ -104,3 +163,21 @@ Passo A, primo punto: il generatore di `MapLayout.asset` (l'asset non l'ho creat
 - il menu **MareIgnoto > Create MapLayout v4** compare nella barra dei menu;
 - dopo averlo eseguito: il messaggio `[MapLayout] Assets/Game/Content/Config/MapLayout.asset creato dal layout v4: Validate OK (con Assets/Game/Content/Config/RulesConfig.asset).`, nessun errore rosso;
 - `.meta` nuovi da committare: `MapLayoutV4Generator.cs`, `MapLayoutV4AssetTests.cs` e, dopo il comando, `MapLayout.asset`.
+
+### Claude Code — 2026-10-03 — commit 5013e61
+
+Parte A applicata parola per parola in un commit a parte (`ce4dcbd`, "docs: patch Athena (viste tabellone, URP)"). Passo B scritto: dettaglio in "Lato codice", wiring per Bezi in "Passo C". Nessuna scena, prefab o asset toccati; `Assets/Scenes/Board.unity` risulta modificato nella working copy ma non è mio e l'ho lasciato fuori dal commit.
+
+**Non compilato in Unity.** Qui non posso compilare il codice Unity. Ho compilato gli assembly Unity ed Editor e i test Unity contro stub delle API usate (UnityEngine, TMPro, UnityEditor, NUnit), scritti da me in un progetto temporaneo fuori dal repo: 0 errori, 0 avvisi. Il controllo riguarda solo sintassi e tipi, e copre anche il comando `Create MapLayout v4` della voce precedente. La parte pura (`ZoneGeometry`) è testata nell'harness: 405 test verdi.
+
+Da controllare in Console (Franci):
+- nessun errore di compilazione in `hp55games.MareIgnoto.Unity`, `hp55games.MareIgnoto.Editor`, `hp55games.MareIgnoto.Unity.Tests`;
+- Test Runner → EditMode: `hp55games.MareIgnoto.Rules.Tests` verde (compresi `ZoneGeometryTests`);
+- dopo il wiring di Bezi, Play da `Board.unity`: nessun `[NomeComponente] … manca il riferimento …` in rosso; se compare, il campo indicato non è collegato;
+- in Play: 25×25 tile, 4 navi colorate sui punti di partenza, l'anello delle 8 zone rosse con il numero 5, il log che si riempie, la lancetta del vento che gira.
+
+#### Note
+
+- Le navi si muovono una alla volta, un passo per evento (gli eventi di movimento sono uno per nave per passo, `04` §3). Se si vuole il passo simultaneo a vista, `EventPlayer` può raggruppare gli `ShipMovedEvent` dello stesso passo: è una modifica solo di presentazione.
+- Il livello delle zone si legge da `RulesConfig.WeatherAt`, quindi le soglie restano solo nella config.
+- La camera (passo A, Bezi) è ancora tarata sulla 20×20; con la mappa 25×25 il centro è in (12, 0, 12).
