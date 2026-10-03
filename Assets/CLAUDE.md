@@ -40,6 +40,13 @@ Nel report distingui:
 - **Domande sulle regole**: se `02`/`03` non coprono un caso, non inventare. Implementa il resto, lascia un `// TODO R-xxx: <domanda>` nel punto esatto, e scrivi la domanda nel report sotto `#### Domande`. Le voci **[DEFAULT]** in `tech/` sono decisioni valide: implementale come scritte.
 - Bezi non vede il lavoro non committato né la radice del repo. Se un suo report contraddice il disco, il report è vecchio: controlla il commit che dichiara prima di agire.
 
+## Patch di documentazione da Athena
+
+- I file in `Assets/Documents/tech/` sono di Athena. Puoi modificarli solo quando un prompt ti dà il testo esatto: applicalo parola per parola, senza riformulare né sistemare.
+- Se la riga indicata non esiste o è diversa da come descritta, fermati e riportalo.
+- Le patch vanno in un commit separato "docs: patch Athena (...)", mai insieme al codice. Dopo ogni patch mostra `git diff --stat`.
+- Se il codice contraddice un documento, non modificare mai il documento per farlo combaciare: scrivi la domanda nel report.
+
 ## Regole che cambiano cosa scrivi
 
 1. **Assembly Rules puro**: `hp55games.MareIgnoto.Rules` ha `noEngineReferences: true`. Niente `UnityEngine`, niente `System.Random`, niente `DateTime.Now`, niente I/O. Tutta la casualità passa da `IRandomSource`. Deterministico: stesso seed + stesse risposte = stessi eventi.
