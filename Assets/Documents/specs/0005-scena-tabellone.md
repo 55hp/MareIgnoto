@@ -181,3 +181,32 @@ Da controllare in Console (Franci):
 - Le navi si muovono una alla volta, un passo per evento (gli eventi di movimento sono uno per nave per passo, `04` §3). Se si vuole il passo simultaneo a vista, `EventPlayer` può raggruppare gli `ShipMovedEvent` dello stesso passo: è una modifica solo di presentazione.
 - Il livello delle zone si legge da `RulesConfig.WeatherAt`, quindi le soglie restano solo nella config.
 - La camera (passo A, Bezi) è ancora tarata sulla 20×20; con la mappa 25×25 il centro è in (12, 0, 12).
+
+### Bezi — 2026-10-03 — commit 5013e61
+
+Passo A, completamento dei due micro-passi rimanenti (camera 25x25 e pipeline URP).
+
+1. Camera:
+Valori iniziali letti in Assets/Scenes/Board.unity su /CAMERA_Rig/Main Camera:
+- Transform localPosition: (9.5, 20, -2.05), localRotation: (60, 0, 0), localScale: (1, 1, 1).
+- UnityEngine.Camera: orthographic true, orthographicSize 11, nearClipPlane 0.3, farClipPlane 100, clearFlags Skybox, cullingMask Everything.
+- Genitore /CAMERA_Rig: Transform localPosition (0, 0, 0), localRotation (0, 0, 0), localScale (1, 1, 1).
+Inquadratura precedente tarata sulla vecchia mappa 20x20 con centro a coordinate world (9.5, 0, 9.5).
+
+Valori finali impostati per la mappa 25x25 (celle 0..24 a world x,0,y, centro world (12, 0, 12)):
+- Transform localPosition: (12, 20, 0.453), localRotation: (60, 0, 0), localScale: (1, 1, 1).
+- UnityEngine.Camera: orthographic true, orthographicSize 12.
+Verifica in Game view a 1920x1080: con inclinazione a 60 gradi, l asse ottico interseca esattamente il piano Y=0 a coordinate (12, 0, 12). Con orthographicSize 12, l estensione verticale visibile sul piano XZ copre da Z = -1.86 a Z = 25.86, includendo la cornice esterna delle celle (Z da -0.5 a 24.5) con un margine di circa 1 cella (1.35 celle, pari a circa 46 pixel dal bordo schermo superiore e inferiore). L estensione orizzontale copre da X = -9.33 a X = 33.33. Tutti e quattro gli angoli della mappa (0,0), (24,0), (0,24), (24,24) e la relativa cornice risultano interamente visibili nella Game view.
+
+2. Pipeline URP:
+Creati i seguenti asset in Assets/Game/Content/Rendering/:
+- Assets/Game/Content/Rendering/UniversalRenderer.asset (ScriptableRendererData di tipo UniversalRendererData con PostProcessData di default).
+- Assets/Game/Content/Rendering/UniversalRenderPipelineAsset.asset (UniversalRenderPipelineAsset configurato con UniversalRenderer.asset).
+
+Impostazioni modificate nel progetto:
+- ProjectSettings/GraphicsSettings.asset: campo m_CustomRenderPipeline impostato con riferimento a Assets/Game/Content/Rendering/UniversalRenderPipelineAsset.asset (guid e589ad1fd49f1ae4f81dcaf6ea7e05f9).
+- ProjectSettings/QualitySettings.asset: campo customRenderPipeline impostato con riferimento a Assets/Game/Content/Rendering/UniversalRenderPipelineAsset.asset su tutti i 6 livelli di qualita (Very Low, Low, Medium, High, Very High, Ultra).
+
+Verifica rendering:
+- I 5 materiali in Assets/Game/Content/Materials/ (Mat_Tile_Sea.mat, Mat_Tile_Island.mat, Mat_Tile_Sacred.mat, Mat_Tile_Border.mat, Mat_Ship.mat) sono stati verificati in anteprima isolata: tutti mostrano correttamente i rispettivi colori PBR (blu mare, sabbia isola, oro metallico Isola Sacra, grigio scuro cornice, neutro nave) e non piu il magenta di fallback.
+- I 5 prefab in Assets/Game/Content/Prefabs/ (Tile_Sea.prefab, Tile_Island.prefab, Tile_Sacred.prefab, Tile_Border.prefab, Ship.prefab) sono stati verificati in anteprima isolata: tutti mostrano correttamente i propri materiali e colori e non piu il magenta di fallback.
