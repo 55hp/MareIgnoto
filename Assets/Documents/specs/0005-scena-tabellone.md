@@ -12,7 +12,7 @@ Documenti: `tech/05_mappa.md`, `tech/06_presentazione.md` §1–2, §4, §6
 
 Gerarchia e nomi: `06` §2 (parte `/GAME_BOOTSTRAP`, `/GAME_FLOW`, `/BOARD...`, `/CAMERA_Rig`, `/Directional Light`, `/UI_Canvas/UI_TopBar` col solo vento, `/UI_Canvas/UI_Log`).
 Prefab: `Tile_Sea`, `Tile_Island`, `Tile_Sacred`, `Tile_Border`, `Ship` in `Assets/Game/Content/Prefabs/`.
-`GameBootstrap` con "avvio diretto di test": tutti i posti bot casuali, seed nell'Inspector, numero giocatori nell'Inspector.
+`GameBootstrap` con "avvio diretto di test": tutti i posti bot casuali, seed nell'Inspector, numero giocatori nell'Inspector. `BoardView` mostra anche i segnalini isola (R-097) come dischi del colore del giocatore sopra la cella isola; `ZoneOverlayView` disegna ogni zona come forma con contorno lungo il perimetro delle sue celle e ne mostra il livello come numero quando è ≥ 1.
 
 Il lavoro si divide in tre passi:
 - **A (Bezi, in parallelo a 0002–0004)**: `MapLayout.asset` dal layout approvato in `05_mappa.md` §6; scena `Board.unity` con la gerarchia vuota del contratto; prefab placeholder delle tile e della nave (cubi/quad con materiali URP Lit colorati, `06` §6); camera e luce.
@@ -29,7 +29,7 @@ Passo A (`MapLayout.asset` non è più un compito di Bezi: lo genera il comando 
 - [ ] `Assets/Scenes/Board.unity` con la gerarchia del contratto (oggetti vuoti, nomi esatti).
 - [ ] Prefab placeholder in `Assets/Game/Content/Prefabs/` e materiali in `Assets/Game/Content/Materials/`.
 - [ ] Camera ortografica dall'alto, inclinata, che inquadra tutta la mappa **25×25** a 1920×1080 (centro della mappa in world (12, 0, 12) con celle da 1, `05` §1). La camera fatta nel passo A è tarata sulla 20×20 (centro (9.5, 0, 9.5), report di Bezi): va rifatta.
-- [ ] Pipeline URP: in `ProjectSettings/GraphicsSettings.asset` `m_CustomRenderPipeline` non è assegnato (nota del report di Bezi), quindi i materiali URP Lit restano magenta. Va assegnato l'asset della pipeline URP del progetto (anche nei livelli di Quality, se lo richiedono).
+- [ ] Pipeline URP: in `ProjectSettings/GraphicsSettings.asset` `m_CustomRenderPipeline` non è assegnato (nota del report di Bezi), quindi i materiali URP Lit restano magenta. Nel progetto non esiste nessun asset di pipeline URP (verificato nel repo e nella storia): va creato (URP Asset con Universal Renderer, in `Assets/Game/Content/Rendering/`) e assegnato in Graphics e in tutti i livelli di Quality.
 
 Passo C: _da compilare da Claude Code nel passo B_.
 
