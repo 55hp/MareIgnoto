@@ -239,3 +239,108 @@ Passo C, parte 1: creazione oggetti nuovi (asset, materiali URP neutri e prefab 
 - Assets/Game/Content/Prefabs/ZoneFill.prefab: radice ZoneFill con Transform localPosition (0, 0, 0), localRotation (0, 0, 0), localScale (1, 1, 1). MeshFilter con sharedMesh nullo (mesh assegnata dal codice a runtime) e MeshRenderer con Mat_ZoneFill.mat.
 - Assets/Game/Content/Prefabs/ZoneOutline.prefab: radice ZoneOutline con Transform localPosition (0, 0, 0), localRotation (0, 0, 0), localScale (1, 1, 1). LineRenderer con larghezza 0.06 (widthCurve costante a 0.06), useWorldSpace true, positionCount 0 (nessun punto impostato), materiale Mat_ZoneOutline.mat.
 - Assets/Game/Content/Prefabs/ZoneLabel.prefab: radice ZoneLabel con Transform localPosition (0, 0, 0), localRotation (90, 0, 0) (ruotato di 90 gradi sull asse X per lettura dall alto), localScale (1, 1, 1). Componente TMPro.TextMeshPro 3D (non UGUI) con text [ph], alignment Center, fontSize 4, font LiberationSans SDF.
+
+### Bezi — 2026-10-03 — commit 5013e61
+
+Passo C, parte 2: oggetti UI in Assets/Scenes/Board.unity (/UI_Canvas/UI_TopBar e /UI_Canvas/UI_Log).
+
+1. Stato iniziale rilevato (lettura prima della modifica):
+- /UI_Canvas/UI_TopBar: 0 figli (childCount = 0). RectTransform con anchorMin (0.5, 0.5), anchorMax (0.5, 0.5), pivot (0.5, 0.5), anchoredPosition (0, 0), sizeDelta (100, 100).
+- /UI_Canvas/UI_Log: 0 figli (childCount = 0). RectTransform con anchorMin (0.5, 0.5), anchorMax (0.5, 0.5), pivot (0.5, 0.5), anchoredPosition (0, 0), sizeDelta (100, 100).
+
+2. Dimensionamento e ancoraggio dei contenitori per Canvas 1920x1080:
+- /UI_Canvas/UI_TopBar: barra superiore a estensione orizzontale completa. RectTransform con anchorMin (0, 1), anchorMax (1, 1), pivot (0.5, 1), anchoredPosition (0, 0), sizeDelta (0, 60).
+- /UI_Canvas/UI_Log: pannello di log in basso a destra. RectTransform con anchorMin (1, 0), anchorMax (1, 0), pivot (1, 0), anchoredPosition (-20, 20), sizeDelta (420, 280).
+
+3. Oggetti creati in /UI_Canvas/UI_TopBar:
+- /UI_Canvas/UI_TopBar/WindNeedle: RectTransform con anchorMin (0.5, 0.5), anchorMax (0.5, 0.5), pivot (0.5, 0.5), anchoredPosition (-80, 0), sizeDelta (40, 40), localEulerAngles (0, 0, 0). Componente UnityEngine.UI.Image con sprite Assets/Art/UI/WindNeedle.png (lancetta che a rotazione 0 punta verso l alto / Nord, con punta rossa a Nord e base argento a Sud), preserveAspect true.
+- /UI_Canvas/UI_TopBar/WindLabel: RectTransform con anchorMin (0.5, 0.5), anchorMax (0.5, 0.5), pivot (0, 0.5), anchoredPosition (-50, 0), sizeDelta (200, 40). Componente TMPro.TextMeshProUGUI con text [ph], fontSize 24, font LiberationSans SDF, horizontalAlignment Left, verticalAlignment Middle.
+
+4. Oggetti creati in /UI_Canvas/UI_Log:
+- /UI_Canvas/UI_Log/LogText: RectTransform ad aggancio completo al genitore log, anchorMin (0, 0), anchorMax (1, 1), pivot (0, 0), anchoredPosition (0, 0), sizeDelta (0, 0). Componente TMPro.TextMeshProUGUI con text [ph], fontSize 16, font LiberationSans SDF, horizontalAlignment Left, verticalAlignment Bottom (allineato in basso), wordWrapping abilitato (auto-wrapping attivo), overflowMode Overflow.
+
+### Bezi — 2026-10-03 — commit 5013e61
+
+Passo C, parte 3: aggiunta componenti e collegamenti (wiring) nella scena Assets/Scenes/Board.unity. Tutti i componenti e i campi elencati nella checklist esistono e sono stati collegati con successo uno alla volta senza modificare valori su prefab o asset e senza avviare il Play mode.
+
+Elenco finale dei componenti e valore di ciascun campo:
+
+1. /GAME_BOOTSTRAP:
+- hp55games.MareIgnoto.Unity.Flow.GameBootstrap:
+  - rulesConfig: Assets/Game/Content/Config/RulesConfig.asset
+  - mapLayout: Assets/Game/Content/Config/MapLayout.asset
+  - flow: /GAME_FLOW (componente hp55games.MareIgnoto.Unity.Flow.GameFlowController)
+  - playerCount: 4
+  - seed: 1
+
+2. /GAME_FLOW:
+- hp55games.MareIgnoto.Unity.Flow.GameFlowController:
+  - eventPlayer: /GAME_FLOW (componente hp55games.MareIgnoto.Unity.Flow.EventPlayer)
+  - botDelaySeconds: 0.3
+- hp55games.MareIgnoto.Unity.Flow.EventPlayer:
+  - views (array di 6 elementi ordinati):
+    - [0]: /BOARD/BOARD_Tiles (componente hp55games.MareIgnoto.Unity.Views.BoardView)
+    - [1]: /BOARD/BOARD_Zones (componente hp55games.MareIgnoto.Unity.Views.ZoneOverlayView)
+    - [2]: /BOARD/BOARD_Ships (componente hp55games.MareIgnoto.Unity.Views.ShipsView)
+    - [3]: /BOARD/BOARD_Highlights (componente hp55games.MareIgnoto.Unity.Views.CellHighlightView)
+    - [4]: /UI_Canvas/UI_TopBar (componente hp55games.MareIgnoto.Unity.Views.WindRoseView)
+    - [5]: /UI_Canvas/UI_Log (componente hp55games.MareIgnoto.Unity.Views.LogView)
+  - secondsPerAnimation: 0.25
+  - speed: 1
+  - skipAnimations: false
+
+3. /BOARD/BOARD_Tiles:
+- hp55games.MareIgnoto.Unity.Views.BoardView:
+  - seaTilePrefab: Assets/Game/Content/Prefabs/Tile_Sea.prefab
+  - islandTilePrefab: Assets/Game/Content/Prefabs/Tile_Island.prefab
+  - sacredTilePrefab: Assets/Game/Content/Prefabs/Tile_Sacred.prefab
+  - borderTilePrefab: Assets/Game/Content/Prefabs/Tile_Border.prefab
+  - islandMarkerPrefab: Assets/Game/Content/Prefabs/IslandMarker.prefab
+  - palette: Assets/Game/Content/Config/PlayerPalette.asset
+  - markerHeight: 0.1
+  - markerSpread: 0.25
+  - cellSize: 1
+
+4. /BOARD/BOARD_Zones:
+- hp55games.MareIgnoto.Unity.Views.ZoneOverlayView:
+  - board: /BOARD/BOARD_Tiles (componente hp55games.MareIgnoto.Unity.Views.BoardView)
+  - fillPrefab: Assets/Game/Content/Prefabs/ZoneFill.prefab (componente UnityEngine.MeshFilter)
+  - outlinePrefab: Assets/Game/Content/Prefabs/ZoneOutline.prefab (componente UnityEngine.LineRenderer)
+  - labelPrefab: Assets/Game/Content/Prefabs/ZoneLabel.prefab (componente TMPro.TextMeshPro)
+  - roughSeaColor: (1.0, 0.85, 0.1, 0.35)
+  - stormColor: (0.9, 0.15, 0.1, 0.45)
+  - fillHeight: 0.04
+  - outlineHeight: 0.05
+  - labelHeight: 0.08
+
+5. /BOARD/BOARD_Ships:
+- hp55games.MareIgnoto.Unity.Views.ShipsView:
+  - board: /BOARD/BOARD_Tiles (componente hp55games.MareIgnoto.Unity.Views.BoardView)
+  - shipPrefab: Assets/Game/Content/Prefabs/Ship.prefab
+  - palette: Assets/Game/Content/Config/PlayerPalette.asset
+  - sharedCellSpread: 0.22
+
+6. /BOARD/BOARD_Highlights:
+- hp55games.MareIgnoto.Unity.Views.CellHighlightView:
+  - board: /BOARD/BOARD_Tiles (componente hp55games.MareIgnoto.Unity.Views.BoardView)
+  - ships: /BOARD/BOARD_Ships (componente hp55games.MareIgnoto.Unity.Views.ShipsView)
+  - palette: Assets/Game/Content/Config/PlayerPalette.asset
+  - routeMarkerPrefab: Assets/Game/Content/Prefabs/RouteMarker.prefab
+  - height: 0.07
+
+7. /UI_Canvas/UI_TopBar:
+- hp55games.MareIgnoto.Unity.Views.WindRoseView:
+  - needle: /UI_Canvas/UI_TopBar/WindNeedle (componente UnityEngine.RectTransform)
+  - label: /UI_Canvas/UI_TopBar/WindLabel (componente TMPro.TextMeshProUGUI)
+
+8. /UI_Canvas/UI_Log:
+- hp55games.MareIgnoto.Unity.Views.LogView:
+  - text: /UI_Canvas/UI_Log/LogText (componente TMPro.TextMeshProUGUI)
+  - maxLines: 40
+
+9. Verifica trasformazioni gerarchia /BOARD:
+- /BOARD: localPosition (0, 0, 0), localRotation (0, 0, 0), localScale (1, 1, 1)
+- /BOARD/BOARD_Tiles: localPosition (0, 0, 0), localRotation (0, 0, 0), localScale (1, 1, 1)
+- /BOARD/BOARD_Zones: localPosition (0, 0, 0), localRotation (0, 0, 0), localScale (1, 1, 1)
+- /BOARD/BOARD_Ships: localPosition (0, 0, 0), localRotation (0, 0, 0), localScale (1, 1, 1)
+- /BOARD/BOARD_Highlights: localPosition (0, 0, 0), localRotation (0, 0, 0), localScale (1, 1, 1)
