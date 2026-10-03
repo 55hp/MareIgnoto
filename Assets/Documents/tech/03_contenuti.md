@@ -48,9 +48,9 @@ Costo pagato al Tesoro (R-121). Bersaglio: qualsiasi zona, da qualsiasi posizion
 | Id | Nome | Costo | Copie | Effetto |
 |---|---|---|---|---|
 | `SupplicaGartya` | Supplica a Gartya | 2 | 6 | Sposta di 1 scatto la lancetta del vento dominante, in senso orario o antiorario a scelta |
-| `InvocazioneGartya` | Invocazione di Gartya | 5 | 6 | La zona scelta diventa Mare Mosso |
-| `IraGartya` | Ira di Gartya | 10 | 3 | La zona scelta diventa Tempesta |
-| `FavoreGartya` | Favore di Gartya | 2 | 5 | La zona scelta scende di un livello (Tempesta→Mare Mosso, Mare Mosso→Normale) |
+| `InvocazioneGartya` | Invocazione di Gartya | 5 | 6 | Porta la zona scelta a livello 1, solo se è a livello 0 (R-088) |
+| `IraGartya` | Ira di Gartya | 10 | 3 | Porta la zona scelta a livello 2, solo se è a livello 0 o 1 (R-088) |
+| `FavoreGartya` | Favore di Gartya | 2 | 5 | Abbassa di 1 il livello della zona scelta, minimo 0 (R-088) |
 | `VentoInPoppa` | Vento in Poppa | 0 | 5 | Immunità al meteo nella Fase 1 del round successivo (R-087) |
 | `RafficaCanaglia` | Raffica canaglia | 0 | 5 | Inverte la lancetta del vento dominante (180°) |
 
@@ -78,7 +78,7 @@ Ricompense in segnalini taglia. "Contatore" indica cosa il motore deve tracciare
 | `Gemelli` | Gemelli | Ha due carte dello stesso rango sopra coperta (i due Jolly valgono 4) | 2 (4 con i due Jolly) | Immediata | stato ciurma |
 | `NaveDAssalto` | Nave d'assalto | Ha sopra coperta due carte di rango J, Q o K (qualsiasi combinazione) | 1 | Immediata | stato ciurma |
 | `ParlareConIPesci` | Parlare con i pesci | Ha perso 3 carte crew "in mare" (R-022) | 3 | Immediata | perdite in mare |
-| `GambaDiLegno` | Gamba di legno | Si è arenato 3 volte su 3 celle di cornice diverse (R-069) | 3 | Immediata | insieme delle celle di arenamento |
+| `GambaDiLegno` | Gamba di legno | Si è arenato 3 volte su 3 celle diverse, di cornice o di isola con il proprio segnalino (R-069, R-097) | 3 | Immediata | insieme delle celle di arenamento |
 
 Esclusa dal mazzo: **Magellano x3** (bozza nel GDD, "Visita due isole specifiche", +2). Non va implementata finché Franci non la chiude.
 

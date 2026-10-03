@@ -52,7 +52,7 @@ Claude Code never wires objects at runtime: if a script exposes a `[SerializeFie
 4. **No player-facing text in scenes or prefabs.** Text comes from code. TMP fields in prefabs hold the placeholder `[ph]`.
 5. **TextMeshPro for all text.**
 6. **Input**: Legacy Input Manager is active (`activeInputHandler: 0`); EventSystem uses `StandaloneInputModule`. Don't add Input System components.
-7. **Map data** is `Assets/Game/Content/Config/MapLayout.asset` (`MapLayoutAsset`). Coordinates: `x` 0..19 west→east, `y` 0..19 south→north (`tech/05_mappa.md` §1). Never infer a map layout: it comes from the approved layout in `tech/05_mappa.md` §6 or from Franci.
+7. **Map data** is `Assets/Game/Content/Config/MapLayout.asset` (`MapLayoutAsset`). Coordinates: columns are letters A..Y (A = 0, west→east), rows are numbers 0..24 (south→north); cell B1 = column B, row 1 (`tech/05_mappa.md` §1). Never infer a map layout: it comes from the approved layout in `tech/05_mappa.md` §6 or from Franci.
 8. **Folders**: content assets and prefabs in `Assets/Game/Content/` (`Config/`, `Prefabs/`, `Materials/`); scenes in `Assets/Scenes/`; art in `Assets/Art/`. Never put assets inside `Assets/Game/Rules/` or `Assets/Game/Unity/` (code only).
 9. **Legacy 2024 content** (`Assets/Scripts/`, `Assets/Cards/`, `MainScene.unity`, `Assets/GameobjectsInScena/`) is reference only until Franci removes it. Don't modify or reuse it unless a task says so.
 10. **Play**: from `Assets/Scenes/Board.unity` (direct test start) or `Assets/Scenes/Menu.unity`, once they exist.

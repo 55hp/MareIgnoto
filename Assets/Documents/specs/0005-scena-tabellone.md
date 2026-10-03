@@ -6,7 +6,7 @@ Documenti: `tech/05_mappa.md`, `tech/06_presentazione.md` §1–2, §4, §6
 
 ## Obiettivo
 
-`Board.unity` mostra la mappa 20×20 dal `MapLayout.asset`, le navi, le zone meteo e il vento, e riproduce gli eventi della Fase 1 (rotte, meteo, movimento cella per cella, collisioni, Abbordaggio) da una partita giocata da soli bot casuali. Ancora nessuna UI di decisione.
+`Board.unity` mostra la mappa 25×25 dal `MapLayout.asset`, le navi, le zone meteo e il vento, e riproduce gli eventi della Fase 1 (rotte, meteo, movimento cella per cella, collisioni, Abbordaggio) da una partita giocata da soli bot casuali. Ancora nessuna UI di decisione.
 
 ## Contratto
 

@@ -20,7 +20,7 @@ Bezi crea questi oggetti con **questi nomi esatti**; Claude Code scrive i compon
 /GAME_FLOW                 GameFlowController, EventPlayer
 /BOARD
    /BOARD_Tiles            BoardView (istanzia le celle dal MapLayout: unica eccezione "generato a runtime")
-   /BOARD_Zones            ZoneOverlayView (colore per stato meteo, una quad per zona)
+   /BOARD_Zones            ZoneOverlayView (colore per livello meteo e linea di contorno lungo il perimetro delle celle, una forma per zona)
    /BOARD_Ships            ShipsView (una nave per giocatore, istanziate dal prefab)
    /BOARD_Highlights       CellHighlightView (celle raggiungibili, bersagli, rotte)
 /CAMERA_Rig

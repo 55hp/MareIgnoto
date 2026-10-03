@@ -56,5 +56,5 @@ Motore delle regole in C# puro (`Assets/Game/Rules/`, nessun riferimento a Unity
 
 ## 6. Aperti
 
-- Mappa 20×20 con isole: non esiste, il layout va deciso (`tech/05_mappa.md` §6). Blocca la creazione di `MapLayout.asset`.
+- Mappa 25×25: layout v4 approvato il 03/10/2026 (`tech/05_mappa.md` §6). Il motore va ancora allineato; `MapLayout.asset` si crea nella spec 0005, passo A.
 - Le scelte marcate **[DEFAULT]** in `tech/` attendono conferma di Franci.

@@ -13,7 +13,7 @@ Se una regola qui è ambigua o manca un caso: **non inventare**. Implementa il r
 | ID | Regola |
 |---|---|
 | R-001 | Giocatori: da 2 a 8. |
-| R-002 | Mappa: griglia quadrata 20×20. Prima/ultima riga e prima/ultima colonna sono **cornice** (terra ferma, punti di partenza). Area navigabile 18×18. Dettaglio celle e coordinate: `05_mappa.md`. |
+| R-002 | Mappa: griglia quadrata 25×25. Prima/ultima riga e prima/ultima colonna sono **cornice** (terra ferma). Area navigabile 23×23. Le colonne si indicano con lettere (A–Y), le righe con numeri (0–24): B1, M0, Y12. Dettaglio celle, zone e coordinate: `05_mappa.md`. |
 | R-003 | Mazzo Crew: 54 carte = 13 ranghi (1–10, J, Q, K) × 4 semi + 2 Jolly. |
 | R-004 | Mazzo Pirateria: 110 carte = 80 da battaglia/economia + 30 Meteo. Composizione: `03_contenuti.md`. |
 | R-005 | Mazzo Corsaro: missioni, elenco in `03_contenuti.md`. 2 copie per missione (17 missioni × 2 = 34 carte). |
@@ -48,14 +48,14 @@ Se una regola qui è ambigua o manca un caso: **non inventare**. Implementa il r
 | ID | Regola |
 |---|---|
 | R-030 | Si mescolano i mazzi Crew, Pirateria e Corsaro. |
-| R-031 | Ogni nave parte da un punto di partenza della cornice. I punti dipendono dal numero di giocatori (preset in `MapLayout`, `05_mappa.md` §4); il giocatore del posto *k* prende il *k*-esimo punto del preset. |
+| R-031 | Ogni nave parte da un punto di partenza: gli angoli sono celle di mare (B1, X1, X23, B23), i lati sono celle di cornice (M0, Y12, M24, A12). I punti dipendono dal numero di giocatori (preset in `MapLayout`, `05_mappa.md` §4); il giocatore del posto *k* prende il *k*-esimo punto del preset. |
 | R-032 | Ogni giocatore pesca 2 carte crew e le mette sotto coperta, negli slot sotto coperta che preferisce. La scelta è libera (tutte le disposizioni sono ammesse): la posizione conta solo perché gli slot sotto coperta sono distinguibili per Spyglass!, che li sceglie alla cieca per slot (`03` §2.1). |
 | R-033 | Ogni giocatore pesca 3 carte Pirateria. |
 | R-034 | Ogni giocatore pesca 3 carte Corsaro, ne tiene almeno 1 e scarta le altre che non vuole. Le missioni scartate escono dal gioco **coperte** e non vengono rivelate (R-009, R-130). |
 | R-035 | Ogni giocatore riceve 10 monete. |
 | R-036 | **Offerta a Gartya**: ogni giocatore sceglie in segreto quante monete offrire (da 0 a tutte). Le offerte vengono rivelate insieme e le monete vanno nel **Tesoro** dell'Isola Sacra. |
 | R-037 | L'ordine di turno del **primo round** è per offerta decrescente (chi ha offerto di più gioca per primo). Pareggi: tiro di dado, il risultato più alto precede; se il tiro pareggia si ritira tra i pari. |
-| R-038 | Vento iniziale: si tira 1d8 (evento di dado) e la lancetta si porta a *r* scatti in senso orario da Nord (8 = Nord). Tutte le zone meteo partono Normali. |
+| R-038 | Vento iniziale: si tira 1d8 (evento di dado) e la lancetta si porta a *r* scatti in senso orario da Nord (8 = Nord). Tutte le zone meteo partono a livello 0, tranne gli spicchi dell'anello centrale, che partono a livello 5 (R-081). |
 
 ## 4. Struttura del round
 
@@ -79,7 +79,7 @@ Il round ha due fasi. La partita è una sequenza di round finché non scatta la 
 | R-050 | Ordine di turno dal round 2 in poi: somma crescente dei valori (R-014) delle 2 carte sopra coperta di ciascun giocatore. Il totale più basso gioca per primo. Per la Fase 2 si ricalcola all'inizio della Fase 2 (un Abbordaggio può aver cambiato la ciurma); per le scelte di Fase 1 vale il calcolo all'inizio del round (R-042). |
 | R-051 | Pareggi nell'ordine: chi ha meno monete, poi chi ha meno carte Pirateria in mano, poi tiro di dado (come R-037). |
 | R-052 | All'inizio del proprio turno il giocatore riceve 1 moneta per ogni Mozzo sopra coperta (R-013, R-015). Non vale se il turno salta per la cornice (R-053). |
-| R-053 | Nave sulla **cornice**: il turno del giocatore termina subito. |
+| R-053 | Nave sulla **cornice** o su un'isola con il proprio segnalino (R-097): il turno del giocatore termina subito. |
 | R-054 | Nave su un'**isola** (porto): il giocatore sceglie **una** azione di porto (§7) e il turno termina. In porto non si fanno swap, attacchi né carte Pirateria. |
 | R-055 | Nave sull'**Isola Sacra**: vedi §9; nessuna azione di porto. |
 | R-056 | Nave in **mare**: il giocatore sceglie una delle due opzioni: (A) pesca 2 carte Pirateria e il turno termina; (B) esegue, nell'ordine che vuole, nessuna, alcune o tutte queste azioni, ciascuna al massimo una volta: 1 swap crew (R-057), 1 attacco (§7.2), 1 carta Pirateria giocata (§7.3); l'apertura di un attacco con una carta della mano conta come la carta Pirateria giocata (R-112). Poi il turno termina. |
@@ -106,7 +106,7 @@ Il round ha due fasi. La partita è una sequenza di round finché non scatta la 
 | R-066 | Dopo ogni passo si controlla la cella appena raggiunta. Se è **terra** (isola, Isola Sacra o cornice) la nave si ferma lì e perde il movimento residuo. Se è occupata da **un'altra nave** (ferma o appena arrivata) la nave si ferma lì e perde il movimento residuo: è una **collisione**. |
 | R-067 | **Attraversamento**: se due navi si scambiano di posizione nello stesso passo senza mai condividere una cella, la collisione avviene comunque. Le due navi si fermano sulla stessa cella, scelta dal giocatore con il valore più basso secondo l'ordine turno (R-050/R-051) tra le due celle coinvolte. |
 | R-068 | Le celle di terra possono ospitare più navi senza collisione: le isole sono zona franca, la cornice è terra ferma. |
-| R-069 | Una nave che finisce sulla cornice si è **arenata** (serve alla missione "Gamba di legno"). |
+| R-069 | Una nave che finisce sulla cornice, o su un'isola con il proprio segnalino (R-097), si è **arenata** (serve alla missione "Gamba di legno"). |
 
 ### 5.3 Abbordaggio fortuito
 
@@ -126,14 +126,15 @@ Si risolve dopo che tutte le navi hanno finito di muoversi, per ogni cella di ma
 
 | ID | Regola |
 |---|---|
-| R-080 | Il meteo è una proprietà delle **zone**: blocchi fissi di 3×3 celle di mare (`05_mappa.md`). Le celle isola non appartengono a nessuna zona. |
-| R-081 | Stati: **Normale**, **Mare Mosso**, **Tempesta**. Nessun decadimento automatico: una zona cambia stato solo per una carta Meteo. |
-| R-082 | Il meteo si applica nella Fase 1 (R-042), alla zona in cui la nave si trova prima di muoversi. Navi su isole o cornice non subiscono il meteo. |
+| R-080 | Il meteo è una proprietà delle **zone**: gruppi fissi di celle di mare definiti nel layout (`05_mappa.md` §3), cioè le nuvole (N1–N12) e gli spicchi dell'anello centrale (R1–R8). Le celle di mare che non appartengono a nessuna zona sono mare libero: non hanno meteo e non cambiano mai. Le celle isola non appartengono a nessuna zona. |
+| R-081 | Ogni zona ha un **livello** intero ≥ 0: livello 0 = **Normale**, livello 1 = **Mare Mosso**, livello ≥ 2 = **Tempesta** (l'effetto è sempre quello di Tempesta, anche a livello 5). Nessun decadimento automatico: una zona cambia livello solo per una carta Meteo. Gli spicchi dell'anello partono a livello 5, le nuvole a 0. |
+| R-082 | Il meteo si applica nella Fase 1 (R-042), alla zona in cui la nave si trova prima di muoversi. Navi su isole, cornice o mare libero non subiscono il meteo. |
 | R-083 | **Mare Mosso**: si tira 1d8 e si ruota la rotta della nave di quel numero di scatti in senso orario (8 = nessun cambio). Poi il giocatore perde 1 carta Pirateria dalla mano (a sua scelta). |
 | R-084 | **Tempesta**: come Mare Mosso per la rotazione; inoltre il giocatore perde 1 carta crew **sotto coperta**, se ne ha (a sua scelta). |
-| R-085 | **Navigatore** (rango 6) sopra coperta: −1 intensità percepita per copia (Tempesta→Mare Mosso, Mare Mosso→Normale). |
+| R-085 | **Navigatore** (rango 6) sopra coperta: −1 livello percepito per copia: per decidere l'effetto si usa il livello della zona meno 1 per ogni copia (minimo 0). Una zona a livello 2 vale quindi Mare Mosso, una a livello 5 resta Tempesta. |
 | R-086 | **Timoniere** sopra coperta: sceglie la rotazione invece di tirare il d8. |
 | R-087 | **Vento in Poppa** (carta): immunità al meteo nella Fase 1 del round successivo a quello in cui è giocata. |
+| R-088 | Effetto delle carte Meteo sul livello (`03` §2.2): Invocazione porta la zona a livello 1 solo se è a livello 0; Ira la porta a livello 2 solo se è a livello 0 o 1; negli altri casi la carta è sprecata (si paga comunque). Favore abbassa il livello di 1 (minimo 0). Supplica, Raffica e Vento in Poppa non agiscono sui livelli. |
 
 ## 7. Azioni della Fase 2
 
@@ -150,6 +151,7 @@ Stesso set di azioni su ogni isola. Zona franca: nessun combattimento.
 | R-094 | Commercio | Vendi una carta crew (da qualsiasi slot) per il suo valore di Commercio (R-014) in monete. |
 | R-095 | Cuoco di bordo (rango 4) sopra coperta: −1 moneta sul costo di ogni azione di porto a pagamento, per copia (costo minimo 0). |
 | R-096 | Un'azione a pagamento si può scegliere solo se si hanno le monete per il costo effettivo. |
+| R-097 | **Segnalino isola**: ogni giocatore ha un solo segnalino. Quando compie un'azione di porto (R-054, anche tramite Vedetta, R-058) lo mette sull'isola in cui si trova, togliendolo da quella dove era. Se la nave **arriva** su un'isola con il proprio segnalino (per movimento o per riposizionamento di un Abbordaggio, R-073a), quell'isola vale per lei come terra ferma, come la cornice: il turno termina subito (R-053) e si è arenata (R-069). Una nave che **resta** sull'isola (velocità 0, Svago) non arriva: può agire. Se lascia l'isola e vi ritorna, arriva di nuovo: non può agire, quindi non può usare nemmeno lo Svago. Se arriva e non agisce, non mette il segnalino. Il segnalino non limita le altre navi. |
 
 ### 7.2 Attacco navale
 
