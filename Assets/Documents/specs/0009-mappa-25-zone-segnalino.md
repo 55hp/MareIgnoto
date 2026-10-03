@@ -1,7 +1,7 @@
 # 0009 — Mappa 25×25, zone meteo a livelli, segnalino isola
 
 Stato: pronta per Claude Code
-Commit di riferimento: da compilare
+Commit di riferimento: `c20ab63`
 Regole coinvolte: R-002, R-031, R-038, R-045, R-053, R-058, R-069, R-073a, R-080–R-088, R-091, R-097; `03` (Invocazione, Ira, Favore, Gamba di legno)
 Documenti: `tech/05_mappa.md` (nuova versione, §A1), `tech/02_regole.md`, `tech/03_contenuti.md`
 
@@ -245,6 +245,16 @@ Leggi prima `tech/05_mappa.md` e le righe cambiate di `02` e `03`.
 
 Se una regola non è chiara, non inventare: lascia un TODO con l'id della regola e scrivi la domanda sotto "#### Domande".
 
+### Fatto (Claude Code)
+
+Commit `c20ab63`. `dotnet test Tools/RulesHarness`: **393 verdi**, più 1 `[Explicit]` (il gate).
+
+1. **MapLayout**: 25×25 di default; nuovo campo `zones` (`LayoutZone`: id, `ZoneKind` Cloud/RingSlice, livello iniziale, celle); `spawnPresets` senza default nel codice (il layout v4 si inserisce come dato). `Validate()` controlla tutto `05` §3 e §5, con codici nuovi (`ZoneCellNotSea`, `ZoneOverlap`, `ZoneNotConnected`, `ZoneIdInvalid`, `ZoneInitialLevel`, `ZoneSpacing`, `RingSliceCount`, `RingContact`, `RingGap`, `SpawnNotAllowed` al posto di `SpawnNotOnBorder`). Le distanze di costruzione sono in `RulesConfig` (`cloudMinSpacing`, `cloudRingMinDistance`, `cloudSpawnMinDistance`, `ringSliceCount`, `ringNonConsecutiveMinDistance`, `ringSacredMinDistance`, `ringIslandMinDistance`). Tolto `zoneSize` e il calcolo dei blocchi 3×3; aggiunto `ringInitialLevel = 5`. `Coord.Name`/`Coord.Parse` per i nomi di cella ("B1"), solo per log, UI e test. Il layout v4 sta in un solo posto, `Tests/EditMode/Rules/LayoutV4.cs`, generato dagli elenchi di `05` §3 e §6 (prima ho verificato che tabella e disegno ASCII di `05` coincidano cella per cella).
+2. **Zone e livelli**: `GameState.ZoneLevels` (interi) e `IReadOnlyGameState.ZoneLevels`; `RulesConfig.WeatherAt(level)` dà l'effetto (0 Normale, 1 Mare Mosso, ≥ 2 Tempesta; soglie `roughSeaLevel`, `stormLevel`). Spicchi a 5, nuvole a 0, mare libero senza meteo. Navigatore: livello − 1 per copia, minimo 0 (R-085). Carte Meteo per id di zona (`ZoneOption.ZoneId`) con R-088 (`invocationLevel`, `wrathLevel`, `favorLevelDrop`); `ZoneChangedEvent` ha id, livello di partenza e di arrivo e `Changed` (falso per una carta sprecata, pagata comunque). `ZoneSetup` del tutorial è ora (id, livello).
+3. **Setup**: invariato nel flusso, i preset sono quelli di `05` §4. Gli angoli sono in mare: il vento vale dal round 1 (test `CornersStartAtSeaWithWindAndSidesOnTheBorderWithout_R031_R062`); il meteo no, perché gli angoli sono fuori dalle zone (lo impone `Validate()`).
+4. **Segnalino isola**: `IslandMarker` e `ArrivedOnOwnIsland` per giocatore (pubblici). Un'azione di porto mette il segnalino (`IslandMarkerPlacedEvent`), l'opzione nuova `PortAction.None` no. Arrivare (movimento o riposizionamento da Abbordaggio) sull'isola del proprio segnalino: `ShipStrandedEvent` (conta per Gamba di legno) e in Fase 2 `TurnSkippedEvent` con motivo `OwnIslandMarker`, senza Mozzo. Restare (Svago, velocità 0) non è arrivare. Con la Vedetta il segnalino va sull'isola dove si attracca; in Svago sull'isola del segnalino già messo.
+5. **Test**: aggiornati tutti quelli che usavano la 20×20, le zone 3×3 o i vecchi spawn (posizioni portate sul layout v4); nuovi `MapTests` (Validate su ogni regola, proprietà di `05` §6: distanze 11 e 4/4, simmetrie, conteggi 168/48/120/508), `WeatherTests` (livelli, anello a 5, Navigatore), `IslandMarkerTests`, `SpawnTests`. Verificato che mordono: arrivo sull'isola del segnalino ignorato (3 rossi), segnalino messo anche con "nessuna azione" (1), Ira che porta sempre a 2 (1), Navigatore ignorato (3), varco non controllato (1).
+
 ## Lato Editor (Bezi) — checklist
 
 Nessuna in questo task. `MapLayout.asset` si crea nella spec 0005, passo A, dai dati di `05` §3–§6.
@@ -252,6 +262,9 @@ Nessuna in questo task. `MapLayout.asset` si crea nella spec 0005, passo A, dai 
 ## Per Franci — modifiche isolate
 
 - Dopo il task: aprire l'Editor per i `.meta` dei file nuovi, controllare la Console e lanciare il Test Runner EditMode.
+  - File nuovi: `Assets/Tests/EditMode/Rules/LayoutV4.cs`, `Assets/Tests/EditMode/Rules/IslandMarkerTests.cs`.
+  - `RulesConfig.asset`: `zoneSize` non esiste più (Unity lo ignora) e i campi nuovi prendono i default al caricamento. Facoltativo: aprirlo e salvarlo, così i valori nuovi finiscono anche nel file.
+  - `AssetConversionTests` (Unity) è cambiato: un `MapLayoutAsset` nuovo è 25×25 e vuoto, quindi non valido finché non si inserisce il layout v4 (spec 0005, passo A).
 
 ## Verifica
 
@@ -261,3 +274,60 @@ Nessuna in questo task. `MapLayout.asset` si crea nella spec 0005, passo A, dai 
 ## Report
 
 <!-- Voci in coda. Intestazione: ### Claude Code — AAAA-MM-GG — commit abc1234 -->
+
+### Claude Code — 2026-10-03 — commit c20ab63
+
+Parte A applicata parola per parola in un commit a parte (`9f74e30`, "docs: patch Athena (mappa 25x25, zone, R-097)"): tutte le righe e sottostringhe combaciavano; R-088 e R-097 inserite dopo R-087 e R-096. Nello stesso commit ho aggiunto al repo questa spec, che era non tracciata (con il `.meta` generato da Unity). Parte B: dettaglio in "Fatto (Claude Code)" sopra.
+
+**Gate** (`Simulation1000Seeds`, seed 1–1000 × 2/4/8, `maxRounds` 500, layout v4, 1 min 22 s): **nessuna eccezione, nessuna violazione di invarianti**.
+
+```
+Simulazione: seed 1-1000, maxRounds 500, bot casuale (seed del bot = seed della partita)
+
+2 giocatori: 1000 partite, 842 finite con l'Isola Sacra, 158 interrotte da maxRounds, 0 errori
+  round (partite finite): min 15, media 198.79, mediana 174, max 498
+  interrotte da maxRounds, seed: 10, 11, 17, 24, 32, 56, 58, 79, 82, 83, 85, 91, 93, 96, 116, 117, 118, 120, 133, 151, 152, 161, 165, 166, 177, 197, 209, 210, 211, 215, 216, 224, 227, 228, 229, 230, 245, 248, 249, 250, 251, 255, 279, 287, 291, 297, 303, 304, 328, 330, 339, 340, 341, 343, 344, 348, 349, 354, 356, 368, 374, 383, 399, 407, 414, 418, 425, 427, 433, 445, 454, 461, 468, 482, 491, 492, 501, 504, 510, 512, 516, 520, 532, 544, 546, 549, 568, 573, 576, 587, 589, 596, 626, 669, 671, 673, 680, 681, 694, 699, 700, 701, 709, 712, 713, 717, 728, 735, 736, 749, 750, 760, 766, 768, 769, 782, 800, 809, 811, 826, 832, 836, 840, 848, 852, 860, 861, 864, 866, 875, 878, 881, 882, 886, 889, 890, 894, 899, 900, 915, 919, 923, 929, 931, 933, 935, 943, 944, 948, 954, 956, 957, 958, 964, 969, 973, 983, 986
+  taglia media per giocatore: 3.00 = battaglie 0.34 + missioni 1.48 + Tesoro 0.42 + monete 3.45 - missioni incomplete 2.71 + poker 0.02
+  quota delle fonti positive: battaglie 5.9%, missioni 25.9%, Tesoro 7.4%, monete 60.5%, poker 0.3%
+  missioni completate per partita: 1.48; vincitore: taglia media 7.46, ha preso il Tesoro nel 81.0% delle partite; parità al primo posto: 15
+  poker: HighCard 99.0%, Pair 1.0%, TwoPair 0.1%
+
+4 giocatori: 1000 partite, 981 finite con l'Isola Sacra, 19 interrotte da maxRounds, 0 errori
+  round (partite finite): min 9, media 146.97, mediana 123, max 494
+  interrotte da maxRounds, seed: 12, 52, 123, 155, 189, 201, 203, 318, 332, 369, 389, 408, 491, 540, 562, 706, 714, 760, 930
+  taglia media per giocatore: 2.72 = battaglie 0.48 + missioni 1.04 + Tesoro 0.25 + monete 3.18 - missioni incomplete 2.25 + poker 0.03
+  quota delle fonti positive: battaglie 9.7%, missioni 20.9%, Tesoro 4.9%, monete 63.9%, poker 0.6%
+  missioni completate per partita: 2.07; vincitore: taglia media 12.84, ha preso il Tesoro nel 94.5% delle partite; parità al primo posto: 3
+  poker: HighCard 98.2%, Pair 1.8%, ThreeOfAKind 0.0%
+
+8 giocatori: 1000 partite, 1000 finite con l'Isola Sacra, 0 interrotte da maxRounds, 0 errori
+  round (partite finite): min 10, media 91.70, mediana 76, max 444
+  taglia media per giocatore: 2.06 = battaglie 0.72 + missioni 0.72 + Tesoro 0.13 + monete 2.24 - missioni incomplete 1.79 + poker 0.04
+  quota delle fonti positive: battaglie 18.7%, missioni 18.7%, Tesoro 3.3%, monete 58.3%, poker 1.0%
+  missioni completate per partita: 2.96; vincitore: taglia media 17.09, ha preso il Tesoro nel 99.6% delle partite; parità al primo posto: 0
+  poker: HighCard 97.4%, Pair 2.6%, TwoPair 0.0%, ThreeOfAKind 0.0%, Straight 0.0%, FullHouse 0.0%
+
+Errori: nessuno
+```
+
+**Rispetto alla 20×20** (ultimo gate, spec 0004 dopo R-020):
+
+| Giocatori | Interrotte da `maxRounds` | Round min / mediana / max (finite) |
+|---|---|---|
+| 2 | 158 (prima 89) | 15 / 174 / 498 (prima 17 / 152 / 500) |
+| 4 | 19 (prima 4) | 9 / 123 / 494 (prima 9 / 85 / 476) |
+| 8 | 0 (prima 0) | 10 / 76 / 444 (prima 7 / 50 / 310) |
+
+La mappa è più grande e i punti di partenza sono a 11 celle dall'Isola Sacra, con l'anello in Tempesta (livello 5) a sbarrare quasi tutte le rotte, quindi i bot casuali ci mettono di più. Le battaglie calano molto (a 2 giocatori 0,34 segnalini a testa invece di 0,76): le navi si incontrano meno. Per questo `Simulation60RoundsWithFullPhase2` ora richiede attacchi solo a 8 giocatori (a 4, su 30 partite da 60 round, le navi a tiro sono capitate 14 volte), e controlla anche che i bot mettano il segnalino. Sono statistiche di bot casuali, non di bilanciamento.
+
+#### Domande
+
+- **R-097 — Vedetta con più isole a tiro**: con Vedetta + Jolly (2 celle) possono esserci più isole raggiungibili; `02` non dice su quale va il segnalino. Ho scelto la più vicina e, a parità, quella con l'id più basso. In alternativa il giocatore potrebbe sceglierla (una decisione in più). `// TODO R-097` in `TurnFlow.PortIsland`.
+- **Livello iniziale degli spicchi in due posti**: `05` §5 mette il livello iniziale nel layout (campo `zones`), la spec chiede anche `RulesConfig.ringInitialLevel`. Per non avere due verità, `Validate()` rifiuta un layout i cui spicchi non partono da `ringInitialLevel` (e le nuvole da 0): il valore che conta è quello della config, il layout deve coincidere. Effetto collaterale: cambiare `ringInitialLevel` in `RulesConfig.asset` rende non valido `MapLayout.asset` finché non lo si aggiorna. Si può togliere uno dei due?
+- **R-097 — isole di più celle**: passare da una cella all'altra della stessa isola col proprio segnalino conta come arrivo. Nel layout v4 tutte le isole hanno una cella sola, quindi oggi non succede.
+
+#### Note
+
+- Le carte Meteo bersagliano una zona per id, ma la decisione resta un elenco di tutte le 20 zone (anche quelle dove la carta sarebbe sprecata): sprecarla è legale (R-088).
+- "Adiacente a un'isola" per i punti di partenza in mare (`05` §5) comprende anche l'Isola Sacra.
+- `ShipStrandedEvent` per l'isola del segnalino porta la cella dell'isola: Gamba di legno conta celle distinte di cornice e di isola (R-069, `03`).
