@@ -210,3 +210,32 @@ Impostazioni modificate nel progetto:
 Verifica rendering:
 - I 5 materiali in Assets/Game/Content/Materials/ (Mat_Tile_Sea.mat, Mat_Tile_Island.mat, Mat_Tile_Sacred.mat, Mat_Tile_Border.mat, Mat_Ship.mat) sono stati verificati in anteprima isolata: tutti mostrano correttamente i rispettivi colori PBR (blu mare, sabbia isola, oro metallico Isola Sacra, grigio scuro cornice, neutro nave) e non piu il magenta di fallback.
 - I 5 prefab in Assets/Game/Content/Prefabs/ (Tile_Sea.prefab, Tile_Island.prefab, Tile_Sacred.prefab, Tile_Border.prefab, Ship.prefab) sono stati verificati in anteprima isolata: tutti mostrano correttamente i propri materiali e colori e non piu il magenta di fallback.
+
+### Bezi — 2026-10-03 — commit 5013e61
+
+Passo C, parte 1: creazione oggetti nuovi (asset, materiali URP neutri e prefab in Assets/Game/Content/). Nessuna modifica alla scena Board.unity e nessun codice C# aggiunto.
+
+1. ScriptableObject PlayerPalette.asset:
+- Creato Assets/Game/Content/Config/PlayerPalette.asset di tipo hp55games.MareIgnoto.Unity.PlayerPaletteAsset tramite menu Create/MareIgnoto/Player Palette.
+- Contiene gli 8 colori di default per i posti giocatori:
+  - Posto 0 (rosso): (0.86, 0.20, 0.18, 1.0)
+  - Posto 1 (blu): (0.20, 0.45, 0.90, 1.0)
+  - Posto 2 (verde): (0.20, 0.70, 0.30, 1.0)
+  - Posto 3 (giallo): (0.95, 0.80, 0.15, 1.0)
+  - Posto 4 (viola): (0.60, 0.30, 0.80, 1.0)
+  - Posto 5 (arancio): (0.95, 0.55, 0.15, 1.0)
+  - Posto 6 (ciano): (0.20, 0.80, 0.80, 1.0)
+  - Posto 7 (rosa): (0.90, 0.40, 0.70, 1.0)
+
+2. Materiali URP neutri creati in Assets/Game/Content/Materials/:
+- Assets/Game/Content/Materials/Mat_IslandMarker.mat: shader Universal Render Pipeline/Lit, _BaseColor (0.85, 0.85, 0.85, 1.0), _Smoothness 0.3.
+- Assets/Game/Content/Materials/Mat_RouteMarker.mat: shader Universal Render Pipeline/Unlit, _BaseColor (0.9, 0.9, 0.9, 1.0).
+- Assets/Game/Content/Materials/Mat_ZoneFill.mat: shader Universal Render Pipeline/Unlit, superficie Transparent (renderQueue 3000, _Surface 1.0, _SrcBlend SrcAlpha, _DstBlend OneMinusSrcAlpha, _ZWrite 0, keyword _SURFACE_TYPE_TRANSPARENT, tag RenderType Transparent), _BaseColor (1.0, 1.0, 1.0, 0.4).
+- Assets/Game/Content/Materials/Mat_ZoneOutline.mat: shader Universal Render Pipeline/Unlit, _BaseColor (1.0, 1.0, 1.0, 1.0).
+
+3. Prefab creati in Assets/Game/Content/Prefabs/ (senza script custom associati):
+- Assets/Game/Content/Prefabs/IslandMarker.prefab: radice IslandMarker con Transform localPosition (0, 0, 0), localRotation (0, 0, 0), localScale (0.3, 0.025, 0.3) (disco cilindrico di diametro 0.3 e altezza 0.05). MeshFilter con Cylinder (Library/unity default resources) e MeshRenderer con Mat_IslandMarker.mat.
+- Assets/Game/Content/Prefabs/RouteMarker.prefab: radice RouteMarker con Transform localPosition (0, 0, 0), localRotation (0, 0, 0), localScale (0.2, 0.02, 0.6) (segno piatto orientato lungo l asse +Z). MeshFilter con Cube (Library/unity default resources) e MeshRenderer con Mat_RouteMarker.mat.
+- Assets/Game/Content/Prefabs/ZoneFill.prefab: radice ZoneFill con Transform localPosition (0, 0, 0), localRotation (0, 0, 0), localScale (1, 1, 1). MeshFilter con sharedMesh nullo (mesh assegnata dal codice a runtime) e MeshRenderer con Mat_ZoneFill.mat.
+- Assets/Game/Content/Prefabs/ZoneOutline.prefab: radice ZoneOutline con Transform localPosition (0, 0, 0), localRotation (0, 0, 0), localScale (1, 1, 1). LineRenderer con larghezza 0.06 (widthCurve costante a 0.06), useWorldSpace true, positionCount 0 (nessun punto impostato), materiale Mat_ZoneOutline.mat.
+- Assets/Game/Content/Prefabs/ZoneLabel.prefab: radice ZoneLabel con Transform localPosition (0, 0, 0), localRotation (90, 0, 0) (ruotato di 90 gradi sull asse X per lettura dall alto), localScale (1, 1, 1). Componente TMPro.TextMeshPro 3D (non UGUI) con text [ph], alignment Center, fontSize 4, font LiberationSans SDF.
