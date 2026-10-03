@@ -1,14 +1,13 @@
 using System.Collections.Generic;
 using System.Linq;
-using hp55games.MareIgnoto.Rules.Map;
-
-namespace hp55games.MareIgnoto.Rules.Tests
+namespace hp55games.MareIgnoto.Rules.Map
 {
     /// <summary>
-    /// Il layout v4 approvato (tech/05_mappa.md §3, §4, §6), unica copia nel codice: dati di test, scritti con i nomi di
-    /// cella del documento. MapLayout.asset (spec 0005) si costruirà dagli stessi elenchi.
+    /// Il layout v4 approvato (tech/05_mappa.md §3, §4, §6), unica copia nel codice, scritto con i nomi di cella del
+    /// documento. Serve al comando Editor "MareIgnoto/Create MapLayout v4", che ne genera MapLayout.asset, e ai test.
+    /// La partita legge la mappa da MapLayout.asset, non da qui.
     /// </summary>
-    internal static class LayoutV4
+    public static class LayoutV4
     {
         private readonly struct ZoneData
         {
