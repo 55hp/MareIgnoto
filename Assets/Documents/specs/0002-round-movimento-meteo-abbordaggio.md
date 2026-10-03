@@ -80,3 +80,7 @@ Da sapere per 0003–0004:
 - Il limite `maxAbbordaggioChain` conta tutti i cicli di Abbordaggio del round, ripetizioni sui pari comprese. Senza questo, due Timonieri che scelgono sempre lo stesso numero bloccherebbero il motore. Nei 3000 giochi simulati il limite non è mai scattato.
 - L'Isola Sacra vale come porto per R-062 (niente vento in partenza). È irrilevante finché entrarci non chiude la partita.
 - Non ho toccato i file non miei rimasti modificati o nuovi nella working copy (`Assets/Game/Content/`, `Assets/Scenes/Board.unity`, `specs/0005`).
+
+### Claude Code — 2026-10-03 — commit 4a25416
+
+Emendamento: la domanda su **R-140 — riposizionamento sull'Isola Sacra** è chiusa (R-073a, R-140, R-141 aggiornati). Un Abbordaggio che riposiziona una nave sull'Isola Sacra le fa prendere il Tesoro e chiude la partita; l'arrivo conta dopo ogni passo di movimento. Tolto il `// TODO R-140` in `BoardingFlow.Move`. Dettaglio e test nel report della spec 0004.
