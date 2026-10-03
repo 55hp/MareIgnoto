@@ -1,7 +1,7 @@
 # 0010 — Layout v5: anello a archi e nuvole riviste
 
 Stato: pronta per Claude Code
-Commit di riferimento: da compilare
+Commit di riferimento: `81dc7c3`
 Regole coinvolte: R-080 (testo); `05` §3–§6 (nuova versione, §A1)
 Documenti: `tech/05_mappa.md`, `tech/02_regole.md`
 
@@ -218,3 +218,67 @@ Nessuna in questo task. Le viste e i prefab non cambiano.
 ## Report
 
 <!-- Voci in coda. Intestazione: ### Claude Code — AAAA-MM-GG — commit abc1234 -->
+
+### Claude Code — 2026-10-03 — commit 81dc7c3
+
+Parte A applicata parola per parola in un commit a parte (`591e352`, "docs: patch Athena (layout v5)"): file, riga R-080 e sottostringhe della 0005 combaciavano. Nello stesso commit ho aggiunto al repo questa spec, che era non tracciata, con il suo `.meta`.
+
+**Parte B**
+1. **Dati**: `LayoutV4` → `LayoutV5` (`Assets/Game/Rules/Map/LayoutV5.cs`, rinominato con `git mv` insieme al `.meta`, stesso GUID). Isole, Isola Sacra e preset invariati; 8 spicchi e 8 nuvole generati dalla tabella di `05` §3. Prima ho verificato che tabella e disegno ASCII di `05` coincidano cella per cella (16 zone, 120 celle) e che varchi e canali dell'elenco siano mare libero. Nessun riferimento rimasto a v4, a "20 zone" o a N9–N12 nel codice e nei test.
+2. **`Validate()`**: fra due spicchi consecutivi ora vale esattamente uno di due casi. Un **varco diagonale**: un solo spigolo in comune, nessun lato, e le altre due celle del 2×2 di mare libero (come prima). Oppure un **canale**: nessun contatto, distanza esattamente `ringChannelWidth` + 1, e le celle in mezzo alle coppie allineate formano una fila dritta, larga `ringChannelWidth`, di mare libero. `ringChannelWidth` = 1 è nuovo in `RulesConfig`. Il controllo "in ordine di angolo" è nuovo (codice `RingOrder`): gli angoli dei baricentri degli spicchi attorno all'Isola Sacra, nell'ordine del layout, girano sempre nello stesso verso e fanno un giro solo. Invariati: distanze delle nuvole (≥ 2 tra loro, ≥ 3 dagli spicchi, ≥ 2 dai punti di partenza), spicchi non consecutivi a ≥ 2, spicchi a ≥ 2 dall'Isola Sacra e a ≥ 3 dalle isole.
+3. **Test**: `LayoutV5` supera `Validate()`; proprietà di `05` §6 (distanza 11, isole a 4 e 4, simmetria per rotazione **e per specchio** di isole, nuvole, anello e punti di partenza, 16 isole, 8 + 8 zone, 48 + 72 = 120 celle). Un layout non valido per ogni regola, con tre test nuovi: canale occupato da un'isola o da una zona, canale largo 2, spicchi non consecutivi troppo vicini, spicchi fuori ordine. Verificato che mordono: canale non controllato, ordine non controllato, non consecutivi non controllati (1 rosso ciascuno). I test di scenario che usavano la nuvola N7 della v4 (D11, ora mare libero) usano la nuvola N5 (D7). `ZoneGeometryTests` copre le 16 zone. `dotnet test Tools/RulesHarness`: 413 verdi.
+4. **Editor e test Unity**: `MapLayoutV4Generator` → `MapLayoutV5Generator` (menu **MareIgnoto/Create MapLayout v5**, da `LayoutV5`, sovrascrittura sul posto dopo conferma, poi `Validate()`); `MapLayoutV4AssetTests` → `MapLayoutV5AssetTests`, confronta l'asset con `LayoutV5` cella per cella. Entrambi rinominati con il loro `.meta`.
+5. **Gate** (`Simulation1000Seeds`, seed 1–1000 × 2/4/8, `maxRounds` 500, layout v5, 1 min 18 s): **nessuna eccezione, nessuna violazione di invarianti**.
+
+```
+Simulazione: seed 1-1000, maxRounds 500, bot casuale (seed del bot = seed della partita)
+
+2 giocatori: 1000 partite, 812 finite con l'Isola Sacra, 188 interrotte da maxRounds, 0 errori
+  round (partite finite): min 8, media 201.90, mediana 180, max 499
+  interrotte da maxRounds, seed: 6, 11, 12, 23, 25, 28, 34, 40, 42, 43, 45, 53, 62, 69, 70, 79, 86, 97, 100, 104, 111, 120, 128, 137, 139, 144, 149, 150, 152, 155, 162, 166, 169, 173, 176, 182, 187, 189, 190, 194, 195, 196, 199, 202, 213, 223, 230, 232, 234, 235, 236, 241, 243, 246, 247, 262, 268, 269, 278, 279, 286, 293, 299, 306, 307, 317, 320, 326, 328, 334, 338, 339, 343, 352, 356, 362, 363, 365, 367, 379, 392, 406, 421, 452, 467, 479, 485, 488, 491, 494, 501, 503, 507, 510, 514, 526, 527, 528, 529, 531, 537, 545, 546, 549, 562, 582, 591, 595, 598, 602, 615, 635, 639, 644, 645, 647, 651, 655, 658, 659, 661, 666, 669, 672, 688, 693, 694, 704, 711, 729, 736, 739, 744, 747, 752, 756, 761, 762, 769, 775, 784, 788, 789, 798, 800, 802, 806, 811, 812, 813, 821, 835, 858, 864, 875, 881, 884, 885, 889, 891, 897, 898, 900, 905, 909, 910, 914, 915, 921, 925, 935, 938, 946, 947, 948, 949, 950, 961, 962, 963, 967, 969, 981, 982, 984, 987, 991, 995
+  taglia media per giocatore: 2.99 = battaglie 0.36 + missioni 1.60 + Tesoro 0.41 + monete 3.45 - missioni incomplete 2.84 + poker 0.02
+  quota delle fonti positive: battaglie 6.2%, missioni 27.4%, Tesoro 7.0%, monete 59.1%, poker 0.4%
+  missioni completate per partita: 1.58; vincitore: taglia media 7.52, ha preso il Tesoro nel 78.2% delle partite; parità al primo posto: 13
+  poker: HighCard 99.0%, Pair 1.0%, TwoPair 0.1%, Straight 0.1%
+
+4 giocatori: 1000 partite, 968 finite con l'Isola Sacra, 32 interrotte da maxRounds, 0 errori
+  round (partite finite): min 13, media 145.67, mediana 123, max 495
+  interrotte da maxRounds, seed: 6, 51, 74, 122, 144, 150, 211, 270, 337, 342, 359, 361, 384, 402, 499, 517, 590, 592, 638, 722, 755, 763, 766, 788, 830, 862, 867, 870, 920, 951, 977, 984
+  taglia media per giocatore: 2.69 = battaglie 0.51 + missioni 1.04 + Tesoro 0.24 + monete 3.12 - missioni incomplete 2.25 + poker 0.03
+  quota delle fonti positive: battaglie 10.3%, missioni 21.1%, Tesoro 4.9%, monete 63.1%, poker 0.6%
+  missioni completate per partita: 2.10; vincitore: taglia media 12.65, ha preso il Tesoro nel 94.1% delle partite; parità al primo posto: 6
+  poker: HighCard 98.1%, Pair 1.9%, TwoPair 0.0%
+
+8 giocatori: 1000 partite, 998 finite con l'Isola Sacra, 2 interrotte da maxRounds, 0 errori
+  round (partite finite): min 10, media 88.33, mediana 74, max 367
+  interrotte da maxRounds, seed: 315, 449
+  taglia media per giocatore: 1.95 = battaglie 0.68 + missioni 0.72 + Tesoro 0.13 + monete 2.17 - missioni incomplete 1.79 + poker 0.04
+  quota delle fonti positive: battaglie 18.2%, missioni 19.3%, Tesoro 3.3%, monete 58.0%, poker 1.2%
+  missioni completate per partita: 2.93; vincitore: taglia media 16.61, ha preso il Tesoro nel 99.3% delle partite; parità al primo posto: 1
+  poker: HighCard 97.1%, Pair 2.9%, TwoPair 0.0%, ThreeOfAKind 0.0%
+
+Errori: nessuno
+```
+
+**Rispetto alla v4** (ultimo gate, spec 0009):
+
+| Giocatori | Interrotte da `maxRounds` | Round min / mediana / max (finite) |
+|---|---|---|
+| 2 | 188 (v4: 157) | 8 / 180 / 499 (v4: 15 / 174 / 498) |
+| 4 | 32 (v4: 19) | 13 / 123 / 495 (v4: 9 / 124 / 494) |
+| 8 | 2, seed 315 e 449 (v4: 0) | 10 / 74 / 367 (v4: 10 / 74 / 444) |
+
+Le mediane non cambiano quasi, ma le partite che non arrivano all'Isola Sacra entro 500 round crescono (a 8 giocatori compaiono le prime due). I bot casuali ignorano il meteo e ruotano a caso nelle Tempeste dell'anello: con 8 nuvole invece di 12 e un anello diverso, il loro cammino casuale cambia. Sono statistiche di bot casuali, non dicono quanto è facile la mappa per un giocatore vero. Battaglie, missioni e Tesoro restano sugli stessi valori.
+
+6. **Spec 0005 e README**: aggiornata la riga di "Lato codice" della 0005 che nominava le 20 zone v4; le voci di report precedenti restano com'erano (append-only). Stato aggiornato nel README.
+
+**Non compilato in Unity.** Gli assembly Unity ed Editor e i test Unity sono compilati solo contro stub delle API (0 errori, 0 avvisi). Da controllare in Console (Franci):
+- nessun errore di compilazione in `hp55games.MareIgnoto.Editor` e `hp55games.MareIgnoto.Unity.Tests` dopo i rinomini;
+- il menu **MareIgnoto > Create MapLayout v5** (e non più v4); eseguirlo, confermare la sovrascrittura e controllare il messaggio `[MapLayout] Assets/Game/Content/Config/MapLayout.asset creato dal layout v5: Validate OK (…)`;
+- Test Runner → EditMode: `MapLayoutV5AssetTests` verde (prima del comando fallisce, perché l'asset è ancora v4), `hp55games.MareIgnoto.Rules.Tests` verde;
+- in Play: 16 zone col contorno, 8 nuvole a livello 0 e 8 archi rossi col numero 5, con i 4 canali dritti sugli assi;
+- committare `MapLayout.asset` rigenerato.
+
+#### Domande
+
+- **"In ordine di angolo"**: l'ho verificato con i baricentri degli spicchi attorno al baricentro dell'Isola Sacra, in un verso qualsiasi (la v5 va in senso antiorario a partire da est). Se il verso deve essere fisso, o R1 deve partire da una direzione precisa, è una riga in `CheckAngleOrder`.
