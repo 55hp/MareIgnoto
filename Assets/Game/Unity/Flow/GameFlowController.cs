@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using hp55games.MareIgnoto.Rules.Bots;
+using hp55games.MareIgnoto.Rules.Decisions;
 using hp55games.MareIgnoto.Rules.Engine;
 using hp55games.MareIgnoto.Rules.Events;
 using UnityEngine;
@@ -11,7 +12,7 @@ namespace hp55games.MareIgnoto.Unity.Flow
 {
     /// <summary>
     /// Il ciclo della partita (01_architettura.md §5): fa riprodurre gli eventi, poi risponde alla decisione in attesa e
-    /// ricomincia. In questa spec (0005) tutti i posti sono bot casuali: rispondono subito, con una breve pausa perché la
+    /// ricomincia. Tutti i posti sono bot (casuali o strategici, spec 0011): rispondono subito, con una breve pausa perché la
     /// scena resti leggibile (06 §3). Niente UI di decisione né passaggio del dispositivo.
     /// </summary>
     public sealed class GameFlowController : MonoBehaviour
@@ -25,10 +26,10 @@ namespace hp55games.MareIgnoto.Unity.Flow
         [SerializeField, Min(0f)] private float botDelaySeconds = 0.3f;
 
         private GameSession session;
-        private RandomBot bot;
+        private IReadOnlyList<IBot> bots;
 
-        /// <summary>Avvia la partita: lo chiama GameBootstrap, il composition root.</summary>
-        public void Begin(GameSession gameSession, RandomBot randomBot)
+        /// <summary>Avvia la partita con un bot per posto: lo chiama GameBootstrap, il composition root.</summary>
+        public void Begin(GameSession gameSession, IReadOnlyList<IBot> seatBots)
         {
             if (eventPlayer == null)
             {
@@ -38,7 +39,7 @@ namespace hp55games.MareIgnoto.Unity.Flow
             }
 
             session = gameSession;
-            bot = randomBot;
+            bots = seatBots;
             eventPlayer.Initialize(session.State);
             eventPlayer.Enqueue(ForSpectator(session.InitialEvents));
             StartCoroutine(Run());
@@ -54,7 +55,9 @@ namespace hp55games.MareIgnoto.Unity.Flow
                 IReadOnlyList<GameEvent> events;
                 try
                 {
-                    events = session.Submit(bot.Choose(session.Pending));
+                    // Ogni bot vede solo il proprio punto di vista (09_bot.md §1).
+                    PendingDecision pending = session.Pending;
+                    events = session.Submit(bots[pending.Player].Choose(pending, session.State.ViewFor(pending.Player)));
                 }
                 catch (Exception exception)
                 {

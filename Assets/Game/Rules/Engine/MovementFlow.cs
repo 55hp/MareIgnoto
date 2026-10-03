@@ -118,17 +118,24 @@ namespace hp55games.MareIgnoto.Rules.Engine
         /// <summary>
         /// R-060–R-064: base, vento (non se si parte da terra, R-062), Timoniere (Jolly compreso), mai sotto 0.
         /// </summary>
-        public static int Speed(PlayerState player, Heading wind, GameMap map, RulesConfig config)
+        public static int Speed(PlayerState player, Heading wind, GameMap map, RulesConfig config) =>
+            Speed(player.Position, player.ChosenHeading.Value, player.CrewAbove, wind, map, config);
+
+        /// <summary>
+        /// La stessa formula con soli dati pubblici (posizione, rotta, carte sopra coperta): la usano anche i bot
+        /// (09_bot.md §3, "velocità stimata"), così la regola sta in un posto solo.
+        /// </summary>
+        public static int Speed(Coord position, Heading heading, IReadOnlyList<CrewCard> crewAbove, Heading wind, GameMap map,
+            RulesConfig config)
         {
-            Heading heading = player.ChosenHeading.Value;
             int speed = config.baseSpeed;
-            if (!map.IsLand(player.Position))
+            if (!map.IsLand(position))
             {
                 if (heading == wind) speed += config.windSpeedBonus;
                 else if (heading == wind.Opposite()) speed -= config.windSpeedBonus;
             }
 
-            speed += CrewEffects.EffectiveCount(player.CrewAbove, CrewCardId.Timoniere) * config.helmsmanSpeedBonus;
+            speed += CrewEffects.EffectiveCount(crewAbove, CrewCardId.Timoniere) * config.helmsmanSpeedBonus;
             return speed < 0 ? 0 : speed;
         }
 

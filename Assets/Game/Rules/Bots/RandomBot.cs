@@ -1,6 +1,7 @@
 using System;
 using hp55games.MareIgnoto.Rules.Decisions;
 using hp55games.MareIgnoto.Rules.Random;
+using hp55games.MareIgnoto.Rules.State;
 
 namespace hp55games.MareIgnoto.Rules.Bots
 {
@@ -9,7 +10,7 @@ namespace hp55games.MareIgnoto.Rules.Bots
     /// Usa una sorgente propria, distinta da quella della partita, così le sue scelte non consumano la casualità del gioco.
     /// Serve alla simulazione e a riempire i posti vuoti nei playtest solitari.
     /// </summary>
-    public sealed class RandomBot
+    public sealed class RandomBot : IBot
     {
         private readonly IRandomSource random;
 
@@ -23,5 +24,8 @@ namespace hp55games.MareIgnoto.Rules.Bots
             if (decision == null) throw new ArgumentNullException(nameof(decision));
             return decision.Choose(random.Range(0, decision.Options.Count));
         }
+
+        /// <summary><see cref="IBot"/>: il punto di vista non serve, la scelta è la stessa di <see cref="Choose(PendingDecision)"/>.</summary>
+        public DecisionAnswer Choose(PendingDecision decision, PlayerView view) => Choose(decision);
     }
 }

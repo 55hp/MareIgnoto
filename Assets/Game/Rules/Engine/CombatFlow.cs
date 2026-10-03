@@ -13,9 +13,11 @@ namespace hp55games.MareIgnoto.Rules.Engine
     internal static class CombatFlow
     {
         /// <summary>R-100: base più Falconet, Saker e Culverin sopra coperta, per copia (Jolly compreso).</summary>
-        public static int Range(PlayerState player, RulesConfig config)
+        public static int Range(PlayerState player, RulesConfig config) => Range(player.CrewAbove, config);
+
+        /// <summary>La gittata dalle sole carte sopra coperta (pubbliche): la usano anche i bot (09_bot.md §3).</summary>
+        public static int Range(IReadOnlyList<CrewCard> above, RulesConfig config)
         {
-            IReadOnlyList<CrewCard> above = player.CrewAbove;
             return config.baseRange
                    + CrewEffects.EffectiveCount(above, CrewCardId.Falconet) * config.falconetRange
                    + CrewEffects.EffectiveCount(above, CrewCardId.Saker) * config.sakerRange

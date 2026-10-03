@@ -4,10 +4,13 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using hp55games.MareIgnoto.Rules.Config;
+using hp55games.MareIgnoto.Rules.Decisions;
+using hp55games.MareIgnoto.Rules.Events;
 using hp55games.MareIgnoto.Rules.Engine;
 using hp55games.MareIgnoto.Rules.Map;
 using hp55games.MareIgnoto.Rules.Random;
 using hp55games.MareIgnoto.Rules.Setup;
+using hp55games.MareIgnoto.Rules.State;
 
 namespace hp55games.MareIgnoto.Rules.Bots
 {
@@ -25,6 +28,40 @@ namespace hp55games.MareIgnoto.Rules.Bots
 
         /// <summary>Protezione: una partita che chiede più decisioni di così è considerata bloccata.</summary>
         public int MaxDecisionsPerGame { get; set; } = 200000;
+
+        /// <summary>
+        /// Il bot di ogni posto (09_bot.md §5): un profilo, oppure null per il bot casuale. Null = tutti casuali (come prima,
+        /// con un solo bot casuale per la partita). Con N giocatori si usano i primi N elementi (mancanti = casuali), e la
+        /// disposizione ruota con il seed: il posto s ha l'elemento (s + seed) mod N.
+        /// </summary>
+        public IReadOnlyList<BotProfile> SeatProfiles { get; set; }
+
+        /// <summary>Nome dello scenario, per il report.</summary>
+        public string Name { get; set; }
+
+        /// <summary>Il profilo del posto <paramref name="seat"/> in una partita di <paramref name="players"/> giocatori col seed dato; null = casuale.</summary>
+        public BotProfile ProfileFor(int seat, int players, int seed)
+        {
+            if (SeatProfiles == null) return null;
+            int index = ((seat + seed) % players + players) % players;
+            return index < SeatProfiles.Count ? SeatProfiles[index] : null;
+        }
+    }
+
+    /// <summary>Le statistiche dei posti con lo stesso bot (09 §5).</summary>
+    public sealed class SimulationProfileStats
+    {
+        public string Name { get; }
+        /// <summary>Posti giocati con questo bot (nelle partite arrivate al punteggio).</summary>
+        public long Seats { get; internal set; }
+        /// <summary>Vittorie, con i pari merito divisi.</summary>
+        public double Wins { get; internal set; }
+        public long Battle, Mission, Treasure, CoinTokens, Penalty, Poker, Total;
+
+        public SimulationProfileStats(string name)
+        {
+            Name = name;
+        }
     }
 
     /// <summary>Una partita finita male: eccezione, invariante violato o motore bloccato.</summary>
@@ -63,6 +100,16 @@ namespace hp55games.MareIgnoto.Rules.Bots
         public long MissionsCompleted, WinnerTotal, WinnerTookTreasure, ScoredGames, TiedGames;
         public Dictionary<PokerHand, int> PokerHands { get; } = new Dictionary<PokerHand, int>();
 
+        /// <summary>Per bot (solo con posti configurati, 09 §5).</summary>
+        public Dictionary<string, SimulationProfileStats> Profiles { get; } = new Dictionary<string, SimulationProfileStats>();
+
+        /// <summary>Battaglie (R-104) e Abbordaggi fortuiti (R-070) in tutte le partite arrivate al punteggio.</summary>
+        public long Battles, Boardings;
+
+        /// <summary>Partite in cui un Rush è entrato nell'Isola Sacra, e vittorie (divise) dei Rush entrati.</summary>
+        public long RushEntries;
+        public double RushWinsAfterEntering;
+
         public SimulationGroup(int players)
         {
             Players = players;
@@ -89,8 +136,9 @@ namespace hp55games.MareIgnoto.Rules.Bots
         public string ToText()
         {
             var text = new StringBuilder();
+            if (!string.IsNullOrEmpty(Options.Name)) text.AppendLine("Scenario " + Options.Name);
             text.AppendLine("Simulazione: seed " + Options.FirstSeed + "-" + Options.LastSeed + ", maxRounds " +
-                            Options.Config.maxRounds + ", bot casuale (seed del bot = seed della partita)");
+                            Options.Config.maxRounds + ", " + SeatsText());
             foreach (SimulationGroup g in Groups)
             {
                 text.AppendLine();
@@ -118,6 +166,7 @@ namespace hp55games.MareIgnoto.Rules.Bots
                                 " delle partite; parità al primo posto: " + g.TiedGames);
                 text.AppendLine("  poker: " + string.Join(", ", g.PokerHands.OrderBy(h => h.Key)
                     .Select(h => h.Key + " " + P(h.Value / n))));
+                if (Options.SeatProfiles != null) AppendProfiles(text, g);
             }
 
             text.AppendLine();
@@ -125,6 +174,32 @@ namespace hp55games.MareIgnoto.Rules.Bots
             text.AppendLine(failures.Count == 0 ? "Errori: nessuno" : "Errori: " + failures.Count);
             foreach (SimulationFailure failure in failures.Take(50)) text.AppendLine("  " + failure);
             return text.ToString();
+        }
+
+        private string SeatsText()
+        {
+            if (Options.SeatProfiles == null) return "bot casuale (seed del bot = seed della partita)";
+            return "posti: " + string.Join(", ", Options.SeatProfiles.Select(p => p?.Name ?? "casuale")) +
+                   " (con N giocatori i primi N, ruotati col seed)";
+        }
+
+        private static void AppendProfiles(StringBuilder text, SimulationGroup g)
+        {
+            double games = Math.Max(1, g.ScoredGames);
+            text.AppendLine("  battaglie per partita: " + F(g.Battles / games) + "; Abbordaggi per partita: " + F(g.Boardings / games));
+            foreach (SimulationProfileStats p in g.Profiles.Values.OrderBy(p => p.Name))
+            {
+                double seats = Math.Max(1, p.Seats);
+                text.AppendLine("  " + p.Name + ": " + p.Seats + " posti, vittorie " + F(p.Wins) + " (" + P(p.Wins / games) +
+                                " delle partite); taglia media " + F(p.Total / seats) + " = battaglie " + F(p.Battle / seats) +
+                                " + missioni " + F(p.Mission / seats) + " + Tesoro " + F(p.Treasure / seats) + " + monete " +
+                                F(p.CoinTokens / seats) + " - incomplete " + F(p.Penalty / seats) + " + poker " + F(p.Poker / seats));
+            }
+
+            if (g.Profiles.ContainsKey(BotProfile.Rush.Name))
+                text.AppendLine("  Rush nell'Isola Sacra: in " + g.RushEntries + " partite (" + P(g.RushEntries / games) +
+                                "); vittorie dopo esserci entrato: " + F(g.RushWinsAfterEntering) +
+                                (g.RushEntries > 0 ? " (" + P(g.RushWinsAfterEntering / g.RushEntries) + ")" : ""));
         }
 
         private static string F(double value) => value.ToString("0.00", CultureInfo.InvariantCulture);
@@ -164,10 +239,20 @@ namespace hp55games.MareIgnoto.Rules.Bots
         {
             group.Games++;
             GameSession session;
+            var sacredEntrants = new HashSet<int>();
             try
             {
                 session = GameSession.Start(GameSetup.ForPlayers(group.Players, seed), options.Config, options.Map);
-                var bot = new RandomBot(new SeededRandom(seed));
+                var randomBot = new RandomBot(new SeededRandom(seed));
+                var bots = new IBot[group.Players];
+                for (int seat = 0; seat < group.Players; seat++)
+                {
+                    BotProfile profile = options.ProfileFor(seat, group.Players, seed);
+                    bots[seat] = profile == null
+                        ? (IBot)randomBot
+                        : new StrategicBot(profile, new SeededRandom(StrategicBot.SeedFor(seed, seat)));
+                }
+
                 if (!Check(session, group, seed)) return;
 
                 int decisions = 0;
@@ -180,7 +265,11 @@ namespace hp55games.MareIgnoto.Rules.Bots
                         return;
                     }
 
-                    session.Submit(bot.Choose(session.Pending));
+                    PendingDecision pending = session.Pending;
+                    IBot bot = bots[pending.Player];
+                    PlayerView view = bot is RandomBot ? null : session.State.ViewFor(pending.Player);
+                    IReadOnlyList<GameEvent> events = session.Submit(bot.Choose(pending, view));
+                    if (options.SeatProfiles != null) Count(group, events, options, seed, sacredEntrants);
                     if (!Check(session, group, seed)) return;
                 }
             }
@@ -205,6 +294,47 @@ namespace hp55games.MareIgnoto.Rules.Bots
             }
 
             Collect(group, result, session);
+            if (options.SeatProfiles != null) CollectProfiles(group, result, options, seed, sacredEntrants);
+        }
+
+        private static string LabelOf(SimulationOptions options, int seat, int players, int seed) =>
+            options.ProfileFor(seat, players, seed)?.Name ?? "casuale";
+
+        /// <summary>Battaglie, Abbordaggi e ingressi nell'Isola Sacra, dagli eventi.</summary>
+        private static void Count(SimulationGroup g, IReadOnlyList<GameEvent> events, SimulationOptions options, int seed,
+            HashSet<int> sacredEntrants)
+        {
+            foreach (GameEvent e in events)
+            {
+                if (e is BattleWonEvent) g.Battles++;
+                else if (e is BoardingStartedEvent) g.Boardings++;
+                else if (e is SacredIslandEnteredEvent entered) sacredEntrants.Add(entered.Player);
+            }
+        }
+
+        private static void CollectProfiles(SimulationGroup g, GameResult result, SimulationOptions options, int seed,
+            HashSet<int> sacredEntrants)
+        {
+            int players = result.Ranking.Count;
+            foreach (PlayerScore score in result.Ranking)
+            {
+                string label = LabelOf(options, score.Player, players, seed);
+                if (!g.Profiles.TryGetValue(label, out SimulationProfileStats p)) g.Profiles[label] = p = new SimulationProfileStats(label);
+                p.Seats++;
+                if (result.Winners.Contains(score.Player)) p.Wins += 1.0 / result.Winners.Count;
+                p.Battle += score.BattleTokens;
+                p.Mission += score.MissionTokens;
+                p.Treasure += score.TreasureTokens;
+                p.CoinTokens += score.CoinTokens;
+                p.Penalty += score.MissionPenalty;
+                p.Poker += score.Poker.Score;
+                p.Total += score.Total;
+            }
+
+            var rushEntrants = sacredEntrants.Where(seat => LabelOf(options, seat, players, seed) == BotProfile.Rush.Name).ToList();
+            if (rushEntrants.Count == 0) return;
+            g.RushEntries++;
+            g.RushWinsAfterEntering += rushEntrants.Count(seat => result.Winners.Contains(seat)) / (double)result.Winners.Count;
         }
 
         private static bool Check(GameSession session, SimulationGroup group, int seed)

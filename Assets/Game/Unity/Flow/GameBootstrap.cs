@@ -9,9 +9,9 @@ using UnityEngine;
 namespace hp55games.MareIgnoto.Unity.Flow
 {
     /// <summary>
-    /// Il composition root della scena (01_architettura.md §5, CLAUDE.md regola 9). Spec 0005: "avvio diretto di test",
-    /// tutti i posti bot casuali, con numero di giocatori e seed nell'Inspector. Crea la GameSession da RulesConfigAsset e
-    /// MapLayoutAsset e la passa a GameFlowController.
+    /// Il composition root della scena (01_architettura.md §5, CLAUDE.md regola 9). "Avvio diretto di test": tutti i posti
+    /// sono bot (spec 0005), con numero di giocatori, seed e tipo di bot per posto nell'Inspector (spec 0011). Crea la
+    /// GameSession da RulesConfigAsset e MapLayoutAsset e la passa a GameFlowController con un bot per posto.
     /// </summary>
     public sealed class GameBootstrap : MonoBehaviour
     {
@@ -20,8 +20,11 @@ namespace hp55games.MareIgnoto.Unity.Flow
         [SerializeField] private GameFlowController flow;
 
         [Header("Avvio diretto di test")]
-        [Tooltip("Numero di giocatori, tutti bot casuali (devono rientrare nei limiti di RulesConfig).")]
+        [Tooltip("Numero di giocatori, tutti bot (devono rientrare nei limiti di RulesConfig).")]
         [SerializeField, Min(1)] private int playerCount = 4;
+
+        [Tooltip("Il bot di ogni posto, in ordine (09_bot.md). I posti oltre la lista giocano col bot casuale.")]
+        [SerializeField] private List<SeatBot> seats = new List<SeatBot> { SeatBot.Rush, SeatBot.Random, SeatBot.Hunter, SeatBot.Random };
 
         [Tooltip("Seed della partita e del bot: stesso seed, stessa partita.")]
         [SerializeField] private int seed = 1;
@@ -30,8 +33,17 @@ namespace hp55games.MareIgnoto.Unity.Flow
         {
             if (!Require(rulesConfig, nameof(rulesConfig)) || !Require(mapLayout, nameof(mapLayout)) || !Require(flow, nameof(flow))) return;
 
+            var kinds = new List<SeatBot>();
+            for (int seat = 0; seat < playerCount; seat++) kinds.Add(seat < seats.Count ? seats[seat] : SeatBot.Random);
+            IReadOnlyList<string> names = UiText.BotNames(kinds);
+
             var players = new List<PlayerSetup>();
-            for (int seat = 0; seat < playerCount; seat++) players.Add(new PlayerSetup(seat, UiText.BotName(seat)));
+            var bots = new List<IBot>();
+            for (int seat = 0; seat < playerCount; seat++)
+            {
+                players.Add(new PlayerSetup(seat, names[seat]));
+                bots.Add(CreateBot(kinds[seat], seat));
+            }
 
             GameSession session;
             try
@@ -45,7 +57,19 @@ namespace hp55games.MareIgnoto.Unity.Flow
                 return;
             }
 
-            flow.Begin(session, new RandomBot(new SeededRandom(seed)));
+            flow.Begin(session, bots);
+        }
+
+        /// <summary>Un bot per posto, ognuno con la sua casualità derivata da seed e posto (09_bot.md §1).</summary>
+        private IBot CreateBot(SeatBot kind, int seat)
+        {
+            var random = new SeededRandom(StrategicBot.SeedFor(seed, seat));
+            switch (kind)
+            {
+                case SeatBot.Rush: return new StrategicBot(BotProfile.Rush, random);
+                case SeatBot.Hunter: return new StrategicBot(BotProfile.Hunter, random);
+                default: return new RandomBot(random);
+            }
         }
 
         private bool Require(UnityEngine.Object reference, string field)

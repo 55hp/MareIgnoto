@@ -14,6 +14,33 @@ namespace hp55games.MareIgnoto.Unity
     {
         public static string BotName(int seat) => "Bot " + (seat + 1);
 
+        /// <summary>
+        /// I nomi dei posti per tipo di bot (spec 0011): "Bot Rush", "Bot Cacciatore", "Bot casuale 2". Se due posti hanno lo
+        /// stesso profilo, il numero del posto li distingue ("Bot Rush 1", "Bot Rush 3").
+        /// </summary>
+        public static IReadOnlyList<string> BotNames(IReadOnlyList<SeatBot> seats)
+        {
+            var names = new List<string>();
+            for (int seat = 0; seat < seats.Count; seat++)
+            {
+                SeatBot kind = seats[seat];
+                bool duplicated = kind != SeatBot.Random && seats.Count(other => other == kind) > 1;
+                names.Add(kind == SeatBot.Random || duplicated ? BotLabel(kind) + " " + (seat + 1) : BotLabel(kind));
+            }
+
+            return names;
+        }
+
+        private static string BotLabel(SeatBot kind)
+        {
+            switch (kind)
+            {
+                case SeatBot.Rush: return "Bot Rush";
+                case SeatBot.Hunter: return "Bot Cacciatore";
+                default: return "Bot casuale";
+            }
+        }
+
         public static string HeadingName(Heading heading)
         {
             switch (heading)
