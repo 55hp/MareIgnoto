@@ -30,7 +30,7 @@ Passo B, commit `5013e61`. Assembly `hp55games.MareIgnoto.Unity` (cartelle `Flow
 
 **Viste** (`Assets/Game/Unity/Views/`, tutte derivano da `GameView`: `Initialize(stato)` all'avvio, `Play(evento, durata)` per ogni evento; reagiscono ai dati degli eventi, non allo stato corrente, che è più avanti)
 - `BoardView` (`/BOARD/BOARD_Tiles`): una tile per cella dal prefab del tipo di cella, cella (x, y) in (x · `cellSize`, 0, y · `cellSize`) nello spazio dell'oggetto (`cellSize` = 1). Converte celle e spigoli in posizioni per le altre viste. Segnalini isola (R-097): un disco per giocatore dal prefab, colorato con la palette, sulla prima cella dell'isola, spostato di poco per posto; si sposta con `IslandMarkerPlacedEvent`.
-- `ZoneOverlayView` (`/BOARD/BOARD_Zones`): per ogni zona un riempimento (mesh delle sue celle sul prefab con `MeshFilter`), un contorno (`LineRenderer` dal prefab, chiuso, lungo il perimetro) e il livello come testo 3D TextMeshPro. Livello 0 invisibile, Mare Mosso giallo, Tempesta rosso (soglie da `RulesConfig.WeatherAt`); il numero compare dal livello 1. Si aggiorna con `ZoneChangedEvent`.
+- `ZoneOverlayView` (`/BOARD/BOARD_Zones`): per ogni zona un riempimento (mesh delle sue celle sul prefab con `MeshFilter`), un contorno (`LineRenderer` dal prefab, chiuso, lungo il perimetro) e il livello come testo 3D TextMeshPro. Ogni zona è sempre disegnata: a livello 0 contorno e riempimento neutro quasi trasparente (`calmColor`, default bianco al 10%), Mare Mosso giallo, Tempesta rosso; la scelta della tinta è logica pura in Rules (`ZoneAppearance`, soglie da `RulesConfig.WeatherAt`, con test). Il numero compare dal livello 1. Si aggiorna con `ZoneChangedEvent`.
 - `ShipsView` (`/BOARD/BOARD_Ships`): una nave per giocatore dal prefab `Ship`, colorata con la palette; avanza una cella per `ShipMovedEvent` (animazione di `durata`), poi riposizionamenti, attraversamenti e allineamento con `MovementEndedEvent`. Più navi sulla stessa cella si dispongono in cerchio.
 - `CellHighlightView` (`/BOARD/BOARD_Highlights`, minima): le rotte rivelate, un segno del colore del giocatore sulla cella verso cui punta, girato nella direzione; segue le rotazioni del meteo e sparisce quando parte il movimento.
 - `WindRoseView` (`/UI_Canvas/UI_TopBar`): lancetta (Nord in alto, 45° per scatto orario) e scritta del vento.
@@ -344,3 +344,17 @@ Elenco finale dei componenti e valore di ciascun campo:
 - /BOARD/BOARD_Zones: localPosition (0, 0, 0), localRotation (0, 0, 0), localScale (1, 1, 1)
 - /BOARD/BOARD_Ships: localPosition (0, 0, 0), localRotation (0, 0, 0), localScale (1, 1, 1)
 - /BOARD/BOARD_Highlights: localPosition (0, 0, 0), localRotation (0, 0, 0), localScale (1, 1, 1)
+
+### Claude Code — 2026-10-03 — commit b49c877
+
+Zone sempre visibili. Parte A in un commit a parte (`3e33a3d`, "docs: patch Athena (zone sempre visibili)"): le due sottostringhe combaciavano.
+
+- `ZoneOverlayView` disegna sempre ogni zona. A livello 0: contorno visibile e riempimento neutro quasi trasparente, nel campo nuovo `calmColor` (default (1, 1, 1, 0.10); serve solo l'inizializzatore, niente wiring). Livello 1 giallo e livello ≥ 2 rosso come prima. Il numero del livello si attiva solo dal livello 1 (prima spariva insieme alla zona).
+- La scelta della tinta e del numero è logica pura in Rules: `ZoneAppearance.TintFor(livello, config)` (`Calm`, `RoughSea`, `Storm`, con le soglie di `RulesConfig.WeatherAt`) e `ZoneAppearance.ShowsLevel(livello)`. `ZoneAppearanceTests`: livelli 0, 1, 2, 5 e soglie diverse dalla config. Verificato che il test morde (numero da livello 0: rosso). `dotnet test Tools/RulesHarness`: 410 verdi.
+- Nessuna scena, prefab o asset toccati. "Lato codice" aggiornato.
+
+**Non compilato in Unity**: compilato solo contro gli stub delle API Unity (0 errori, 0 avvisi). Da controllare in Console e in Play (Franci):
+- nessun errore di compilazione in `hp55games.MareIgnoto.Unity`;
+- `.meta` nuovi da committare: `Assets/Game/Rules/Map/ZoneAppearance.cs`, `Assets/Tests/EditMode/Rules/ZoneAppearanceTests.cs`;
+- in Play: tutte le 20 zone hanno il contorno; le 12 nuvole a livello 0 hanno il riempimento appena visibile e nessun numero, gli 8 spicchi sono rossi col numero 5;
+- se il riempimento a livello 0 non si vede o è troppo forte, si regola `calmColor` su `/BOARD/BOARD_Zones` (il materiale del prefab `ZoneFill` deve essere trasparente).
