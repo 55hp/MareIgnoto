@@ -10,6 +10,7 @@
 | `06_presentazione.md` | Scene, contratto dei nomi della gerarchia, hot-seat, testi | Athena/Franci; Claude Code e Bezi propongono modifiche nel report |
 | `07_tutorial.md` | Obiettivi, scenario, passi del tutorial | Athena/Franci (testi rifinibili da Inspector) |
 | `08_test-e-simulazione.md` | Harness .NET, casi di test, simulazione | Athena/Franci; Claude Code aggiorna la parte operativa |
+| `09_bot.md` | Bot strategici: principi, strumenti comuni, profili (rosso, giallo; verde e blu da specificare), misure | Solo Athena/Franci |
 
 ## Regola di sincronia
 
@@ -33,3 +34,4 @@ Divergenze:
 | 03/10/2026 (2) | **R-097**: con la Vedetta e più isole a portata sceglie il giocatore. **`05` §3**: il livello iniziale degli spicchi sta solo nel layout (tolto `ringInitialLevel` da `RulesConfig`) | `02`, `05`, `01` |
 | 03/10/2026 (3) | **`06`**: BoardView mostra i segnalini isola; ZoneOverlayView mostra il livello delle zone. **Spec 0005**: la pipeline URP va creata, non assegnata | `06` |
 | 03/10/2026 (4) | **`05`**: layout v5. L'anello diventa 8 archi regolari: 4 varchi diagonali a spigolo e 4 canali dritti larghi 1 sugli assi (prima: lobi irregolari con varchi diagonali). Nuvole da 12 a 8. Copertura 24%. **R-080**: nuvole N1–N8 | `05`, `02` |
+| 03/10/2026 (5) | **`09`** nuovo: bot strategici basati su `PlayerView`, profili Rush e Cacciatore, scenari di misura | `09` |
