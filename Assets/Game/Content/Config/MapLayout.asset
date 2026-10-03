@@ -1,0 +1,579 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e26c5243abd21fb48b66c10a8ea8a16f, type: 3}
+  m_Name: MapLayout
+  m_EditorClassIdentifier: 
+  layout:
+    width: 25
+    height: 25
+    islandCells:
+    - x: 2
+      y: 5
+      islandId: 1
+    - x: 2
+      y: 19
+      islandId: 2
+    - x: 3
+      y: 8
+      islandId: 3
+    - x: 3
+      y: 16
+      islandId: 4
+    - x: 5
+      y: 2
+      islandId: 5
+    - x: 5
+      y: 22
+      islandId: 6
+    - x: 8
+      y: 3
+      islandId: 7
+    - x: 8
+      y: 21
+      islandId: 8
+    - x: 16
+      y: 3
+      islandId: 9
+    - x: 16
+      y: 21
+      islandId: 10
+    - x: 19
+      y: 2
+      islandId: 11
+    - x: 19
+      y: 22
+      islandId: 12
+    - x: 21
+      y: 8
+      islandId: 13
+    - x: 21
+      y: 16
+      islandId: 14
+    - x: 22
+      y: 5
+      islandId: 15
+    - x: 22
+      y: 19
+      islandId: 16
+    sacredIslandCells:
+    - x: 12
+      y: 12
+    - x: 11
+      y: 12
+    - x: 13
+      y: 12
+    - x: 12
+      y: 11
+    - x: 12
+      y: 13
+    zones:
+    - id: R1
+      kind: 1
+      initialLevel: 5
+      cells:
+      - x: 15
+        y: 12
+      - x: 15
+        y: 13
+      - x: 15
+        y: 14
+      - x: 16
+        y: 13
+      - x: 16
+        y: 14
+      - x: 17
+        y: 14
+      - x: 17
+        y: 15
+    - id: R2
+      kind: 1
+      initialLevel: 5
+      cells:
+      - x: 13
+        y: 16
+      - x: 14
+        y: 15
+      - x: 14
+        y: 16
+      - x: 14
+        y: 17
+      - x: 15
+        y: 17
+    - id: R3
+      kind: 1
+      initialLevel: 5
+      cells:
+      - x: 9
+        y: 17
+      - x: 10
+        y: 15
+      - x: 10
+        y: 16
+      - x: 10
+        y: 17
+      - x: 11
+        y: 15
+      - x: 11
+        y: 16
+      - x: 12
+        y: 15
+    - id: R4
+      kind: 1
+      initialLevel: 5
+      cells:
+      - x: 7
+        y: 14
+      - x: 7
+        y: 15
+      - x: 8
+        y: 13
+      - x: 8
+        y: 14
+      - x: 9
+        y: 14
+    - id: R5
+      kind: 1
+      initialLevel: 5
+      cells:
+      - x: 7
+        y: 10
+      - x: 7
+        y: 9
+      - x: 8
+        y: 10
+      - x: 8
+        y: 11
+      - x: 9
+        y: 10
+      - x: 9
+        y: 11
+      - x: 9
+        y: 12
+    - id: R6
+      kind: 1
+      initialLevel: 5
+      cells:
+      - x: 9
+        y: 7
+      - x: 10
+        y: 7
+      - x: 10
+        y: 8
+      - x: 10
+        y: 9
+      - x: 11
+        y: 8
+    - id: R7
+      kind: 1
+      initialLevel: 5
+      cells:
+      - x: 12
+        y: 9
+      - x: 13
+        y: 8
+      - x: 13
+        y: 9
+      - x: 14
+        y: 7
+      - x: 14
+        y: 8
+      - x: 14
+        y: 9
+      - x: 15
+        y: 7
+    - id: R8
+      kind: 1
+      initialLevel: 5
+      cells:
+      - x: 15
+        y: 10
+      - x: 16
+        y: 10
+      - x: 16
+        y: 11
+      - x: 17
+        y: 10
+      - x: 17
+        y: 9
+    - id: N1
+      kind: 0
+      initialLevel: 0
+      cells:
+      - x: 20
+        y: 10
+      - x: 20
+        y: 11
+      - x: 20
+        y: 12
+      - x: 20
+        y: 13
+      - x: 20
+        y: 14
+      - x: 20
+        y: 15
+      - x: 20
+        y: 9
+      - x: 21
+        y: 10
+      - x: 21
+        y: 11
+      - x: 21
+        y: 12
+      - x: 21
+        y: 13
+      - x: 21
+        y: 14
+    - id: N2
+      kind: 0
+      initialLevel: 0
+      cells:
+      - x: 20
+        y: 17
+      - x: 20
+        y: 18
+      - x: 21
+        y: 17
+      - x: 21
+        y: 18
+      - x: 22
+        y: 16
+      - x: 22
+        y: 17
+      - x: 22
+        y: 18
+      - x: 23
+        y: 15
+      - x: 23
+        y: 16
+    - id: N3
+      kind: 0
+      initialLevel: 0
+      cells:
+      - x: 15
+        y: 23
+      - x: 16
+        y: 22
+      - x: 16
+        y: 23
+      - x: 17
+        y: 20
+      - x: 17
+        y: 21
+      - x: 17
+        y: 22
+      - x: 18
+        y: 20
+      - x: 18
+        y: 21
+      - x: 18
+        y: 22
+    - id: N4
+      kind: 0
+      initialLevel: 0
+      cells:
+      - x: 9
+        y: 20
+      - x: 10
+        y: 20
+      - x: 10
+        y: 21
+      - x: 11
+        y: 20
+      - x: 11
+        y: 21
+      - x: 12
+        y: 20
+      - x: 12
+        y: 21
+      - x: 13
+        y: 20
+      - x: 13
+        y: 21
+      - x: 14
+        y: 20
+      - x: 14
+        y: 21
+      - x: 15
+        y: 20
+    - id: N5
+      kind: 0
+      initialLevel: 0
+      cells:
+      - x: 6
+        y: 20
+      - x: 6
+        y: 21
+      - x: 6
+        y: 22
+      - x: 7
+        y: 20
+      - x: 7
+        y: 21
+      - x: 7
+        y: 22
+      - x: 8
+        y: 22
+      - x: 8
+        y: 23
+      - x: 9
+        y: 23
+    - id: N6
+      kind: 0
+      initialLevel: 0
+      cells:
+      - x: 1
+        y: 15
+      - x: 1
+        y: 16
+      - x: 2
+        y: 16
+      - x: 2
+        y: 17
+      - x: 2
+        y: 18
+      - x: 3
+        y: 17
+      - x: 3
+        y: 18
+      - x: 4
+        y: 17
+      - x: 4
+        y: 18
+    - id: N7
+      kind: 0
+      initialLevel: 0
+      cells:
+      - x: 3
+        y: 10
+      - x: 3
+        y: 11
+      - x: 3
+        y: 12
+      - x: 3
+        y: 13
+      - x: 3
+        y: 14
+      - x: 4
+        y: 10
+      - x: 4
+        y: 11
+      - x: 4
+        y: 12
+      - x: 4
+        y: 13
+      - x: 4
+        y: 14
+      - x: 4
+        y: 15
+      - x: 4
+        y: 9
+    - id: N8
+      kind: 0
+      initialLevel: 0
+      cells:
+      - x: 1
+        y: 8
+      - x: 1
+        y: 9
+      - x: 2
+        y: 6
+      - x: 2
+        y: 7
+      - x: 2
+        y: 8
+      - x: 3
+        y: 6
+      - x: 3
+        y: 7
+      - x: 4
+        y: 6
+      - x: 4
+        y: 7
+    - id: N9
+      kind: 0
+      initialLevel: 0
+      cells:
+      - x: 6
+        y: 2
+      - x: 6
+        y: 3
+      - x: 6
+        y: 4
+      - x: 7
+        y: 2
+      - x: 7
+        y: 3
+      - x: 7
+        y: 4
+      - x: 8
+        y: 1
+      - x: 8
+        y: 2
+      - x: 9
+        y: 1
+    - id: N10
+      kind: 0
+      initialLevel: 0
+      cells:
+      - x: 9
+        y: 4
+      - x: 10
+        y: 3
+      - x: 10
+        y: 4
+      - x: 11
+        y: 3
+      - x: 11
+        y: 4
+      - x: 12
+        y: 3
+      - x: 12
+        y: 4
+      - x: 13
+        y: 3
+      - x: 13
+        y: 4
+      - x: 14
+        y: 3
+      - x: 14
+        y: 4
+      - x: 15
+        y: 4
+    - id: N11
+      kind: 0
+      initialLevel: 0
+      cells:
+      - x: 15
+        y: 1
+      - x: 16
+        y: 1
+      - x: 16
+        y: 2
+      - x: 17
+        y: 2
+      - x: 17
+        y: 3
+      - x: 17
+        y: 4
+      - x: 18
+        y: 2
+      - x: 18
+        y: 3
+      - x: 18
+        y: 4
+    - id: N12
+      kind: 0
+      initialLevel: 0
+      cells:
+      - x: 20
+        y: 6
+      - x: 20
+        y: 7
+      - x: 21
+        y: 6
+      - x: 21
+        y: 7
+      - x: 22
+        y: 6
+      - x: 22
+        y: 7
+      - x: 22
+        y: 8
+      - x: 23
+        y: 8
+      - x: 23
+        y: 9
+    spawnPresets:
+    - playerCount: 2
+      cells:
+      - x: 1
+        y: 1
+      - x: 23
+        y: 23
+    - playerCount: 3
+      cells:
+      - x: 1
+        y: 1
+      - x: 23
+        y: 1
+      - x: 12
+        y: 24
+    - playerCount: 4
+      cells:
+      - x: 1
+        y: 1
+      - x: 23
+        y: 1
+      - x: 1
+        y: 23
+      - x: 23
+        y: 23
+    - playerCount: 5
+      cells:
+      - x: 1
+        y: 1
+      - x: 23
+        y: 1
+      - x: 1
+        y: 23
+      - x: 23
+        y: 23
+      - x: 12
+        y: 24
+    - playerCount: 6
+      cells:
+      - x: 1
+        y: 1
+      - x: 23
+        y: 1
+      - x: 1
+        y: 23
+      - x: 23
+        y: 23
+      - x: 12
+        y: 24
+      - x: 12
+        y: 0
+    - playerCount: 7
+      cells:
+      - x: 1
+        y: 1
+      - x: 23
+        y: 1
+      - x: 1
+        y: 23
+      - x: 23
+        y: 23
+      - x: 12
+        y: 24
+      - x: 12
+        y: 0
+      - x: 0
+        y: 12
+    - playerCount: 8
+      cells:
+      - x: 1
+        y: 1
+      - x: 23
+        y: 1
+      - x: 1
+        y: 23
+      - x: 23
+        y: 23
+      - x: 12
+        y: 24
+      - x: 12
+        y: 0
+      - x: 0
+        y: 12
+      - x: 24
+        y: 12
