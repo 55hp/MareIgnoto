@@ -24,7 +24,7 @@ Un'isola può occupare più celle: ogni cella isola ha un `islandId` (le celle c
 Una **zona** è un gruppo fisso di celle di mare, definito nel layout. Ci sono due tipi:
 
 - **Nuvola**: forma curva e irregolare, spessore massimo 2–3 celle, partenza a livello 0.
-- **Spicchio**: parte dell'anello di tempesta che circonda l'Isola Sacra, partenza a **livello 5** (`ringInitialLevel` in `RulesConfig`).
+- **Spicchio**: parte dell'anello di tempesta che circonda l'Isola Sacra, partenza a **livello 5**, scritto nel layout (campo `livelloIniziale` di ogni zona).
 
 Ogni zona ha un **livello** intero ≥ 0 (R-081): 0 Normale, 1 Mare Mosso, ≥ 2 Tempesta. Le celle di mare che non stanno in nessuna zona sono mare libero.
 

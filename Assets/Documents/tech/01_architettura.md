@@ -37,7 +37,7 @@ Dettaglio: `08_test-e-simulazione.md`.
 
 ## 4. Configurazione: una sola fonte per ogni numero
 
-- `RulesConfig` (classe C# pura, Rules): tutti i numeri del gioco (monete iniziali, carte pescate, copie per carta, costi, ricompense, livello iniziale degli spicchi (`ringInitialLevel`), `maxRounds`...). I valori di default sono gli inizializzatori dei campi e coincidono con `02_regole.md` e `03_contenuti.md`.
+- `RulesConfig` (classe C# pura, Rules): tutti i numeri del gioco (monete iniziali, carte pescate, copie per carta, costi, ricompense, `maxRounds`...). I valori di default sono gli inizializzatori dei campi e coincidono con `02_regole.md` e `03_contenuti.md`.
 - `RulesConfigAsset` (ScriptableObject, Unity): espone gli stessi campi per il bilanciamento da Inspector e produce un `RulesConfig`. Un asset creato dal menu `Create/MareIgnoto/Rules Config` nasce già con i default giusti, quindi crearlo è un passo da un clic.
 - Nessun numero di regola scritto altrove (né nel codice degli effetti, né nella UI, né nei test: i test leggono da `RulesConfig`).
 - `MapLayoutAsset` → `MapLayout` con lo stesso schema (`05_mappa.md`).
