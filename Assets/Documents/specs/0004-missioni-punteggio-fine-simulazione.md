@@ -176,3 +176,10 @@ Errori: nessuno
 ### Claude Code — 2026-10-03 — commit 854f413
 
 R-145 (patch del 02/10 (5)): verificato, nessun comportamento nuovo. `Scoring.Poker` sceglie la lettura che dà il punteggio poker finale più alto e a parità lascia fuori il Jolly, anche con i Nostromi: il moltiplicatore di R-146 è identico nelle due letture, quindi confrontarle prima dei raddoppi dà lo stesso esito. Aggiunto `OnATieTheJokerStaysOutAlsoWithTheNostromoMultipliers_R145_R146` (morde: con `>=` al posto di `>` diventa rosso); `dotnet test Tools/RulesHarness` verde, 361 test.
+
+### Claude Code — 2026-10-03 — commit bd9b891
+
+Riordino dei file (commit "chore: CLAUDE.md alla radice, README di radice"):
+- `CLAUDE.md` spostato da `Assets/` alla radice del repo (`git mv`), rimosso `Assets/CLAUDE.md.meta`. Nessun documento citava il percorso `Assets/CLAUDE.md`, né i miei né quelli in `tech/`.
+- `README.md` di radice: esiste già (contiene solo il titolo "# MareIgnoto"), quindi non l'ho creato né modificato. Il testo previsto per la radice oggi sta in `Assets/README.md`.
+- File e cartelle sotto `Assets/` senza `.meta` (controllo sul disco, escluse le voci nascoste e con `~` che Unity ignora): **nessuno**. Ogni file tracciato ha anche il suo `.meta` tracciato. Se in futuro la lista non è vuota, Bezi deve aggiornare l'Editor per generarli: non si scrivono a mano.
