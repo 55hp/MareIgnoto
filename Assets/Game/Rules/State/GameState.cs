@@ -50,9 +50,12 @@ namespace hp55games.MareIgnoto.Rules.State
         /// <summary>Avanzamento delle missioni in mano, per Uid della carta (R-131: nasce quando la missione si tiene).</summary>
         public Dictionary<int, Engine.MissionProgress> MissionProgress { get; } = new Dictionary<int, Engine.MissionProgress>();
 
+        /// <summary>Passo convenzionale di un arrivo sull'Isola Sacra per Abbordaggio: dopo ogni passo di movimento (R-141).</summary>
+        public const int BoardingArrivalStep = int.MaxValue;
+
         /// <summary>
-        /// Navi entrate nell'Isola Sacra nel movimento di questo round, col passo (R-140, R-141). Non vuoto: la partita
-        /// finisce alla fine del round (R-142).
+        /// Navi entrate nell'Isola Sacra in questo round, col passo (R-140, R-141; <see cref="BoardingArrivalStep"/> per gli
+        /// arrivi da Abbordaggio, R-073a). Non vuoto: la partita finisce alla fine del round (R-142).
         /// </summary>
         public Dictionary<int, int> SacredIslandArrivals { get; } = new Dictionary<int, int>();
 

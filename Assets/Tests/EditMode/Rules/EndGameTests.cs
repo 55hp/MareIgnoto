@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using hp55games.MareIgnoto.Rules.Cards;
 using hp55games.MareIgnoto.Rules.Config;
+using hp55games.MareIgnoto.Rules.Decisions;
 using hp55games.MareIgnoto.Rules.Engine;
 using hp55games.MareIgnoto.Rules.Events;
 using hp55games.MareIgnoto.Rules.Map;
@@ -102,6 +103,78 @@ namespace hp55games.MareIgnoto.Rules.Tests
             Assert.AreEqual(1, events.OfType<TreasureTakenEvent>().Single().CoinsLost, "il resto va perso");
             Assert.AreEqual(s.Config.treasureTokens, s.P(0).BountyFrom(BountyReason.Treasure));
             Assert.AreEqual(s.Config.treasureTokens, s.P(1).BountyFrom(BountyReason.Treasure));
+        }
+
+        /// <summary>
+        /// Abbordaggio vicino all'Isola Sacra, col vento verso S: p0 da (7,9) verso E e p1 da (8,10) verso S (velocità 2) si
+        /// scontrano in (8,9); con 3 navi anche p2 da (7,10) verso SE. I tiri sono accodati nell'ordine di turno.
+        /// </summary>
+        private static RoundScenario BoardingNextToTheIsland(int players)
+        {
+            RoundScenario s = Arrival(players).At(0, 7, 9).At(1, 8, 10).Wind(Heading.S);
+            if (players > 2) s.At(2, 7, 10);
+            return s;
+        }
+
+        [Test]
+        public void AShipRepositionedOntoTheSacredIslandTakesTheTreasureAndEndsTheGame_R073a_R140()
+        {
+            RoundScenario s = BoardingNextToTheIsland(2);
+            s.State.Treasure = 5;
+            s.Random.Enqueue(3, 7); // p0 verso E in (9,9), p1 verso O in (7,9)
+            List<GameEvent> events = s.PlayRound(new[] { Heading.E, Heading.S });
+
+            Assert.IsTrue(events.OfType<SacredIslandEnteredEvent>().Single().ByBoarding);
+            TreasureTakenEvent taken = events.OfType<TreasureTakenEvent>().Single();
+            Assert.IsTrue(taken.ByBoarding);
+            CollectionAssert.AreEqual(new[] { 0 }, s.Session.Result.TreasureTakers);
+            Assert.AreEqual(5, s.P(0).Coins);
+            Assert.AreEqual(GameEndReason.SacredIsland, s.Session.Result.Reason);
+        }
+
+        [Test]
+        public void AnArrivalByMovementBeatsAnArrivalByBoarding_R141()
+        {
+            // p2 entra in movimento da (11,9) verso O al passo 1; p0 arriva dopo, per Abbordaggio.
+            RoundScenario s = BoardingNextToTheIsland(3).At(2, 11, 9);
+            s.State.Treasure = 5;
+            s.Random.Enqueue(3, 7);
+            s.PlayRound(new[] { Heading.E, Heading.S, Heading.O });
+
+            CollectionAssert.AreEqual(new[] { 2 }, s.Session.Result.TreasureTakers);
+            Assert.AreEqual(0, s.P(0).BountyFrom(BountyReason.Treasure));
+            Assert.AreEqual(Map.CellKind.SacredIsland, s.State.Map.KindAt(s.P(0).Position), "p0 è comunque sull'Isola Sacra");
+        }
+
+        [Test]
+        public void BoardingArrivalsTieAndSplitTheTreasureAlsoWithThreeShips_R071_R141()
+        {
+            RoundScenario s = BoardingNextToTheIsland(3);
+            s.State.Treasure = 7;
+            s.Random.Enqueue(3, 2, 7); // p0 in (9,9), p1 in (9,10): Isola Sacra; p2 in (7,9)
+            List<GameEvent> events = s.PlayRound(new[] { Heading.E, Heading.S, Heading.SE });
+
+            Assert.AreEqual(3, events.OfType<BoardingStartedEvent>().Single().Players.Count);
+            CollectionAssert.AreEqual(new[] { 0, 1 }, s.Session.Result.TreasureTakers);
+            Assert.AreEqual(3, s.P(0).Coins);
+            Assert.AreEqual(3, s.P(1).Coins);
+            Assert.AreEqual(1, events.OfType<TreasureTakenEvent>().Single().CoinsLost);
+        }
+
+        [Test]
+        public void MeteoCardsInTheCourtesyRoundArePaidButTheCoinsLeaveTheGame_R142()
+        {
+            RoundScenario s = Arrival(2);
+            s.P(1).Coins = 10;
+            s.State.Treasure = 4;
+            s.Hand(1, PirateCardId.InvocazioneGartya);
+            List<GameEvent> events = s.PlayRound(Headings(2, Heading.E),
+                RoundScenario.Pick(RoundScenario.Opt<PlayCardOption>(1, o => o.Card.Id == PirateCardId.InvocazioneGartya)));
+
+            Assert.AreEqual(10 - s.Config.PirateCost(PirateCardId.InvocazioneGartya), s.P(1).Coins, "pagata");
+            Assert.AreEqual(0, s.State.Treasure, "il Tesoro era già stato preso");
+            Assert.AreEqual(4, s.P(0).Coins);
+            Assert.AreEqual(1, events.OfType<TreasureChangedEvent>().Count());
         }
 
         [Test]

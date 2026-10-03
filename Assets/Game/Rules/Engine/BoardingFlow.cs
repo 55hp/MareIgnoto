@@ -149,8 +149,13 @@ namespace hp55games.MareIgnoto.Rules.Engine
             Coord to = from.Step(HeadingExtensions.FromD8(value));
             player.Position = to;
             ctx.Emit(new ShipRepositionedEvent(player.Id, value, from, to));
-            // TODO R-140: riposizionarsi sull'Isola Sacra fa finire la partita? Vedi le domande della spec 0002.
             if (state.Map.KindAt(to) == CellKind.Border) ctx.Emit(new ShipStrandedEvent(player.Id, to));
+            if (state.Map.KindAt(to) == CellKind.SacredIsland && !state.SacredIslandArrivals.ContainsKey(player.Id))
+            {
+                // R-073a, R-140: arriva sull'Isola Sacra come in movimento, ma dopo tutti i passi (R-141).
+                state.SacredIslandArrivals[player.Id] = GameState.BoardingArrivalStep;
+                ctx.Emit(new SacredIslandEnteredEvent(player.Id, 0, to, true));
+            }
             return to;
         }
 

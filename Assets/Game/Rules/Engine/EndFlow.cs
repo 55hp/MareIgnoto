@@ -9,8 +9,9 @@ namespace hp55games.MareIgnoto.Rules.Engine
     internal static class EndFlow
     {
         /// <summary>
-        /// R-140, R-141: dopo il movimento, il Tesoro va a chi è entrato nell'Isola Sacra nel passo più basso. A parità di
-        /// passo ognuno prende il segnalino e le monete si dividono per difetto; il resto esce dal gioco.
+        /// R-140, R-141: dopo movimento e Abbordaggi, il Tesoro va a chi è entrato nell'Isola Sacra nel passo più basso; gli
+        /// arrivi per Abbordaggio (R-073a) vengono dopo tutti i passi. A parità ognuno prende il segnalino e le monete si
+        /// dividono per difetto; il resto esce dal gioco.
         /// </summary>
         public static void TakeTreasure(GameContext ctx)
         {
@@ -24,7 +25,8 @@ namespace hp55games.MareIgnoto.Rules.Engine
             int treasure = state.Treasure;
             int coinsEach = treasure / takers.Count;
             int lost = treasure - coinsEach * takers.Count;
-            ctx.Emit(new TreasureTakenEvent(takers.ToArray(), step, ctx.Config.treasureTokens, coinsEach, lost));
+            bool byBoarding = step == GameState.BoardingArrivalStep;
+            ctx.Emit(new TreasureTakenEvent(takers.ToArray(), byBoarding ? 0 : step, byBoarding, ctx.Config.treasureTokens, coinsEach, lost));
             if (treasure > 0) ctx.ChangeTreasure(-treasure);
 
             foreach (int id in takers)

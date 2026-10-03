@@ -25,6 +25,12 @@ namespace hp55games.MareIgnoto.Rules.Engine
         /// <summary>Round a cui si riferisce <see cref="Count"/> per i contatori "nello stesso round" o "consecutivi"; -1 se nessuno.</summary>
         public int Round { get; set; } = -1;
 
+        /// <summary>
+        /// Missioni di stato (R-131): la condizione all'ultimo controllo. Si completano solo quando passa da falsa a vera,
+        /// quindi se è già vera quando la missione si tiene deve prima smettere di esserlo.
+        /// </summary>
+        public bool StateWasTrue { get; set; }
+
         /// <summary>Insieme di chiavi: avversari battuti (Barbanera!), celle di arenamento (Gamba di legno).</summary>
         public HashSet<int> Keys { get; } = new HashSet<int>();
 
@@ -48,7 +54,9 @@ namespace hp55games.MareIgnoto.Rules.Engine
         public static void Track(GameState state, PlayerState player, MissionCard card)
         {
             player.Missions.Add(card);
-            state.MissionProgress[card.Uid] = new MissionProgress(card, player.Id);
+            var progress = new MissionProgress(card, player.Id);
+            progress.StateWasTrue = StateCondition(state, player, card.Id) == true; // R-131: conta solo il passaggio a vero
+            state.MissionProgress[card.Uid] = progress;
         }
 
         /// <summary>Aggiorna i contatori delle missioni in mano con un evento appena emesso.</summary>
@@ -90,17 +98,12 @@ namespace hp55games.MareIgnoto.Rules.Engine
                             CountInRound(m, state.Round) >= threshold) m.Met = true;
                         break;
 
+                    // Monete e mano: controllate a ogni evento, così conta anche un passaggio che dura un istante.
                     case MissionId.Avido:
                     case MissionId.Avidissimo:
-                        if (owner.Coins >= threshold) m.Met = true;
-                        break;
-
                     case MissionId.Bancarotta:
-                        if (owner.Coins == 0) m.Met = true;
-                        break;
-
                     case MissionId.DispersiInMare:
-                        if (owner.Hand.Count == 0) m.Met = true;
+                        UpdateState(state, owner, m);
                         break;
 
                     case MissionId.SpugnaDiMare: // azioni Svago
@@ -134,7 +137,8 @@ namespace hp55games.MareIgnoto.Rules.Engine
                         }
                         break;
 
-                    // Cacciatore di Taglie, Gemelli, Nave d'assalto: condizioni sullo stato, valutate nei punti sicuri.
+                    // Cacciatore di Taglie, Gemelli, Nave d'assalto: condizioni sullo stato della ciurma o delle missioni,
+                    // valutate nei punti sicuri (IsMet).
                 }
             }
         }
@@ -197,20 +201,33 @@ namespace hp55games.MareIgnoto.Rules.Engine
 
         private static bool IsMet(GameState state, PlayerState player, MissionProgress m)
         {
-            if (m.Met) return true;
-            int threshold = state.Config.Mission(m.Card.Id).threshold;
-            IReadOnlyList<CrewCard> above = player.CrewAbove;
-            switch (m.Card.Id)
+            if (m.Card.Id == MissionId.CacciatoreDiTaglie) // tutta la partita, eccezione a R-131
+                return player.Completed.Count >= state.Config.Mission(m.Card.Id).threshold;
+            UpdateState(state, player, m);
+            return m.Met;
+        }
+
+        /// <summary>R-131: una missione di stato scatta quando la sua condizione passa da falsa a vera.</summary>
+        private static void UpdateState(GameState state, PlayerState player, MissionProgress m)
+        {
+            bool? now = StateCondition(state, player, m.Card.Id);
+            if (now == null) return;
+            if (now.Value && !m.StateWasTrue) m.Met = true;
+            m.StateWasTrue = now.Value;
+        }
+
+        /// <summary>La condizione delle missioni di stato (03 §3); null per le altre.</summary>
+        private static bool? StateCondition(GameState state, PlayerState player, MissionId id)
+        {
+            switch (id)
             {
-                // Condizioni sullo stato: vere anche se lo erano già quando la missione è stata pescata (domanda R-131 nel report).
                 case MissionId.Avido:
-                case MissionId.Avidissimo: return player.Coins >= threshold;
+                case MissionId.Avidissimo: return player.Coins >= state.Config.Mission(id).threshold;
                 case MissionId.Bancarotta: return player.Coins == 0;
                 case MissionId.DispersiInMare: return player.Hand.Count == 0;
-                case MissionId.CacciatoreDiTaglie: return player.Completed.Count >= threshold; // tutta la partita
-                case MissionId.Gemelli: return SameRankPair(above);
-                case MissionId.NaveDAssalto: return above.Count(c => c != null && CrewCatalog.IsCourt(c.Rank)) >= 2;
-                default: return false;
+                case MissionId.Gemelli: return SameRankPair(player.CrewAbove);
+                case MissionId.NaveDAssalto: return player.CrewAbove.Count(c => c != null && CrewCatalog.IsCourt(c.Rank)) >= 2;
+                default: return null;
             }
         }
 

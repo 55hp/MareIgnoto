@@ -65,9 +65,24 @@ namespace hp55games.MareIgnoto.Rules.Tests
             Assert.AreEqual(PokerHand.RoyalStraightFlush, royal.Hand);
             Assert.AreEqual(Config.PokerTokens(PokerHand.RoyalStraightFlush) / Config.singleJokerPokerDivisor, royal.Score);
 
-            PokerScore odd = PokerAllBelow(Card(5, H), Joker());
-            Assert.AreEqual(PokerHand.Pair, odd.Hand, "il Jolly completa anche una ciurma corta");
-            Assert.AreEqual(Config.PokerTokens(PokerHand.Pair) / Config.singleJokerPokerDivisor, odd.Score, "per difetto");
+            PokerScore shortCrew = PokerAllBelow(Card(5, H), Card(5, D), Card(5, C), Joker());
+            Assert.AreEqual(PokerHand.FourOfAKind, shortCrew.Hand, "il Jolly completa anche una ciurma corta");
+            Assert.IsTrue(shortCrew.HalvedByJoker);
+
+            // Coppia di 5 + Jolly: il tris dimezzato vale quanto la coppia da sola, quindi il Jolly non entra (R-146).
+            PokerScore pair = PokerAllBelow(Card(5, H), Card(5, D), Joker());
+            Assert.AreEqual(PokerHand.Pair, pair.Hand);
+            Assert.IsFalse(pair.HalvedByJoker);
+        }
+
+        [Test]
+        public void AJokerThatAddsNothingAfterHalvingIsNotPartOfTheCombination_R145_R146()
+        {
+            // Quattro 9 col Jolly: il Jolly non migliora il poker, quindi non ne fa parte e non dimezza.
+            PokerScore four = PokerAllBelow(Card(9, H), Card(9, D), Card(9, C), Card(9, S), Joker());
+            Assert.AreEqual(PokerHand.FourOfAKind, four.Hand);
+            Assert.IsFalse(four.HalvedByJoker);
+            Assert.AreEqual(Config.PokerTokens(PokerHand.FourOfAKind), four.Score);
         }
 
         [Test]
@@ -95,9 +110,21 @@ namespace hp55games.MareIgnoto.Rules.Tests
         }
 
         [Test]
+        public void AJokerNextToTheNostromoOutsideTheCombinationGivesTheFullX4_R146()
+        {
+            // Nostromo e Jolly sopra coperta, quattro 9 in tutto: il Jolly non serve alla combinazione, conta solo come
+            // secondo Nostromo.
+            PokerScore score = Poker(Card(9, H), Joker(), Card(9, D), Card(9, C), Card(9, S));
+            Assert.IsFalse(score.HalvedByJoker);
+            Assert.AreEqual(Config.nostromoPokerMultiplier * Config.nostromoPokerMultiplier, score.NostromoMultiplier);
+            Assert.AreEqual(Config.PokerTokens(PokerHand.FourOfAKind) * score.NostromoMultiplier, score.Score);
+        }
+
+        [Test]
         public void TheNostromoDoublesAfterTheJokerHalving_R145_R146()
         {
-            // Nostromo e Jolly sopra coperta: il Jolly è la carta jolly del poker (R-145) e duplica il Nostromo (R-015).
+            // Nostromo e Jolly sopra coperta, Jolly nella combinazione: prima il dimezzamento (R-145), poi due raddoppi
+            // perché il Jolly conta come secondo Nostromo (R-146): circa ×2 in tutto.
             PokerScore score = Poker(Card(9, H), Joker(), Card(9, D), Card(9, C), Card(5, S));
             Assert.AreEqual(PokerHand.FourOfAKind, score.Hand);
             int halved = Config.PokerTokens(PokerHand.FourOfAKind) / Config.singleJokerPokerDivisor;

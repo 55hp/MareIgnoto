@@ -186,21 +186,28 @@ namespace hp55games.MareIgnoto.Rules.Events
         public override string Describe() => "ShipStranded p" + Player + " " + Cell;
     }
 
-    /// <summary>La nave è entrata nell'Isola Sacra al passo <see cref="Step"/> (R-140, R-141): la partita finisce a fine round (R-142).</summary>
+    /// <summary>
+    /// La nave è entrata nell'Isola Sacra (R-140, R-141): al passo <see cref="Step"/> del movimento, oppure riposizionata da
+    /// un Abbordaggio (<see cref="ByBoarding"/>, R-073a: arriva dopo tutto il movimento, <see cref="Step"/> è 0).
+    /// La partita finisce a fine round (R-142).
+    /// </summary>
     public sealed class SacredIslandEnteredEvent : GameEvent
     {
         public int Player { get; }
         public int Step { get; }
         public Coord Cell { get; }
+        public bool ByBoarding { get; }
 
-        public SacredIslandEnteredEvent(int player, int step, Coord cell)
+        public SacredIslandEnteredEvent(int player, int step, Coord cell, bool byBoarding = false)
         {
             Player = player;
             Step = step;
             Cell = cell;
+            ByBoarding = byBoarding;
         }
 
-        public override string Describe() => "SacredIslandEntered p" + Player + " s" + Step + " " + Cell;
+        public override string Describe() =>
+            "SacredIslandEntered p" + Player + (ByBoarding ? " byBoarding" : " s" + Step) + " " + Cell;
     }
 
     /// <summary>Fine del movimento: la posizione di ogni nave, per id giocatore.</summary>

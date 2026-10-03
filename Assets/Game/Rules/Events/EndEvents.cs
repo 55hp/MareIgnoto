@@ -28,28 +28,32 @@ namespace hp55games.MareIgnoto.Rules.Events
     }
 
     /// <summary>
-    /// Il Tesoro dell'Isola Sacra (R-140, R-141): a chi è entrato nel passo più basso. A parità il segnalino va a ciascuno
-    /// e le monete si dividono per difetto; il resto (<see cref="CoinsLost"/>) esce dal gioco.
+    /// Il Tesoro dell'Isola Sacra (R-140, R-141): a chi è entrato nel passo più basso; gli arrivi per Abbordaggio
+    /// (<see cref="ByBoarding"/>, <see cref="Step"/> 0) vengono dopo ogni arrivo in movimento. A parità il segnalino va a
+    /// ciascuno e le monete si dividono per difetto; il resto (<see cref="CoinsLost"/>) esce dal gioco.
     /// </summary>
     public sealed class TreasureTakenEvent : GameEvent
     {
         public IReadOnlyList<int> Players { get; }
         public int Step { get; }
+        public bool ByBoarding { get; }
         public int TokensEach { get; }
         public int CoinsEach { get; }
         public int CoinsLost { get; }
 
-        public TreasureTakenEvent(IReadOnlyList<int> players, int step, int tokensEach, int coinsEach, int coinsLost)
+        public TreasureTakenEvent(IReadOnlyList<int> players, int step, bool byBoarding, int tokensEach, int coinsEach, int coinsLost)
         {
             Players = players;
             Step = step;
+            ByBoarding = byBoarding;
             TokensEach = tokensEach;
             CoinsEach = coinsEach;
             CoinsLost = coinsLost;
         }
 
         public override string Describe() =>
-            "TreasureTaken [" + Join(Players) + "] s" + Step + " tokens=" + TokensEach + " coins=" + CoinsEach + " lost=" + CoinsLost;
+            "TreasureTaken [" + Join(Players) + "]" + (ByBoarding ? " byBoarding" : " s" + Step) + " tokens=" + TokensEach +
+            " coins=" + CoinsEach + " lost=" + CoinsLost;
     }
 
     /// <summary>La taglia finale di un giocatore col dettaglio delle fonti (R-143–R-146). Pubblico: a fine partita si rivela tutto.</summary>

@@ -46,19 +46,25 @@ namespace hp55games.MareIgnoto.Rules.Engine
 
             PokerHand hand;
             int afterJokers;
-            bool pair = jokers >= 2, halved = jokers == 1;
-            if (halved)
+            bool pair = jokers >= 2, halved = false;
+            if (jokers == 1)
             {
-                // Il Jolly diventa la carta che dà la combinazione migliore.
-                hand = PokerHand.HighCard;
+                // R-145: il Jolly diventa la carta che dà la combinazione migliore, e il punteggio si dimezza.
+                PokerHand withJoker = PokerHand.HighCard;
                 foreach (int rank in Enumerable.Range(CrewCatalog.MinRank, CrewCatalog.MaxRank - CrewCatalog.MinRank + 1))
                     foreach (CrewSuit suit in CrewCatalog.SuitsInDeck)
                     {
-                        var withJoker = new List<PokerCard>(cards) { new PokerCard(rank, suit) };
-                        hand = Better(hand, BestHand(withJoker, cfg), cfg);
+                        var withCard = new List<PokerCard>(cards) { new PokerCard(rank, suit) };
+                        withJoker = Better(withJoker, BestHand(withCard, cfg), cfg);
                     }
 
-                afterJokers = cfg.PokerTokens(hand) / cfg.singleJokerPokerDivisor;
+                // R-146: se il Jolly non fa parte della combinazione (le altre carte valgono almeno quanto la combinazione
+                // col Jolly dimezzata) il dimezzamento non si applica.
+                PokerHand without = BestHand(cards, cfg);
+                int halvedScore = cfg.PokerTokens(withJoker) / cfg.singleJokerPokerDivisor;
+                halved = halvedScore > cfg.PokerTokens(without);
+                hand = halved ? withJoker : without;
+                afterJokers = halved ? halvedScore : cfg.PokerTokens(without);
             }
             else
             {

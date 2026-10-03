@@ -224,13 +224,38 @@ namespace hp55games.MareIgnoto.Rules.Tests
         }
 
         [Test]
-        public void AStateConditionAlreadyTrueWhenTheMissionIsKeptCompletesAtOnce_R131()
+        public void AStateConditionAlreadyTrueWhenKeptMustGoFalseAndTrueAgain_R131()
         {
+            // Avido tenuto con le monete già sopra soglia: non si completa. Una carta Meteo lo porta sotto, Pesca Fortunata!
+            // lo riporta sopra: ora sì.
             RoundScenario s = AtSea();
-            s.P(0).Coins = Threshold(s, MissionId.Avido);
+            int threshold = Threshold(s, MissionId.Avido);
+            int cost = s.Config.PirateCost(PirateCardId.SupplicaGartya);
+            int coins = System.Math.Max(threshold, threshold + cost - s.Config.fortunateCatchCoins);
+            Assert.Less(coins - cost, threshold, "la carta Meteo deve portarlo sotto soglia");
+            s.P(0).Coins = coins;
             MissionCard card = s.Mission(0, MissionId.Avido);
             s.PlayTurns();
-            Assert.IsTrue(Done(s, 0, card));
+            Assert.IsFalse(Done(s, 0, card), "già vera quando è stata tenuta");
+
+            s.Hand(0, PirateCardId.SupplicaGartya);
+            s.PlayTurns(Pick(Opt<PlayCardOption>(0, o => o.Card.Id == PirateCardId.SupplicaGartya)));
+            Assert.IsFalse(Done(s, 0, card));
+
+            s.Hand(0, PirateCardId.PescaFortunata);
+            PlayCatch(s);
+            Assert.IsTrue(Done(s, 0, card), "è tornata vera dopo essere stata falsa");
+        }
+
+        [Test]
+        public void ACrewConditionAlreadyTrueWhenKeptDoesNotComplete_R131()
+        {
+            RoundScenario s = AtSea();
+            s.Crew(0, s.AboveSlot(0), CrewCardId.Mozzo);
+            s.Crew(0, s.AboveSlot(1), CrewCardId.Mozzo);
+            MissionCard twins = s.Mission(0, MissionId.Gemelli);
+            s.PlayTurns();
+            Assert.IsFalse(Done(s, 0, twins));
         }
 
         [TestCase(0, true)]
@@ -358,15 +383,24 @@ namespace hp55games.MareIgnoto.Rules.Tests
 
         // ---- Gemelli, Nave d'assalto (stato della ciurma) ----
 
+        /// <summary>
+        /// p0 tiene la missione con <paramref name="a"/> sopra coperta e <paramref name="b"/> sotto; nel turno porta
+        /// <paramref name="b"/> sopra con uno swap, così la condizione diventa vera dopo la pesca (R-131).
+        /// </summary>
+        private static List<GameEvent> KeepThenSwapUp(RoundScenario s, MissionId id, CrewCardId a, CrewCardId b, out MissionCard card)
+        {
+            s.Crew(0, s.AboveSlot(0), a);
+            s.Crew(0, s.BelowSlot(0), b);
+            card = s.Mission(0, id);
+            return s.PlayTurns(Pick(Opt<SwapOption>(0, o => o.From == s.BelowSlot(0) && o.To == s.AboveSlot(1))));
+        }
+
         [TestCase(CrewCardId.Mozzo, CrewCardId.Mozzo, true)]
         [TestCase(CrewCardId.Mozzo, CrewCardId.Cuoco, false)]
         public void GemelliNeedsTwoCardsOfTheSameRankAboveDeck(CrewCardId a, CrewCardId b, bool done)
         {
             RoundScenario s = AtSea();
-            s.Crew(0, s.AboveSlot(0), a);
-            s.Crew(0, s.AboveSlot(1), b);
-            MissionCard card = s.Mission(0, MissionId.Gemelli);
-            List<GameEvent> events = s.PlayTurns();
+            List<GameEvent> events = KeepThenSwapUp(s, MissionId.Gemelli, a, b, out MissionCard card);
             Assert.AreEqual(done, Done(s, 0, card));
             if (done) Assert.AreEqual(Reward(s, MissionId.Gemelli), Completed(events, card).Reward);
         }
@@ -375,22 +409,8 @@ namespace hp55games.MareIgnoto.Rules.Tests
         public void GemelliWithTheTwoJokersPaysMore()
         {
             RoundScenario s = AtSea();
-            s.Crew(0, s.AboveSlot(0), CrewCardId.Jolly);
-            s.Crew(0, s.AboveSlot(1), CrewCardId.Jolly);
-            MissionCard card = s.Mission(0, MissionId.Gemelli);
-            List<GameEvent> events = s.PlayTurns();
+            List<GameEvent> events = KeepThenSwapUp(s, MissionId.Gemelli, CrewCardId.Jolly, CrewCardId.Jolly, out MissionCard card);
             Assert.AreEqual(s.Config.twinsJokersReward, Completed(events, card).Reward);
-        }
-
-        [Test]
-        public void GemelliCompletesAfterASwapInTheTurn()
-        {
-            RoundScenario s = AtSea();
-            s.Crew(0, s.AboveSlot(0), CrewCardId.Mozzo);
-            s.Crew(0, s.BelowSlot(0), CrewCardId.Mozzo);
-            MissionCard card = s.Mission(0, MissionId.Gemelli);
-            s.PlayTurns(Pick(Opt<SwapOption>(0, o => o.From == s.BelowSlot(0) && o.To == s.AboveSlot(1))));
-            Assert.IsTrue(Done(s, 0, card));
         }
 
         [TestCase(CrewCardId.Falconet, CrewCardId.Culverin, true)]
@@ -399,10 +419,7 @@ namespace hp55games.MareIgnoto.Rules.Tests
         public void NaveDAssaltoNeedsTwoCourtCardsAboveDeck(CrewCardId a, CrewCardId b, bool done)
         {
             RoundScenario s = AtSea();
-            s.Crew(0, s.AboveSlot(0), a);
-            s.Crew(0, s.AboveSlot(1), b);
-            MissionCard card = s.Mission(0, MissionId.NaveDAssalto);
-            s.PlayTurns();
+            KeepThenSwapUp(s, MissionId.NaveDAssalto, a, b, out MissionCard card);
             Assert.AreEqual(done, Done(s, 0, card));
         }
 

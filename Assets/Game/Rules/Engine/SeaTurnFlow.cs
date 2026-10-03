@@ -121,7 +121,8 @@ namespace hp55games.MareIgnoto.Rules.Engine
             if (cost > 0)
             {
                 ctx.ChangeCoins(player, -cost, CoinReason.WeatherCard);
-                ctx.ChangeTreasure(cost);
+                // R-142: nel round di cortesia il Tesoro è già assegnato e le monete escono dal gioco.
+                if (state.TreasureTakers.Count == 0) ctx.ChangeTreasure(cost);
             }
 
             // R-122: il Cuoco aggiunge una risorsa per copia alle carte pesca.

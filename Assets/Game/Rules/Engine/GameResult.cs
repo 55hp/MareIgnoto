@@ -103,7 +103,7 @@ namespace hp55games.MareIgnoto.Rules.Engine
         /// <summary>Le carte della ciurma, sopra e sotto coperta.</summary>
         public IReadOnlyList<CrewCard> Cards { get; }
 
-        /// <summary>La combinazione riconosciuta (con un Jolly: quella che il Jolly completa; con due: quella delle altre carte).</summary>
+        /// <summary>La combinazione riconosciuta (con un Jolly: quella che conviene, col Jolly o senza; con due: quella delle altre carte).</summary>
         public PokerHand Hand { get; }
 
         /// <summary>Segnalini della combinazione secondo la tabella (03 §4).</summary>
@@ -114,7 +114,7 @@ namespace hp55games.MareIgnoto.Rules.Engine
         /// <summary>Due Jolly: punteggio fisso, la tabella non conta (R-145).</summary>
         public bool JokerPair { get; }
 
-        /// <summary>Un Jolly: il punteggio della tabella si dimezza per difetto (R-145).</summary>
+        /// <summary>Un Jolly che fa parte della combinazione: il punteggio della tabella si dimezza per difetto (R-145, R-146).</summary>
         public bool HalvedByJoker { get; }
 
         /// <summary>Dopo R-145, prima del Nostromo.</summary>
