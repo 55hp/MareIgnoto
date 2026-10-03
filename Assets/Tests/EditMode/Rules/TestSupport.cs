@@ -16,8 +16,8 @@ namespace hp55games.MareIgnoto.Rules.Tests
     /// <summary>Costruzione di scenari e pilotaggio delle partite, condivisi dai test.</summary>
     internal static class TestSupport
     {
-        /// <summary>La mappa del gioco: il layout v4 approvato (05_mappa.md §6), da <see cref="LayoutV4"/>.</summary>
-        public static MapLayout StandardMap() => LayoutV4.Create();
+        /// <summary>La mappa del gioco: il layout v5 approvato (05_mappa.md §6), da <see cref="LayoutV5"/>.</summary>
+        public static MapLayout StandardMap() => LayoutV5.Create();
 
         public static GameSession Start(int players, int seed, RulesConfig config = null, IRandomSource random = null,
             Action<GameSetup> customize = null)

@@ -8,20 +8,20 @@ using UnityEngine;
 namespace hp55games.MareIgnoto.Editor
 {
     /// <summary>
-    /// Comando "MareIgnoto/Create MapLayout v4" (spec 0005, passo A): genera MapLayout.asset dal layout v4 approvato
-    /// (<see cref="LayoutV4"/>, tech/05_mappa.md §3–§6), poi lo valida e scrive l'esito in Console.
+    /// Comando "MareIgnoto/Create MapLayout v5" (spec 0005, passo A): genera MapLayout.asset dal layout v5 approvato
+    /// (<see cref="LayoutV5"/>, tech/05_mappa.md §3–§6), poi lo valida e scrive l'esito in Console.
     /// Se l'asset esiste già chiede conferma e lo sovrascrive sul posto, così il GUID (e i riferimenti) restano.
     /// </summary>
-    public static class MapLayoutV4Generator
+    public static class MapLayoutV5Generator
     {
         public const string AssetPath = "Assets/Game/Content/Config/MapLayout.asset";
         private const string RulesConfigPath = "Assets/Game/Content/Config/RulesConfig.asset";
         private const int MaxIssuesInLog = 10;
 
-        [MenuItem("MareIgnoto/Create MapLayout v4")]
-        public static void CreateMapLayoutV4()
+        [MenuItem("MareIgnoto/Create MapLayout v5")]
+        public static void CreateMapLayoutV5()
         {
-            MapLayout layout = LayoutV4.Create();
+            MapLayout layout = LayoutV5.Create();
 
             MapLayoutAsset asset = AssetDatabase.LoadAssetAtPath<MapLayoutAsset>(AssetPath);
             if (asset == null && AssetDatabase.LoadMainAssetAtPath(AssetPath) != null)
@@ -32,11 +32,11 @@ namespace hp55games.MareIgnoto.Editor
 
             if (asset != null)
             {
-                bool overwrite = EditorUtility.DisplayDialog("Create MapLayout v4",
-                    AssetPath + " esiste già.\nSovrascriverlo con il layout v4 (05_mappa.md §6)?", "Sovrascrivi", "Annulla");
+                bool overwrite = EditorUtility.DisplayDialog("Create MapLayout v5",
+                    AssetPath + " esiste già.\nSovrascriverlo con il layout v5 (05_mappa.md §6)?", "Sovrascrivi", "Annulla");
                 if (!overwrite) return;
 
-                Undo.RecordObject(asset, "Create MapLayout v4");
+                Undo.RecordObject(asset, "Create MapLayout v5");
                 asset.EditorReplaceLayout(layout);
                 EditorUtility.SetDirty(asset);
             }
@@ -58,7 +58,7 @@ namespace hp55games.MareIgnoto.Editor
 
             if (result.IsValid)
             {
-                Debug.Log("[MapLayout] " + AssetPath + " creato dal layout v4: Validate OK (con " + against + ").", asset);
+                Debug.Log("[MapLayout] " + AssetPath + " creato dal layout v5: Validate OK (con " + against + ").", asset);
                 return;
             }
 

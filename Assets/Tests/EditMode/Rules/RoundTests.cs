@@ -68,7 +68,7 @@ namespace hp55games.MareIgnoto.Rules.Tests
         {
             RoundScenario s = RoundScenario.Create(2).Order(0, 1);
             int resting = 1 - s.Session.Pending.Player; // la decisione già in attesa è dell'altro giocatore
-            s.At(resting, 3, 11).At(1 - resting, 2, 2).ZoneAt(3, 11, WeatherState.Storm); // in Svago dentro la nuvola N7 in Tempesta
+            s.At(resting, 3, 7).At(1 - resting, 2, 2).ZoneAt(3, 7, WeatherState.Storm); // in Svago dentro la nuvola N5 in Tempesta
             s.P(resting).LeisureRound = s.Session.State.Round;
             List<GameEvent> events = s.PlayRound(new[] { Heading.E, Heading.E });
 
@@ -77,7 +77,7 @@ namespace hp55games.MareIgnoto.Rules.Tests
             Assert.AreEqual(0, events.OfType<MovementStartedEvent>().Single().Speeds[resting]);
             Assert.IsFalse(events.OfType<ShipMovedEvent>().Any(e => e.Player == resting));
             Assert.IsFalse(events.OfType<WeatherAppliedEvent>().Any(e => e.Player == resting));
-            Assert.AreEqual(new Coord(3, 11), s.P(resting).Position);
+            Assert.AreEqual(new Coord(3, 7), s.P(resting).Position);
         }
 
         [Test]

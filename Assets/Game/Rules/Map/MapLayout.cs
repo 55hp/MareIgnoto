@@ -91,7 +91,7 @@ namespace hp55games.MareIgnoto.Rules.Map
     /// <summary>
     /// La mappa come dato (05_mappa.md §5): dimensioni, isole, Isola Sacra, zone meteo, punti di partenza.
     /// È l'oggetto puro che MapLayoutAsset produce; il motore lo converte in <see cref="GameMap"/>. Il layout approvato
-    /// (v4, 05 §6) si inserisce come dato (MapLayout.asset, spec 0005): qui ci sono solo le dimensioni di default.
+    /// (v5, 05 §6) si inserisce come dato (MapLayout.asset, spec 0005): qui ci sono solo le dimensioni di default.
     /// </summary>
     [Serializable]
     public sealed class MapLayout
@@ -222,6 +222,8 @@ namespace hp55games.MareIgnoto.Rules.Map
                 return;
             }
 
+            if (sacred.Count > 0) CheckAngleOrder(slices.Select(i => cellsOf[i]).ToList(), slices.Select(Id).ToList(), sacred, issues);
+
             for (int i = 0; i < slices.Count; i++)
             {
                 HashSet<Coord> slice = cellsOf[slices[i]];
@@ -244,17 +246,51 @@ namespace hp55games.MareIgnoto.Rules.Map
                         continue;
                     }
 
-                    CheckGap(Id(slices[i]), slice, Id(slices[j]), other, land, owner, issues);
+                    CheckLink(config, Id(slices[i]), slice, Id(slices[j]), other, land, owner, issues);
                 }
             }
         }
 
         /// <summary>
-        /// Due spicchi consecutivi si toccano per uno spigolo solo e per nessun lato; il blocco 2×2 del contatto ha le
-        /// altre due celle di mare libero (il varco).
+        /// Gli spicchi R1…R8 vanno in ordine di angolo attorno all'Isola Sacra (05 §3): gli angoli dei loro baricentri,
+        /// presi nell'ordine del layout, girano sempre nello stesso verso e fanno un giro solo.
         /// </summary>
-        private void CheckGap(string idA, HashSet<Coord> a, string idB, HashSet<Coord> b, HashSet<Coord> land,
-            Dictionary<Coord, string> owner, List<MapValidationIssue> issues)
+        private static void CheckAngleOrder(List<HashSet<Coord>> slices, List<string> ids, HashSet<Coord> sacred,
+            List<MapValidationIssue> issues)
+        {
+            if (slices.Count < 3 || slices.Any(s => s.Count == 0)) return;
+            double cx = sacred.Average(c => c.X), cy = sacred.Average(c => c.Y);
+            var angles = slices.Select(s => Math.Atan2(s.Average(c => c.Y) - cy, s.Average(c => c.X) - cx)).ToList();
+            double total = 0;
+            int sign = 0;
+            for (int i = 0; i < angles.Count; i++)
+            {
+                double step = angles[(i + 1) % angles.Count] - angles[i];
+                while (step <= -Math.PI) step += 2 * Math.PI;
+                while (step > Math.PI) step -= 2 * Math.PI;
+                int stepSign = Math.Sign(step);
+                if (stepSign == 0 || (sign != 0 && stepSign != sign))
+                {
+                    issues.Add(new MapValidationIssue(MapValidationCode.RingOrder,
+                        "Gli spicchi non sono in ordine di angolo attorno all'Isola Sacra (" + ids[i] + " → " + ids[(i + 1) % ids.Count] + ")."));
+                    return;
+                }
+
+                sign = stepSign;
+                total += step;
+            }
+
+            if (Math.Abs(Math.Abs(total) - 2 * Math.PI) > 1e-6)
+                issues.Add(new MapValidationIssue(MapValidationCode.RingOrder,
+                    "Gli spicchi non fanno un giro solo attorno all'Isola Sacra."));
+        }
+
+        /// <summary>
+        /// Due spicchi consecutivi sono collegati da un varco diagonale (un solo spigolo in comune, nessun lato, le altre due
+        /// celle del blocco 2×2 di mare libero) oppure da un canale (<see cref="CheckChannel"/>), mai in altro modo (05 §3).
+        /// </summary>
+        private void CheckLink(RulesConfig config, string idA, HashSet<Coord> a, string idB, HashSet<Coord> b,
+            HashSet<Coord> land, Dictionary<Coord, string> owner, List<MapValidationIssue> issues)
         {
             var corners = new List<KeyValuePair<Coord, Coord>>();
             foreach (Coord p in a)
@@ -271,6 +307,12 @@ namespace hp55games.MareIgnoto.Rules.Map
                     if (dx == 1 && dy == 1) corners.Add(new KeyValuePair<Coord, Coord>(p, q));
                 }
 
+            if (corners.Count == 0)
+            {
+                CheckChannel(config, idA, a, idB, b, land, owner, issues);
+                return;
+            }
+
             if (corners.Count != 1)
             {
                 issues.Add(new MapValidationIssue(MapValidationCode.RingContact,
@@ -283,6 +325,43 @@ namespace hp55games.MareIgnoto.Rules.Map
                 if (!IsNavigableArea(free) || land.Contains(free) || owner.ContainsKey(free))
                     issues.Add(new MapValidationIssue(MapValidationCode.RingGap,
                         "Il varco tra " + idA + " e " + idB + ": la cella " + free.Name + " deve essere di mare libero."));
+        }
+
+        /// <summary>
+        /// Canale tra due spicchi consecutivi che non si toccano: distano esattamente <c>ringChannelWidth</c> + 1, e le celle
+        /// in mezzo alle coppie allineate (stessa riga o stessa colonna) formano una fila dritta, larga
+        /// <c>ringChannelWidth</c>, di mare libero.
+        /// </summary>
+        private void CheckChannel(RulesConfig config, string idA, HashSet<Coord> a, string idB, HashSet<Coord> b,
+            HashSet<Coord> land, Dictionary<Coord, string> owner, List<MapValidationIssue> issues)
+        {
+            int gap = config.ringChannelWidth + 1;
+            var between = new HashSet<Coord>();
+            if (MinDistance(a, b) == gap)
+                foreach (Coord p in a)
+                    foreach (Coord q in b)
+                    {
+                        if (p.X == q.X && Math.Abs(p.Y - q.Y) == gap)
+                            for (int y = Math.Min(p.Y, q.Y) + 1; y < Math.Max(p.Y, q.Y); y++) between.Add(new Coord(p.X, y));
+                        else if (p.Y == q.Y && Math.Abs(p.X - q.X) == gap)
+                            for (int x = Math.Min(p.X, q.X) + 1; x < Math.Max(p.X, q.X); x++) between.Add(new Coord(x, p.Y));
+                    }
+
+            bool straight = between.Count > 0 &&
+                            (between.Max(c => c.X) - between.Min(c => c.X) + 1 == config.ringChannelWidth ||
+                             between.Max(c => c.Y) - between.Min(c => c.Y) + 1 == config.ringChannelWidth);
+            if (!straight)
+            {
+                issues.Add(new MapValidationIssue(MapValidationCode.RingContact,
+                    "Gli spicchi " + idA + " e " + idB + " non sono collegati né da un varco diagonale né da un canale dritto largo " +
+                    config.ringChannelWidth + "."));
+                return;
+            }
+
+            foreach (Coord free in between.OrderBy(c => c.Y).ThenBy(c => c.X))
+                if (!IsNavigableArea(free) || land.Contains(free) || owner.ContainsKey(free))
+                    issues.Add(new MapValidationIssue(MapValidationCode.RingGap,
+                        "Il canale tra " + idA + " e " + idB + ": la cella " + free.Name + " deve essere di mare libero."));
         }
 
         private static bool IsEdgeConnected(HashSet<Coord> cells)

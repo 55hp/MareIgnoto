@@ -28,10 +28,12 @@ namespace hp55games.MareIgnoto.Rules.Map
         /// <summary>Distanze tra nuvole, spicchi, isole e punti di partenza.</summary>
         ZoneSpacing,
         RingSliceCount,
-        /// <summary>Contatto tra spicchi: i consecutivi per uno spigolo solo, i non consecutivi lontani.</summary>
+        /// <summary>Collegamento tra spicchi: i consecutivi per un varco o un canale, i non consecutivi lontani.</summary>
         RingContact,
-        /// <summary>Le due celle del varco tra spicchi consecutivi non sono di mare libero.</summary>
+        /// <summary>Le celle del varco o del canale tra spicchi consecutivi non sono di mare libero.</summary>
         RingGap,
+        /// <summary>Gli spicchi non sono in ordine di angolo attorno all'Isola Sacra.</summary>
+        RingOrder,
     }
 
     public sealed class MapValidationIssue

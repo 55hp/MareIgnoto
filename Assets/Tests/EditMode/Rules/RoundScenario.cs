@@ -45,7 +45,7 @@ namespace hp55games.MareIgnoto.Rules.Tests
     /// Uno scenario di round sulla mappa di <see cref="TestSupport.StandardMap"/>: dopo il setup (giocato dal bot) svuota
     /// ciurme e mani, poi il test mette navi, carte, vento e zone dove gli servono e gioca un round con rotte date.
     /// Le carte si prendono dai mazzi e tornano negli scarti, così la conservazione resta vera.
-    /// Mappa: il layout v4 (LayoutV4, 05_mappa.md §6). Tutte le zone partono a livello 0, anello compreso.
+    /// Mappa: il layout v5 (LayoutV5, 05_mappa.md §6). Tutte le zone partono a livello 0, anello compreso.
     /// </summary>
     internal sealed class RoundScenario
     {

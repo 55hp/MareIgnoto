@@ -3,11 +3,11 @@ using System.Linq;
 namespace hp55games.MareIgnoto.Rules.Map
 {
     /// <summary>
-    /// Il layout v4 approvato (tech/05_mappa.md §3, §4, §6), unica copia nel codice, scritto con i nomi di cella del
-    /// documento. Serve al comando Editor "MareIgnoto/Create MapLayout v4", che ne genera MapLayout.asset, e ai test.
+    /// Il layout v5 approvato (tech/05_mappa.md §3, §4, §6), unica copia nel codice, scritto con i nomi di cella del
+    /// documento. Serve al comando Editor "MareIgnoto/Create MapLayout v5", che ne genera MapLayout.asset, e ai test.
     /// La partita legge la mappa da MapLayout.asset, non da qui.
     /// </summary>
-    public static class LayoutV4
+    public static class LayoutV5
     {
         private readonly struct ZoneData
         {
@@ -33,29 +33,25 @@ namespace hp55games.MareIgnoto.Rules.Map
 
         public static readonly string[] SacredIsland = { "M12", "L12", "N12", "M11", "M13" };
 
-        /// <summary>Spicchi in ordine R1…R8, poi nuvole N1–N12, con il livello iniziale (05 §3).</summary>
+        /// <summary>Spicchi in ordine R1…R8 (per angolo attorno all'Isola Sacra), poi nuvole N1–N8, con il livello iniziale (05 §3).</summary>
         private static readonly ZoneData[] Zones =
         {
-            new ZoneData("R1", ZoneKind.RingSlice, 5, "P12, P13, P14, Q13, Q14, R14, R15"),
-            new ZoneData("R2", ZoneKind.RingSlice, 5, "N16, O15, O16, O17, P17"),
-            new ZoneData("R3", ZoneKind.RingSlice, 5, "J17, K15, K16, K17, L15, L16, M15"),
-            new ZoneData("R4", ZoneKind.RingSlice, 5, "H14, H15, I13, I14, J14"),
-            new ZoneData("R5", ZoneKind.RingSlice, 5, "H10, H9, I10, I11, J10, J11, J12"),
-            new ZoneData("R6", ZoneKind.RingSlice, 5, "J7, K7, K8, K9, L8"),
-            new ZoneData("R7", ZoneKind.RingSlice, 5, "M9, N8, N9, O7, O8, O9, P7"),
-            new ZoneData("R8", ZoneKind.RingSlice, 5, "P10, Q10, Q11, R10, R9"),
-            new ZoneData("N1", ZoneKind.Cloud, 0, "U10, U11, U12, U13, U14, U15, U9, V10, V11, V12, V13, V14"),
-            new ZoneData("N2", ZoneKind.Cloud, 0, "U17, U18, V17, V18, W16, W17, W18, X15, X16"),
-            new ZoneData("N3", ZoneKind.Cloud, 0, "P23, Q22, Q23, R20, R21, R22, S20, S21, S22"),
-            new ZoneData("N4", ZoneKind.Cloud, 0, "J20, K20, K21, L20, L21, M20, M21, N20, N21, O20, O21, P20"),
-            new ZoneData("N5", ZoneKind.Cloud, 0, "G20, G21, G22, H20, H21, H22, I22, I23, J23"),
-            new ZoneData("N6", ZoneKind.Cloud, 0, "B15, B16, C16, C17, C18, D17, D18, E17, E18"),
-            new ZoneData("N7", ZoneKind.Cloud, 0, "D10, D11, D12, D13, D14, E10, E11, E12, E13, E14, E15, E9"),
-            new ZoneData("N8", ZoneKind.Cloud, 0, "B8, B9, C6, C7, C8, D6, D7, E6, E7"),
-            new ZoneData("N9", ZoneKind.Cloud, 0, "G2, G3, G4, H2, H3, H4, I1, I2, J1"),
-            new ZoneData("N10", ZoneKind.Cloud, 0, "J4, K3, K4, L3, L4, M3, M4, N3, N4, O3, O4, P4"),
-            new ZoneData("N11", ZoneKind.Cloud, 0, "P1, Q1, Q2, R2, R3, R4, S2, S3, S4"),
-            new ZoneData("N12", ZoneKind.Cloud, 0, "U6, U7, V6, V7, W6, W7, W8, X8, X9"),
+            new ZoneData("R1", ZoneKind.RingSlice, 5, "Q13, Q14, Q15, R13, R14, R15"),
+            new ZoneData("R2", ZoneKind.RingSlice, 5, "N16, N17, O16, O17, P16, P17"),
+            new ZoneData("R3", ZoneKind.RingSlice, 5, "J16, J17, K16, K17, L16, L17"),
+            new ZoneData("R4", ZoneKind.RingSlice, 5, "H13, H14, H15, I13, I14, I15"),
+            new ZoneData("R5", ZoneKind.RingSlice, 5, "H10, H11, H9, I10, I11, I9"),
+            new ZoneData("R6", ZoneKind.RingSlice, 5, "J7, J8, K7, K8, L7, L8"),
+            new ZoneData("R7", ZoneKind.RingSlice, 5, "N7, N8, O7, O8, P7, P8"),
+            new ZoneData("R8", ZoneKind.RingSlice, 5, "Q10, Q11, Q9, R10, R11, R9"),
+            new ZoneData("N1", ZoneKind.Cloud, 0, "U17, U18, V17, V18, W16, W17, W18, X15, X16"),
+            new ZoneData("N2", ZoneKind.Cloud, 0, "P23, Q22, Q23, R20, R21, R22, S20, S21, S22"),
+            new ZoneData("N3", ZoneKind.Cloud, 0, "G20, G21, G22, H20, H21, H22, I22, I23, J23"),
+            new ZoneData("N4", ZoneKind.Cloud, 0, "B15, B16, C16, C17, C18, D17, D18, E17, E18"),
+            new ZoneData("N5", ZoneKind.Cloud, 0, "B8, B9, C6, C7, C8, D6, D7, E6, E7"),
+            new ZoneData("N6", ZoneKind.Cloud, 0, "G2, G3, G4, H2, H3, H4, I1, I2, J1"),
+            new ZoneData("N7", ZoneKind.Cloud, 0, "P1, Q1, Q2, R2, R3, R4, S2, S3, S4"),
+            new ZoneData("N8", ZoneKind.Cloud, 0, "U6, U7, V6, V7, W6, W7, W8, X8, X9"),
         };
 
         /// <summary>I preset di 05 §4, per numero di giocatori.</summary>
@@ -80,7 +76,7 @@ namespace hp55games.MareIgnoto.Rules.Map
 
         private static IEnumerable<string> Split(string cells) => cells.Split(',').Select(c => c.Trim());
 
-        /// <summary>Il layout v4.</summary>
+        /// <summary>Il layout v5.</summary>
         public static MapLayout Create()
         {
             var map = new MapLayout { width = Size, height = Size };

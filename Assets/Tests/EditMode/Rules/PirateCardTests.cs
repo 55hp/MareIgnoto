@@ -244,7 +244,7 @@ namespace hp55games.MareIgnoto.Rules.Tests
             s.PlayTurns(Pick(Play(PirateCardId.VentoInPoppa)));
             Assert.AreEqual(2, s.P(0).TailwindRound);
 
-            s.At(0, 3, 11).ZoneAt(3, 11, WeatherState.Storm); // D11, nella nuvola N7
+            s.At(0, 3, 7).ZoneAt(3, 7, WeatherState.Storm); // D7, nella nuvola N5
             List<GameEvent> round2 = s.PlayTurns();
             Assert.AreEqual(WeatherSkipReason.Tailwind, round2.OfType<WeatherSkippedEvent>().Single(e => e.Player == 0).Reason);
         }

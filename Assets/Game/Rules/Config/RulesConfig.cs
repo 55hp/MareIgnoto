@@ -88,6 +88,8 @@ namespace hp55games.MareIgnoto.Rules.Config
         public int cloudSpawnMinDistance = 2;
         public int ringSliceCount = 8;
         public int ringNonConsecutiveMinDistance = 2;
+        /// <summary>Larghezza del canale dritto tra due spicchi consecutivi che non si toccano (05 §3).</summary>
+        public int ringChannelWidth = 1;
         public int ringSacredMinDistance = 2;
         public int ringIslandMinDistance = 3;
 

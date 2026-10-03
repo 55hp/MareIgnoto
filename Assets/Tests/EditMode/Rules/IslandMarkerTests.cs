@@ -14,7 +14,7 @@ using static hp55games.MareIgnoto.Rules.Tests.RoundScenario;
 namespace hp55games.MareIgnoto.Rules.Tests
 {
     /// <summary>
-    /// Segnalino isola (R-097, R-053, R-069) sul layout v4. Isola 1 in C5: p0 ci arriva da B5 verso E. Isola 5 in F2.
+    /// Segnalino isola (R-097, R-053, R-069) sul layout v5. Isola 1 in C5: p0 ci arriva da B5 verso E. Isola 5 in F2.
     /// p1 resta lontana in Q16. Vento verso N.
     /// </summary>
     public class IslandMarkerTests
@@ -216,7 +216,7 @@ namespace hp55games.MareIgnoto.Rules.Tests
         }
     }
 
-    /// <summary>Punti di partenza del layout v4 (R-031): angoli in mare, lati sulla cornice.</summary>
+    /// <summary>Punti di partenza del layout v5 (R-031): angoli in mare, lati sulla cornice.</summary>
     public class SpawnTests
     {
         [Test]

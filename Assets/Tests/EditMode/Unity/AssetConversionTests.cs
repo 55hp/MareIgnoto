@@ -62,7 +62,7 @@ namespace hp55games.MareIgnoto.Unity.Tests
                 Assert.AreEqual(25, layout.height);
                 Assert.IsEmpty(layout.islandCells);
                 Assert.IsEmpty(layout.zones);
-                Assert.IsEmpty(layout.spawnPresets, "il layout v4 si inserisce come dato (05_mappa.md §3–§6, spec 0005)");
+                Assert.IsEmpty(layout.spawnPresets, "il layout v5 si inserisce come dato (05_mappa.md §3–§6, spec 0005)");
 
                 MapValidationResult result = asset.Validate();
                 Assert.IsFalse(result.IsValid);
@@ -121,7 +121,7 @@ namespace hp55games.MareIgnoto.Unity.Tests
         public void ProjectMapLayoutAssetIsValidIfPresent()
         {
             MapLayoutAsset asset = FindProjectAsset<MapLayoutAsset>();
-            if (asset == null) Assert.Ignore("MapLayout.asset non ancora creato (spec 0005, passo A: layout v4 di 05_mappa.md §3–§6).");
+            if (asset == null) Assert.Ignore("MapLayout.asset non ancora creato (spec 0005, passo A: layout v5 di 05_mappa.md §3–§6).");
             MapValidationResult result = asset.Validate();
             Assert.IsTrue(result.IsValid, result.ToString());
         }

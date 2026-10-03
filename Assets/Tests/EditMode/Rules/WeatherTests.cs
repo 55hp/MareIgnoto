@@ -10,13 +10,13 @@ using NUnit.Framework;
 namespace hp55games.MareIgnoto.Rules.Tests
 {
     /// <summary>
-    /// Meteo della Fase 1 (02_regole.md §6) sul layout v4. p0 in D11, dentro la nuvola N7; p1 lontano in Q16, mare libero.
-    /// Vento da Nord, rotte verso E: senza meteo p0 arriva in E11 (sempre N7).
+    /// Meteo della Fase 1 (02_regole.md §6) sul layout v5. p0 in D7, dentro la nuvola N5; p1 lontano in Q16, mare libero.
+    /// Vento da Nord, rotte verso E: senza meteo p0 arriva in E7 (sempre N5).
     /// </summary>
     public class WeatherTests
     {
         private static readonly Heading[] East = { Heading.E, Heading.E };
-        private static readonly Coord Start = Coord.Parse("D11");
+        private static readonly Coord Start = Coord.Parse("D7");
 
         private static Coord C(string name) => Coord.Parse(name);
 
@@ -230,9 +230,9 @@ namespace hp55games.MareIgnoto.Rules.Tests
         [Test]
         public void IslandsBorderAndFreeSeaHaveNoWeather_R080_R082()
         {
-            // p0 sull'isola D8, accanto a N7 e N8 in Tempesta; p1 sulla cornice A8, accanto a N8; p2 in H8, mare libero.
+            // p0 sull'isola D8, accanto alla nuvola N5 in Tempesta; p1 sulla cornice A8, accanto a N5; p2 in H8, mare libero.
             RoundScenario s = RoundScenario.Create(3).At(0, C("D8").X, C("D8").Y).At(1, C("A8").X, C("A8").Y)
-                .At(2, C("H8").X, C("H8").Y).Order(0, 1, 2).Zone("N7", 5).Zone("N8", 5);
+                .At(2, C("H8").X, C("H8").Y).Order(0, 1, 2).Zone("N5", 5);
             Assert.AreEqual(-1, s.State.Map.ZoneOf(C("D8")));
             Assert.AreEqual(-1, s.State.Map.ZoneOf(C("H8")));
             List<GameEvent> events = s.PlayRound(new[] { Heading.N, Heading.E, Heading.E });
@@ -243,12 +243,12 @@ namespace hp55games.MareIgnoto.Rules.Tests
         [Test]
         public void WeatherIsTheOneOfTheCellBeforeMoving_R082()
         {
-            // p0 in C11, mare libero, entra in D11, nella nuvola N7 in Tempesta: nessun effetto in questo round.
-            RoundScenario s = RoundScenario.Create(2).At(0, C("C11").X, C("C11").Y).At(1, C("Q16").X, C("Q16").Y).Order(0, 1);
-            s.Zone("N7", s.Config.stormLevel);
+            // p0 in B7, mare libero, entra in C7, nella nuvola N5 in Tempesta: nessun effetto in questo round.
+            RoundScenario s = RoundScenario.Create(2).At(0, C("B7").X, C("B7").Y).At(1, C("Q16").X, C("Q16").Y).Order(0, 1);
+            s.Zone("N5", s.Config.stormLevel);
             List<GameEvent> events = s.PlayRound(East);
 
-            Assert.AreEqual(C("D11"), s.P(0).Position);
+            Assert.AreEqual(C("C7"), s.P(0).Position);
             Assert.IsFalse(events.OfType<WeatherAppliedEvent>().Any(e => e.Player == 0));
         }
 
@@ -265,7 +265,7 @@ namespace hp55games.MareIgnoto.Rules.Tests
         [Test]
         public void WeatherChoicesFollowTheTurnOrderOfTheRound_R042()
         {
-            RoundScenario s = RoundScenario.Create(2).At(0, Start.X, Start.Y).At(1, C("D12").X, C("D12").Y).Order(1, 0)
+            RoundScenario s = RoundScenario.Create(2).At(0, Start.X, Start.Y).At(1, C("D6").X, C("D6").Y).Order(1, 0)
                 .ZoneAt(Start.X, Start.Y, WeatherState.RoughSea);
             s.Hand(0, PirateCardId.Bordata, PirateCardId.Parle);
             s.Hand(1, PirateCardId.Bordata, PirateCardId.Parle);

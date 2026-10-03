@@ -75,14 +75,14 @@ namespace hp55games.MareIgnoto.Rules.Tests
         }
 
         [Test]
-        public void EveryV4ZoneIsOneClosedOutlineAroundItsCells()
+        public void EveryV5ZoneIsOneClosedOutlineAroundItsCells()
         {
-            MapLayout layout = LayoutV4.Create();
+            MapLayout layout = LayoutV5.Create();
             foreach (LayoutZone zone in layout.zones)
             {
                 List<Coord> cells = zone.cells.Select(c => c.ToCoord()).ToList();
                 var loops = ZoneGeometry.Outline(cells);
-                Assert.AreEqual(1, loops.Count, zone.id + ": le zone v4 non hanno buchi");
+                Assert.AreEqual(1, loops.Count, zone.id + ": le zone v5 non hanno buchi");
                 Assert.AreEqual(2 * cells.Count, TwiceArea(loops[0]), zone.id + ": l'area racchiusa è quella delle celle");
                 for (int i = 0; i < loops[0].Count; i++)
                 {

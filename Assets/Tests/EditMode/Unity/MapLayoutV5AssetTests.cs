@@ -8,10 +8,10 @@ using UnityEditor;
 namespace hp55games.MareIgnoto.Unity.Tests
 {
     /// <summary>
-    /// MapLayout.asset del progetto (spec 0005, passo A) contro il layout v4 (LayoutV4, tech/05_mappa.md §3–§6): valido e
+    /// MapLayout.asset del progetto (spec 0005, passo A) contro il layout v5 (LayoutV5, tech/05_mappa.md §3–§6): valido e
     /// identico cella per cella. Ignorato finché l'asset non esiste.
     /// </summary>
-    public class MapLayoutV4AssetTests
+    public class MapLayoutV5AssetTests
     {
         private const string AssetPath = "Assets/Game/Content/Config/MapLayout.asset";
 
@@ -19,7 +19,7 @@ namespace hp55games.MareIgnoto.Unity.Tests
         {
             MapLayoutAsset asset = AssetDatabase.LoadAssetAtPath<MapLayoutAsset>(AssetPath);
             if (asset == null)
-                Assert.Ignore(AssetPath + " non esiste ancora: eseguire MareIgnoto > Create MapLayout v4 (spec 0005, passo A).");
+                Assert.Ignore(AssetPath + " non esiste ancora: eseguire MareIgnoto > Create MapLayout v5 (spec 0005, passo A).");
             return asset;
         }
 
@@ -31,10 +31,10 @@ namespace hp55games.MareIgnoto.Unity.Tests
         }
 
         [Test]
-        public void TheProjectMapLayoutMatchesLayoutV4CellByCell()
+        public void TheProjectMapLayoutMatchesLayoutV5CellByCell()
         {
             MapLayout layout = LoadOrIgnore().ToLayout();
-            MapLayout expected = LayoutV4.Create();
+            MapLayout expected = LayoutV5.Create();
             var config = new RulesConfig();
             GameMap actualMap = GameMap.Create(layout, config);
             GameMap expectedMap = GameMap.Create(expected, config);

@@ -92,14 +92,14 @@ namespace hp55games.MareIgnoto.Rules.Tests
         }
 
         [Test]
-        public void TheV4LayoutIsValid()
+        public void TheV5LayoutIsValid()
         {
             MapValidationResult result = TestSupport.StandardMap().Validate();
             Assert.IsTrue(result.IsValid, result.ToString());
         }
 
         [Test]
-        public void TheV4LayoutIs25x25WithTheDocumentedCounts_05_6()
+        public void TheV5LayoutIs25x25WithTheDocumentedCounts_05_6()
         {
             MapLayout map = TestSupport.StandardMap();
             Assert.AreEqual(25, map.width);
@@ -107,9 +107,10 @@ namespace hp55games.MareIgnoto.Rules.Tests
             Assert.AreEqual(16, map.islandCells.Select(c => c.islandId).Distinct().Count());
             Assert.AreEqual(5, map.sacredIslandCells.Count);
             Assert.AreEqual(8, map.zones.Count(z => z.kind == ZoneKind.RingSlice));
-            Assert.AreEqual(12, map.zones.Count(z => z.kind == ZoneKind.Cloud));
+            Assert.AreEqual(8, map.zones.Count(z => z.kind == ZoneKind.Cloud));
             Assert.AreEqual(48, map.zones.Where(z => z.kind == ZoneKind.RingSlice).Sum(z => z.cells.Count));
-            Assert.AreEqual(120, map.zones.Where(z => z.kind == ZoneKind.Cloud).Sum(z => z.cells.Count));
+            Assert.AreEqual(72, map.zones.Where(z => z.kind == ZoneKind.Cloud).Sum(z => z.cells.Count));
+            Assert.AreEqual(120, map.zones.Sum(z => z.cells.Count));
 
             GameMap game = GameMap.Create(map, new RulesConfig());
             int sea = 0;
@@ -143,7 +144,7 @@ namespace hp55games.MareIgnoto.Rules.Tests
         }
 
         [Test]
-        public void TheV4LayoutIsSymmetric_05_6()
+        public void TheV5LayoutIsSymmetric_05_6()
         {
             MapLayout map = TestSupport.StandardMap();
             var islands = map.islandCells.Select(c => c.ToCoord()).ToList();
@@ -158,10 +159,8 @@ namespace hp55games.MareIgnoto.Rules.Tests
                 AssertInvariant(sacred, t, "Isola Sacra");
                 AssertInvariant(clouds, t, "nuvole");
                 AssertInvariant(spawns, t, "punti di partenza");
+                AssertInvariant(ring, t, "anello");
             }
-
-            AssertInvariant(ring, Rotate, "l'anello ruota di 90°");
-            Assert.IsFalse(new HashSet<Coord>(ring).SetEquals(ring.Select(Mirror)), "l'anello è a girandola: niente specchio");
         }
 
         [Test]
@@ -181,7 +180,7 @@ namespace hp55games.MareIgnoto.Rules.Tests
             Assert.AreEqual(25, layout.width);
             Assert.AreEqual(25, layout.height);
             Assert.IsEmpty(layout.zones);
-            Assert.IsEmpty(layout.spawnPresets, "il layout v4 si inserisce come dato (MapLayout.asset), non è nel codice");
+            Assert.IsEmpty(layout.spawnPresets, "il layout v5 si inserisce come dato (MapLayout.asset), non è nel codice");
         }
 
         [Test]
@@ -272,8 +271,8 @@ namespace hp55games.MareIgnoto.Rules.Tests
             Assert.IsTrue(fewer.Validate().Has(MapValidationCode.WrongSpawnCount));
         }
 
-        [TestCase("P12")] // dentro uno spicchio
-        [TestCase("U12")] // dentro una nuvola
+        [TestCase("Q13")] // dentro uno spicchio (R1)
+        [TestCase("X15")] // dentro una nuvola (N1)
         [TestCase("B4")]  // adiacente all'isola C5
         [TestCase("C5")]  // su un'isola
         public void ASpawnMustBeBorderOrFreeSeaAwayFromIslands_05_5(string cell)
@@ -309,16 +308,16 @@ namespace hp55games.MareIgnoto.Rules.Tests
             Assert.IsTrue(onBorder.Validate().Has(MapValidationCode.ZoneCellNotSea));
 
             MapLayout onIsland = TestSupport.StandardMap();
-            Zone(onIsland, "N12").cells.Add(L("V8"));
+            Zone(onIsland, "N8").cells.Add(L("V8"));
             Assert.IsTrue(onIsland.Validate().Has(MapValidationCode.ZoneCellNotSea));
 
             MapLayout overlap = TestSupport.StandardMap();
-            Zone(overlap, "N1").cells.Add(L("P12"));
+            Zone(overlap, "N1").cells.Add(L("Q13"));
             Assert.IsTrue(overlap.Validate().Has(MapValidationCode.ZoneOverlap));
 
             MapLayout split = TestSupport.StandardMap();
-            Zone(split, "N1").cells.Remove(L("U12"));
-            Zone(split, "N1").cells.Remove(L("V12"));
+            Zone(split, "N1").cells.Remove(L("W16"));
+            Zone(split, "N1").cells.Remove(L("W17")); // X15, X16 restano staccate
             Assert.IsTrue(split.Validate().Has(MapValidationCode.ZoneNotConnected));
 
             MapLayout sameId = TestSupport.StandardMap();
@@ -330,16 +329,17 @@ namespace hp55games.MareIgnoto.Rules.Tests
         public void CloudsKeepTheirDistances_05_3()
         {
             MapLayout clouds = TestSupport.StandardMap();
-            Zone(clouds, "N1").cells.Add(L("U16")); // a 1 cella da N2
+            Zone(clouds, "N2").cells.Add(L("T20"));
+            Zone(clouds, "N2").cells.Add(L("T19")); // a 1 cella da N1 (U18)
             Assert.IsTrue(clouds.Validate().Has(MapValidationCode.ZoneSpacing));
 
             MapLayout ring = TestSupport.StandardMap();
-            Zone(ring, "N1").cells.Add(L("T12")); // a 2 celle dallo spicchio R1
+            Zone(ring, "N8").cells.Add(L("T7")); // a 2 celle dallo spicchio R8 (R9)
             Assert.IsTrue(ring.Validate().Has(MapValidationCode.ZoneSpacing));
 
-            // N8 allungata lungo la colonna B fino a B2, adiacente al punto di partenza B1.
+            // N5 allungata lungo la colonna B fino a B2, adiacente al punto di partenza B1.
             MapLayout spawn = TestSupport.StandardMap();
-            foreach (string cell in new[] { "B7", "B6", "B5", "B4", "B3", "B2" }) Zone(spawn, "N8").cells.Add(L(cell));
+            foreach (string cell in new[] { "B7", "B6", "B5", "B4", "B3", "B2" }) Zone(spawn, "N5").cells.Add(L(cell));
             MapValidationResult result = spawn.Validate();
             Assert.IsTrue(result.Has(MapValidationCode.ZoneSpacing), result.ToString());
         }
@@ -368,10 +368,50 @@ namespace hp55games.MareIgnoto.Rules.Tests
         }
 
         [Test]
+        public void ConsecutiveSlicesWithoutContactNeedAStraightFreeChannelOneCellWide_05_3()
+        {
+            // Canale R2–R3 (colonna M, righe 16–17): occupato da un'isola.
+            MapLayout blocked = TestSupport.StandardMap();
+            blocked.islandCells.Add(new LayoutIslandCell(C("M16").X, C("M16").Y, 99));
+            Assert.IsTrue(blocked.Validate().Has(MapValidationCode.RingGap));
+
+            // Canale R2–R3 dentro una zona: non è più mare libero.
+            MapLayout zoned = TestSupport.StandardMap();
+            zoned.zones.Add(new LayoutZone("X1", ZoneKind.Cloud, 0, new[] { L("M17") }));
+            Assert.IsTrue(zoned.Validate().Has(MapValidationCode.RingGap));
+
+            // R3 senza la colonna L: il canale è largo 2, né varco né canale.
+            MapLayout wide = TestSupport.StandardMap();
+            Zone(wide, "R3").cells.RemoveAll(c => c.ToCoord().X == C("L16").X);
+            Assert.IsTrue(wide.Validate().Has(MapValidationCode.RingContact));
+        }
+
+        [Test]
+        public void NonConsecutiveSlicesStayApart_05_3()
+        {
+            // R1 allungato verso R3 fino a M15: tocca il canale e arriva a 1 cella da R3 (L16).
+            MapLayout near = TestSupport.StandardMap();
+            foreach (string cell in new[] { "P14", "O14", "N14", "M14", "M15" }) Zone(near, "R1").cells.Add(L(cell));
+            MapValidationResult result = near.Validate();
+            Assert.IsTrue(result.Issues.Any(i => i.Code == MapValidationCode.RingContact && i.Message.Contains("R1 e R3")), result.ToString());
+        }
+
+        [Test]
+        public void SlicesMustBeInAngleOrder_05_3()
+        {
+            MapLayout swapped = TestSupport.StandardMap();
+            LayoutZone r5 = Zone(swapped, "R5"), r6 = Zone(swapped, "R6");
+            int i5 = swapped.zones.IndexOf(r5), i6 = swapped.zones.IndexOf(r6);
+            swapped.zones[i5] = r6;
+            swapped.zones[i6] = r5;
+            Assert.IsTrue(swapped.Validate().Has(MapValidationCode.RingOrder));
+        }
+
+        [Test]
         public void TheRingKeepsAwayFromTheIslands_05_3()
         {
             MapLayout sacred = TestSupport.StandardMap();
-            sacred.sacredIslandCells.Add(L("O12")); // a 1 cella da R1
+            sacred.sacredIslandCells.Add(L("P12")); // a 1 cella da R1 (Q13)
             Assert.IsTrue(sacred.Validate().Has(MapValidationCode.ZoneSpacing));
 
             MapLayout island = TestSupport.StandardMap();
@@ -420,17 +460,17 @@ namespace hp55games.MareIgnoto.Rules.Tests
         [Test]
         public void ZonesComeFromTheLayout_R080()
         {
-            Assert.AreEqual(20, map.ZoneCount);
+            Assert.AreEqual(16, map.ZoneCount);
             int r1 = map.ZoneIndex("R1");
-            Assert.AreEqual(r1, map.ZoneOf(C("P12")));
+            Assert.AreEqual(r1, map.ZoneOf(C("Q13")));
             Assert.AreEqual(ZoneKind.RingSlice, map.ZoneKindOf(r1));
             Assert.AreEqual(5, map.ZoneInitialLevel(r1), "05 §3: gli spicchi partono a 5");
-            int n4 = map.ZoneIndex("N4");
-            Assert.AreEqual(n4, map.ZoneOf(C("M21")));
-            Assert.AreEqual(ZoneKind.Cloud, map.ZoneKindOf(n4));
-            Assert.AreEqual(0, map.ZoneInitialLevel(n4));
-            Assert.AreEqual("N4", map.ZoneId(n4));
-            CollectionAssert.AreEquivalent(LayoutV4.ZoneCells("N4"), map.SeaCellsOfZone(n4));
+            int n2 = map.ZoneIndex("N2");
+            Assert.AreEqual(n2, map.ZoneOf(C("R21")));
+            Assert.AreEqual(ZoneKind.Cloud, map.ZoneKindOf(n2));
+            Assert.AreEqual(0, map.ZoneInitialLevel(n2));
+            Assert.AreEqual("N2", map.ZoneId(n2));
+            CollectionAssert.AreEquivalent(LayoutV5.ZoneCells("N2"), map.SeaCellsOfZone(n2));
             Assert.AreEqual(-1, map.ZoneIndex("Z9"));
         }
 
@@ -439,6 +479,7 @@ namespace hp55games.MareIgnoto.Rules.Tests
         {
             Assert.AreEqual(-1, map.ZoneOf(C("B1")), "mare libero");
             Assert.AreEqual(-1, map.ZoneOf(C("P15")), "varco");
+            Assert.AreEqual(-1, map.ZoneOf(C("M16")), "canale");
             Assert.AreEqual(-1, map.ZoneOf(C("A0")));
             Assert.AreEqual(-1, map.ZoneOf(C("C5")));
             Assert.AreEqual(-1, map.ZoneOf(C("M12")));

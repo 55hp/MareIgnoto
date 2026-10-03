@@ -22,7 +22,7 @@ namespace hp55games.MareIgnoto.Unity
 #if UNITY_EDITOR
         /// <summary>
         /// Solo Editor: sostituisce il contenuto dell'asset con una copia di <paramref name="source"/>. Lo usa il comando
-        /// "MareIgnoto/Create MapLayout v4" (spec 0005, passo A); a runtime l'asset si legge e basta.
+        /// "MareIgnoto/Create MapLayout v5" (spec 0005, passo A); a runtime l'asset si legge e basta.
         /// </summary>
         public void EditorReplaceLayout(MapLayout source)
         {

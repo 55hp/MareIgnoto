@@ -12,7 +12,7 @@ using NUnit.Framework;
 namespace hp55games.MareIgnoto.Rules.Tests
 {
     /// <summary>
-    /// Fine partita e punteggio (02_regole.md §9) sul layout v4. Isola Sacra: M12, L12, N12, M11, M13; vento verso N.
+    /// Fine partita e punteggio (02_regole.md §9) sul layout v5. Isola Sacra: M12, L12, N12, M11, M13; vento verso N.
     /// p0 parte da K12 verso E ed entra in L12 al passo 1; le altre navi restano ferme (rotta S, contro vento) salvo dove
     /// indicato.
     /// </summary>

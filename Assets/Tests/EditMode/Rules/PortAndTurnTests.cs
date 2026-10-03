@@ -11,7 +11,7 @@ using static hp55games.MareIgnoto.Rules.Tests.RoundScenario;
 namespace hp55games.MareIgnoto.Rules.Tests
 {
     /// <summary>
-    /// Turno di Fase 2 (02_regole.md §4, §7.1) ed effetti crew del turno. In porto (layout v4): p0 parte da B5 verso E e attracca
+    /// Turno di Fase 2 (02_regole.md §4, §7.1) ed effetti crew del turno. In porto (layout v5): p0 parte da B5 verso E e attracca
     /// sull'isola 1 in C5; p1 resta ferma in Q16. Monete fissate a 10.
     /// </summary>
     public class PortAndTurnTests
