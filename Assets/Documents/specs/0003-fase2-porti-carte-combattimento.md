@@ -77,3 +77,18 @@ Da sapere per la 0004:
 
 - Le carte Meteo di zona possono bersagliare anche una zona che non cambia (Favore di Gartya su una zona Normale): è legale e costa comunque.
 - Nella simulazione i bot fanno tutto (attacchi di ogni tipo, Arrembaggio!, Spyglass!, Medico, Nostromo, tutte le azioni di porto). Il Quartiermastro è raro (serve con una Bordata! in mano e un bersaglio a tiro con carte sopra coperta): è coperto dai test di scenario.
+
+### Claude Code — 2026-10-03 — commit 0965837
+
+#### Letture confermate
+
+Franci ha confermato queste letture delle domande qui sopra; il codice resta com'era (tolto solo il `// TODO R-110`):
+- **R-110**: le 5 monete per evitare Arrembaggio! vanno all'attaccante.
+- **R-107**: Saker + Jolly = ×4.
+- **R-111**: scartare la Bordata! per il Quartiermastro non consuma la carta del turno.
+- **R-106**: il Falconet vale solo per gli attacchi aperti con Bordata!; Arrembaggio! resta un'apertura normale.
+- **R-058**: Vedetta + Jolly raggiunge 2 celle; Svago scelto con la Vedetta lascia la nave in mare, quindi attaccabile.
+- **Costi di porto**: Svago e Reclutamento tolgono monete dal gioco, non vanno al Tesoro.
+- **Uomo in mare!, Spyglass!, Mozzo sull'Isola Sacra**: come implementati.
+
+Nello stesso commit, con la spec 0004, ho corretto il Medico (R-023) e il blocco del Nostromo (R-016): dettaglio nel report della spec 0004.
