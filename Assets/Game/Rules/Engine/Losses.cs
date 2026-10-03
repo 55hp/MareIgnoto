@@ -51,7 +51,7 @@ namespace hp55games.MareIgnoto.Rules.Engine
                 }
             }
 
-            player.Crew.Take(slot);
+            ctx.TakeCrew(player, slot);
             if (takenBy != null) takenBy.Add(card);
             else ctx.State.Crew.Discard(card);
             bool atSea = ctx.State.Map.KindAt(player.Position) == CellKind.Sea;

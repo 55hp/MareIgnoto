@@ -130,7 +130,10 @@ namespace hp55games.MareIgnoto.Rules.Tests
         public void ClearSlot(int player, int slot)
         {
             CrewCard old = P(player).Crew.Take(slot);
-            if (old != null) State.Crew.Discard(old);
+            if (old == null) return;
+            State.LockedNostromi.Remove(old.Uid); // fuori dalla nave il Nostromo non è bloccato (R-016)
+            State.NostromiFreedByMedico.Remove(old.Uid);
+            State.Crew.Discard(old);
         }
 
         /// <summary>

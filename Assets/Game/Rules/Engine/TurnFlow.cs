@@ -115,7 +115,7 @@ namespace hp55games.MareIgnoto.Rules.Engine
                     break;
                 case PortAction.Commerce: // R-094: non è una perdita (R-021)
                     bool above = player.Crew.IsAbove(choice.Slot);
-                    CrewCard sold = player.Crew.Take(choice.Slot);
+                    CrewCard sold = ctx.TakeCrew(player, choice.Slot);
                     ctx.State.Crew.Discard(sold);
                     ctx.Emit(new CrewSoldEvent(player.Id, choice.Slot, above, choice.Value, sold));
                     ctx.Emit(new CrewSlotChangedEvent(player.Id, choice.Slot, above, null));

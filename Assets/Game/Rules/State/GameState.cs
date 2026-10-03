@@ -36,8 +36,8 @@ namespace hp55games.MareIgnoto.Rules.State
         public List<int> TurnsPlayed { get; } = new List<int>();
 
         /// <summary>
-        /// Uid dei Nostromi saliti sopra coperta: non possono più tornare sotto (R-016), salvo il Medico (R-023), che li
-        /// sposta in <see cref="NostromiFreedByMedico"/>.
+        /// Uid dei Nostromi sopra coperta: non possono più tornare sotto (R-016), salvo il Medico (R-023), che li sposta in
+        /// <see cref="NostromiFreedByMedico"/>. Il blocco finisce quando la carta lascia la nave (GameContext.TakeCrew).
         /// </summary>
         public HashSet<int> LockedNostromi { get; } = new HashSet<int>();
 

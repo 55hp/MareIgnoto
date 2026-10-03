@@ -306,17 +306,37 @@ namespace hp55games.MareIgnoto.Rules.Tests
         }
 
         [Test]
-        public void AStolenLockedNostromoCanOnlyBeReceivedAbove_R016_R020()
+        public void AStolenNostromoCanBeReceivedBelowDeck_R020_R016()
         {
             RoundScenario s = Create(2).At(0, 5, 7).At(1, 6, 7).Order(0, 1);
             s.P(1).Coins = 0;
-            s.Crew(1, s.AboveSlot(0), CrewCardId.Nostromo);
+            CrewCard nostromo = s.Crew(1, s.AboveSlot(0), CrewCardId.Nostromo);
             s.Hand(0, PirateCardId.Arrembaggio);
-            s.PlayTurns(Pick(Opt<AttackOption>(0, o => o.Opening == AttackOpening.Arrembaggio)));
+            s.PlayTurns(Pick(Opt<AttackOption>(0, o => o.Opening == AttackOpening.Arrembaggio),
+                Opt<ReceiveCrewOption>(0, o => o.Slot == s.BelowSlot(0))));
 
             PendingDecision receive = s.DecisionsOf(DecisionKind.ReceiveCrew, 0).Single();
-            Assert.IsTrue(receive.Options.Cast<ReceiveCrewOption>().All(o => o.Slot < s.Config.slotsAbove));
+            Assert.IsTrue(receive.Options.Cast<ReceiveCrewOption>().Any(o => o.Slot >= s.Config.slotsAbove), "anche sotto coperta");
+            Assert.AreSame(nostromo, s.P(0).Crew[s.BelowSlot(0)]);
+            Assert.IsFalse(s.State.LockedNostromi.Contains(nostromo.Uid), "il blocco vale solo da quando è sopra coperta");
             TestSupport.AssertInvariants(s.Session);
+        }
+
+        [Test]
+        public void AReceivedNostromoIsLockedOnceItGoesAbove_R020_R016()
+        {
+            RoundScenario s = Create(2).At(0, 5, 7).At(1, 6, 7).Order(0, 1);
+            s.P(1).Coins = 0;
+            CrewCard nostromo = s.Crew(1, s.AboveSlot(0), CrewCardId.Nostromo);
+            s.Hand(0, PirateCardId.Arrembaggio);
+            s.PlayTurns(Pick(Opt<AttackOption>(0, o => o.Opening == AttackOpening.Arrembaggio),
+                Opt<ReceiveCrewOption>(0, o => o.Slot == s.AboveSlot(0))));
+
+            Assert.AreSame(nostromo, s.P(0).Crew[s.AboveSlot(0)]);
+            Assert.IsTrue(s.State.LockedNostromi.Contains(nostromo.Uid));
+            s.PlayTurns();
+            var swaps = s.DecisionsOf(DecisionKind.SeaAction, 0).Last().Options.OfType<SwapOption>().ToList();
+            Assert.IsFalse(swaps.Any(o => o.From == s.AboveSlot(0) && o.To >= s.Config.slotsAbove), "ora non scende più");
         }
 
         [Test]

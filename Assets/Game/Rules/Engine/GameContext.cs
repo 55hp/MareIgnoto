@@ -99,6 +99,23 @@ namespace hp55games.MareIgnoto.Rules.Engine
         }
 
         /// <summary>
+        /// Toglie la carta dallo slot (perdita, Arrembaggio!, Commercio, sostituzione). Il blocco del Nostromo vale solo
+        /// mentre è sopra coperta su una nave (R-016): uscito dalla nave non è più bloccato, e chi lo riceve può metterlo
+        /// anche sotto coperta (R-020).
+        /// </summary>
+        public CrewCard TakeCrew(PlayerState player, int slot)
+        {
+            CrewCard card = player.Crew.Take(slot);
+            if (card != null)
+            {
+                State.LockedNostromi.Remove(card.Uid);
+                State.NostromiFreedByMedico.Remove(card.Uid);
+            }
+
+            return card;
+        }
+
+        /// <summary>
         /// R-023: il Medico è l'unico effetto che può riportare sotto coperta un Nostromo bloccato (eccezione a R-016).
         /// Chiamato solo da <see cref="Losses.LoseCrew"/>, prima di scambiare Medico e Nostromo.
         /// </summary>

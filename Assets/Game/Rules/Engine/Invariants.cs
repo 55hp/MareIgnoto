@@ -57,7 +57,8 @@ namespace hp55games.MareIgnoto.Rules.Engine
         /// <summary>
         /// Il Nostromo, una volta sopra coperta, torna sotto solo col Medico (R-016, R-023): un Nostromo sopra coperta è
         /// bloccato; sotto coperta è bloccato mai, e se ci arriva da sopra è perché il Medico l'ha liberato (l'unico
-        /// scrittore di <see cref="GameState.NostromiFreedByMedico"/>). Quando risale, il blocco vale di nuovo.
+        /// scrittore di <see cref="GameState.NostromiFreedByMedico"/>). Quando risale, il blocco vale di nuovo. Il blocco
+        /// vale solo sulla nave: chi riceve un Nostromo (R-020) può metterlo anche sotto coperta.
         /// </summary>
         private static void CheckNostromo(GameState state, List<string> errors)
         {
@@ -76,6 +77,12 @@ namespace hp55games.MareIgnoto.Rules.Engine
             foreach (int uid in state.NostromiFreedByMedico)
                 if (state.LockedNostromi.Contains(uid))
                     errors.Add("Il Nostromo #" + uid + " risulta insieme bloccato e liberato dal Medico.");
+
+            // Il blocco vale solo sulla nave (R-016, R-020): fuori dagli slot (mazzo, scarti, in transito) nessun Nostromo è bloccato.
+            var onShips = new HashSet<int>(state.Players.SelectMany(p => p.Crew.All()).Select(c => c.Uid));
+            foreach (int uid in state.LockedNostromi.Concat(state.NostromiFreedByMedico))
+                if (!onShips.Contains(uid))
+                    errors.Add("Il Nostromo #" + uid + " è fuori dalle navi ma risulta ancora bloccato o liberato.");
         }
 
         /// <summary>

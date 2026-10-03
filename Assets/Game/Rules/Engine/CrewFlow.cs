@@ -13,14 +13,13 @@ namespace hp55games.MareIgnoto.Rules.Engine
     internal static class CrewFlow
     {
         /// <summary>
-        /// R-020: la carta (già in transito presso il giocatore) va in uno slot vuoto a sua scelta; senza slot vuoti
-        /// sostituisce una carta presente (che va negli scarti: è una perdita, R-021) oppure si scarta.
-        /// Un Nostromo che è già stato sopra coperta può andare solo sopra (R-016).
+        /// R-020: la carta (già in transito presso il giocatore) va in uno slot vuoto a sua scelta, sopra o sotto coperta,
+        /// anche se è il Nostromo (il blocco di R-016 vale solo da quando è sopra coperta); senza slot vuoti sostituisce
+        /// una carta presente (che va negli scarti: è una perdita, R-021) oppure si scarta.
         /// </summary>
         public static IEnumerable<FlowStep> Receive(GameContext ctx, PlayerState player, CrewCard card)
         {
-            var allowed = Enumerable.Range(0, player.Crew.Count)
-                .Where(slot => player.Crew.IsAbove(slot) || ctx.CanGoBelow(card)).ToList();
+            var allowed = Enumerable.Range(0, player.Crew.Count).ToList();
             var options = new List<DecisionOption>();
             foreach (int slot in allowed)
                 if (player.Crew[slot] == null) options.Add(new ReceiveCrewOption(ReceiveOutcome.Placed, slot));
@@ -46,7 +45,7 @@ namespace hp55games.MareIgnoto.Rules.Engine
             bool above = player.Crew.IsAbove(choice.Slot);
             if (choice.Outcome == ReceiveOutcome.Replaced)
             {
-                CrewCard old = player.Crew.Take(choice.Slot);
+                CrewCard old = ctx.TakeCrew(player, choice.Slot);
                 ctx.State.Crew.Discard(old);
                 bool atSea = ctx.State.Map.KindAt(player.Position) == CellKind.Sea;
                 ctx.Emit(new CrewLostEvent(player.Id, choice.Slot, above, CrewLossCause.Replaced, atSea, old));
