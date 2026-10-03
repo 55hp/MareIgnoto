@@ -10,10 +10,10 @@ using UnityEngine;
 namespace hp55games.MareIgnoto.Unity.Views
 {
     /// <summary>
-    /// Le zone meteo (/BOARD/BOARD_Zones, 06_presentazione.md §2 e §6): ogni zona è una forma con il riempimento sulle sue
-    /// celle e un contorno lungo il perimetro (<see cref="ZoneGeometry"/>). Il colore segue il livello (R-081): Normale
-    /// invisibile, Mare Mosso giallo, Tempesta rosso; dal livello 1 in su la zona mostra il numero del livello.
-    /// Si aggiorna con <see cref="ZoneChangedEvent"/>.
+    /// Le zone meteo (/BOARD/BOARD_Zones, 06_presentazione.md §2 e §6): ogni zona è sempre disegnata, come forma con il
+    /// riempimento sulle sue celle e un contorno lungo il perimetro (<see cref="ZoneGeometry"/>). La tinta segue il livello
+    /// (<see cref="ZoneAppearance"/>, R-081): Normale quasi trasparente, Mare Mosso giallo, Tempesta rosso; dal livello 1 in
+    /// su la zona mostra il numero del livello. Si aggiorna con <see cref="ZoneChangedEvent"/>.
     /// </summary>
     public sealed class ZoneOverlayView : GameView
     {
@@ -36,6 +36,8 @@ namespace hp55games.MareIgnoto.Unity.Views
         [Tooltip("Prefab di testo 3D (TextMeshPro) per il livello della zona.")]
         [SerializeField] private TMP_Text labelPrefab;
 
+        [Tooltip("Riempimento a livello 0: neutro e quasi trasparente, così la zona si vede sempre dal contorno.")]
+        [SerializeField] private Color calmColor = new Color(1f, 1f, 1f, 0.10f);
         [SerializeField] private Color roughSeaColor = new Color(1f, 0.85f, 0.1f, 0.35f);
         [SerializeField] private Color stormColor = new Color(0.9f, 0.15f, 0.1f, 0.45f);
 
@@ -98,12 +100,7 @@ namespace hp55games.MareIgnoto.Unity.Views
         private void Apply(int zone, int level)
         {
             ZoneShape shape = shapes[zone];
-            WeatherState effect = gameState.Config.WeatherAt(level);
-            bool visible = effect != WeatherState.Normal;
-            shape.Fill.SetActive(visible);
-            if (!visible) return;
-
-            Color color = effect == WeatherState.Storm ? stormColor : roughSeaColor;
+            Color color = ColorFor(ZoneAppearance.TintFor(level, gameState.Config));
             var block = new MaterialPropertyBlock();
             shape.FillRenderer.GetPropertyBlock(block);
             block.SetColor(BaseColorId, color);
@@ -117,7 +114,19 @@ namespace hp55games.MareIgnoto.Unity.Views
                 line.endColor = opaque;
             }
 
-            shape.Label.text = UiText.ZoneLevel(level);
+            bool showLevel = ZoneAppearance.ShowsLevel(level);
+            shape.Label.gameObject.SetActive(showLevel);
+            if (showLevel) shape.Label.text = UiText.ZoneLevel(level);
+        }
+
+        private Color ColorFor(ZoneTint tint)
+        {
+            switch (tint)
+            {
+                case ZoneTint.Storm: return stormColor;
+                case ZoneTint.RoughSea: return roughSeaColor;
+                default: return calmColor;
+            }
         }
 
         /// <summary>Un quad per cella (i suoi quattro spigoli di griglia), nello spazio dell'oggetto del riempimento.</summary>
