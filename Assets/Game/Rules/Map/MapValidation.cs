@@ -23,7 +23,7 @@ namespace hp55games.MareIgnoto.Rules.Map
         ZoneCellNotSea,
         ZoneOverlap,
         ZoneNotConnected,
-        /// <summary>Livello iniziale diverso da quello della regola (nuvole 0, spicchi <c>ringInitialLevel</c>; R-038, R-081).</summary>
+        /// <summary>Livello iniziale negativo (R-081: i livelli sono interi ≥ 0).</summary>
         ZoneInitialLevel,
         /// <summary>Distanze tra nuvole, spicchi, isole e punti di partenza.</summary>
         ZoneSpacing,

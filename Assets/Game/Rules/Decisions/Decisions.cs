@@ -64,6 +64,14 @@ namespace hp55games.MareIgnoto.Rules.Decisions
         StealCrew,
         /// <summary>Quartiermastro: quali carte scambiare (R-111). Opzioni: <see cref="QuartermasterSwapOption"/>.</summary>
         QuartermasterSwap,
+
+        // ---- Mappa 25×25 (spec 0009) ----
+
+        /// <summary>
+        /// Vedetta con più isole a portata: su quale attraccare, e dove andrà il segnalino (R-058, R-097).
+        /// Opzioni: <see cref="IslandOption"/>.
+        /// </summary>
+        LookoutIsland,
     }
 
     /// <summary>Una scelta legale. Ogni tipo di decisione usa la sua sottoclasse.</summary>

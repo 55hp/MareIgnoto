@@ -79,7 +79,7 @@ namespace hp55games.MareIgnoto.Rules.Engine
             ctx.Emit(new TurnOrderSetEvent(1, state.TurnOrderList.ToArray()));
 
             // R-038: d8 → la lancetta fa r scatti in senso orario da Nord (8 = Nord). Le zone partono dal livello del layout
-            // (nuvole 0, spicchi ringInitialLevel), già in GameState.
+            // (05 §3: nuvole 0, spicchi 5), già in GameState.
             TutorialOptions tutorial = ctx.Setup.Tutorial;
             state.Wind = tutorial != null && tutorial.InitialWind.HasValue
                 ? tutorial.InitialWind.Value

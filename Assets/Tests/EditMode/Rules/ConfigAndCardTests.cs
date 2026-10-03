@@ -29,7 +29,6 @@ namespace hp55games.MareIgnoto.Rules.Tests
             Assert.AreEqual(3, config.startingMissionsDrawn);
             Assert.AreEqual(1, config.startingMissionsMinKept);
             Assert.AreEqual(10, config.startingCoins);
-            Assert.AreEqual(5, config.ringInitialLevel); // R-038, R-081
             Assert.AreEqual(0, config.maxRounds);
         }
 

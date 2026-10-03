@@ -17,6 +17,19 @@ namespace hp55games.MareIgnoto.Rules.Decisions
         public override string Describe() => "Turn " + Kind;
     }
 
+    /// <summary>Un'isola per id (05_mappa.md §6): Vedetta con più isole a portata (R-058, R-097).</summary>
+    public sealed class IslandOption : DecisionOption
+    {
+        public int IslandId { get; }
+
+        public IslandOption(int islandId)
+        {
+            IslandId = islandId;
+        }
+
+        public override string Describe() => "Island " + IslandId;
+    }
+
     /// <summary>Un'azione di porto con il costo effettivo (R-095); <see cref="Slot"/> solo per Commercio.</summary>
     public sealed class PortActionOption : DecisionOption
     {

@@ -167,6 +167,44 @@ namespace hp55games.MareIgnoto.Rules.Tests
         }
 
         [Test]
+        public void WithOneIslandInReachTheLookoutDoesNotAsk_R058_R097()
+        {
+            RoundScenario s = Create(2).At(0, 3, 5).At(1, 16, 16).Order(0, 1); // D5: solo C5 a portata
+            s.Crew(0, s.AboveSlot(0), CrewCardId.Vedetta);
+            s.PlayTurns(Pick(Opt<TurnKindOption>(0, o => o.Kind == TurnKind.Port), Port(PortAction.Plunder)));
+
+            Assert.IsFalse(s.DecisionsOf(DecisionKind.LookoutIsland, 0).Any());
+            Assert.AreEqual(C5, s.P(0).IslandMarker);
+        }
+
+        [TestCase(1)]
+        [TestCase(3)]
+        public void WithSeveralIslandsInReachThePlayerChooses_R058_R097(int chosen)
+        {
+            // C6 con Vedetta + Jolly (portata 2): a portata C5 (isola 1, a 1 cella) e D8 (isola 3, a 2 celle).
+            RoundScenario s = Create(2).At(0, 2, 6).At(1, 16, 16).Order(0, 1);
+            s.Crew(0, s.AboveSlot(0), CrewCardId.Vedetta);
+            s.Crew(0, s.AboveSlot(1), CrewCardId.Jolly);
+            s.PlayTurns(Pick(Opt<TurnKindOption>(0, o => o.Kind == TurnKind.Port), Opt<IslandOption>(0, o => o.IslandId == chosen),
+                Port(PortAction.Plunder)));
+
+            PendingDecision which = s.DecisionsOf(DecisionKind.LookoutIsland, 0).Single();
+            Assert.IsTrue(which.IsSecret);
+            CollectionAssert.AreEqual(new[] { 1, 3 }, which.Options.Cast<IslandOption>().Select(o => o.IslandId));
+            Assert.AreEqual(chosen, s.P(0).IslandMarker, "il segnalino va sull'isola scelta");
+        }
+
+        [Test]
+        public void ChoosingTheSeaTurnAsksNoIsland_R058()
+        {
+            RoundScenario s = Create(2).At(0, 2, 6).At(1, 16, 16).Order(0, 1);
+            s.Crew(0, s.AboveSlot(0), CrewCardId.Vedetta);
+            s.Crew(0, s.AboveSlot(1), CrewCardId.Jolly);
+            s.PlayTurns(Pick(Opt<TurnKindOption>(0, o => o.Kind == TurnKind.Sea)));
+            Assert.IsFalse(s.DecisionsOf(DecisionKind.LookoutIsland, 0).Any());
+        }
+
+        [Test]
         public void GambaDiLegnoCountsTheOwnMarkerIslandAsAStranding_R069_R097()
         {
             RoundScenario s = FromB5(C5);

@@ -132,8 +132,6 @@ namespace hp55games.MareIgnoto.Rules.Config
         public int maxAbbordaggioChain = 50;
 
         // ---- Meteo: livelli delle zone (R-038, R-081, R-088) ----
-        /// <summary>Livello iniziale degli spicchi dell'anello (R-038, R-081); le nuvole partono da 0.</summary>
-        public int ringInitialLevel = 5;
         /// <summary>Livello da cui una zona è Mare Mosso (R-081).</summary>
         public int roughSeaLevel = 1;
         /// <summary>Livello da cui una zona è Tempesta (R-081).</summary>
@@ -309,7 +307,7 @@ namespace hp55games.MareIgnoto.Rules.Config
             if (maxPlayers < minPlayers) errors.Add("maxPlayers non può essere minore di minPlayers.");
             if (minMapSize < 3) errors.Add("minMapSize deve essere almeno 3.");
             if (roughSeaLevel < 1 || stormLevel <= roughSeaLevel) errors.Add("Serve 1 <= roughSeaLevel < stormLevel (R-081).");
-            if (ringInitialLevel < 0 || invocationLevel < 0 || wrathLevel < 0 || favorLevelDrop < 0)
+            if (invocationLevel < 0 || wrathLevel < 0 || favorLevelDrop < 0)
                 errors.Add("I livelli delle zone non possono essere negativi.");
             if (slotsAbove < 1 || slotsBelow < 0) errors.Add("La ciurma richiede almeno 1 slot sopra coperta.");
             if (jokerCount < 0) errors.Add("jokerCount non può essere negativo.");

@@ -190,11 +190,23 @@ namespace hp55games.MareIgnoto.Rules.Tests
             // Con al massimo 4 giocatori i preset per 5–8 sono di troppo; con 9 manca quello per 9.
             Assert.IsTrue(TestSupport.StandardMap().Validate(new RulesConfig { maxPlayers = 4 }).Has(MapValidationCode.SpawnPresetOutOfRange));
             Assert.IsTrue(TestSupport.StandardMap().Validate(new RulesConfig { maxPlayers = 9 }).Has(MapValidationCode.MissingSpawnPreset));
-            // Gli spicchi devono partire dal livello della config (R-038), le nuvole da 0.
-            Assert.IsTrue(TestSupport.StandardMap().Validate(new RulesConfig { ringInitialLevel = 4 }).Has(MapValidationCode.ZoneInitialLevel));
-            MapLayout cloud = TestSupport.StandardMap();
-            Zone(cloud, "N3").initialLevel = 1;
-            Assert.IsTrue(cloud.Validate().Has(MapValidationCode.ZoneInitialLevel));
+        }
+
+        [Test]
+        public void TheInitialLevelComesOnlyFromTheLayout_05_3()
+        {
+            // Qualsiasi livello ≥ 0 è accettato: lo decide il layout, non la config.
+            MapLayout other = TestSupport.StandardMap();
+            Zone(other, "R1").initialLevel = 4;
+            Zone(other, "N3").initialLevel = 1;
+            Assert.IsTrue(other.Validate().IsValid, other.Validate().ToString());
+            GameMap map = GameMap.Create(other, new RulesConfig());
+            Assert.AreEqual(4, map.ZoneInitialLevel(map.ZoneIndex("R1")));
+            Assert.AreEqual(1, map.ZoneInitialLevel(map.ZoneIndex("N3")));
+
+            MapLayout negative = TestSupport.StandardMap();
+            Zone(negative, "N3").initialLevel = -1;
+            Assert.IsTrue(negative.Validate().Has(MapValidationCode.ZoneInitialLevel));
         }
 
         [Test]
@@ -412,7 +424,7 @@ namespace hp55games.MareIgnoto.Rules.Tests
             int r1 = map.ZoneIndex("R1");
             Assert.AreEqual(r1, map.ZoneOf(C("P12")));
             Assert.AreEqual(ZoneKind.RingSlice, map.ZoneKindOf(r1));
-            Assert.AreEqual(new RulesConfig().ringInitialLevel, map.ZoneInitialLevel(r1));
+            Assert.AreEqual(5, map.ZoneInitialLevel(r1), "05 §3: gli spicchi partono a 5");
             int n4 = map.ZoneIndex("N4");
             Assert.AreEqual(n4, map.ZoneOf(C("M21")));
             Assert.AreEqual(ZoneKind.Cloud, map.ZoneKindOf(n4));

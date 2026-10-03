@@ -216,12 +216,14 @@ namespace hp55games.MareIgnoto.Rules.Tests
             Assert.That(roll.Value, Is.InRange(1, 8));
             Assert.AreEqual(Heading.N.Rotate(roll.Value), session.State.Wind);
             Assert.AreEqual(session.State.Wind, events.OfType<WindChangedEvent>().Single().Wind);
-            // R-038, R-081: gli spicchi partono a ringInitialLevel, le nuvole a 0.
+            // R-038, R-081: ogni zona parte dal livello del layout (05 §3: spicchi 5, nuvole 0).
             GameMap map = session.State.Map;
             Assert.AreEqual(map.ZoneCount, session.State.ZoneLevels.Count);
             for (int zone = 0; zone < map.ZoneCount; zone++)
-                Assert.AreEqual(map.ZoneKindOf(zone) == ZoneKind.RingSlice ? session.State.Config.ringInitialLevel : 0,
-                    session.State.ZoneLevels[zone], map.ZoneId(zone));
+            {
+                Assert.AreEqual(map.ZoneInitialLevel(zone), session.State.ZoneLevels[zone], map.ZoneId(zone));
+                Assert.AreEqual(map.ZoneKindOf(zone) == ZoneKind.RingSlice ? 5 : 0, session.State.ZoneLevels[zone], map.ZoneId(zone));
+            }
         }
 
         [TestCase(1, Heading.NE)]

@@ -44,7 +44,7 @@ namespace hp55games.MareIgnoto.Rules.Map
     {
         /// <summary>Nuvola: forma irregolare, parte a livello 0.</summary>
         Cloud,
-        /// <summary>Spicchio dell'anello di tempesta attorno all'Isola Sacra (R1…R8), parte a <c>ringInitialLevel</c>.</summary>
+        /// <summary>Spicchio dell'anello di tempesta attorno all'Isola Sacra (R1…R8); il livello iniziale è nel layout (05 §3).</summary>
         RingSlice,
     }
 
@@ -186,10 +186,10 @@ namespace hp55games.MareIgnoto.Rules.Map
                     issues.Add(new MapValidationIssue(MapValidationCode.ZoneNotConnected,
                         "Zona " + id + ": le celle non sono connesse per lati."));
 
-                int expected = zone.kind == ZoneKind.RingSlice ? config.ringInitialLevel : 0;
-                if (zone.initialLevel != expected)
+                // Il livello iniziale viene solo dal layout (05 §3); deve essere un livello (R-081: intero ≥ 0).
+                if (zone.initialLevel < 0)
                     issues.Add(new MapValidationIssue(MapValidationCode.ZoneInitialLevel,
-                        "Zona " + id + ": il livello iniziale è " + zone.initialLevel + ", la regola dice " + expected + " (R-038, R-081)."));
+                        "Zona " + id + ": il livello iniziale è negativo (" + zone.initialLevel + ")."));
 
                 cellsOf.Add(cells);
             }

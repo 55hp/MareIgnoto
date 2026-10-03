@@ -121,7 +121,7 @@ namespace hp55games.MareIgnoto.Rules.Tests
             List<GameEvent> events = s.PlayRound(new[] { Heading.O, Heading.E });
 
             WeatherAppliedEvent applied = events.OfType<WeatherAppliedEvent>().Single(e => e.Player == 0);
-            Assert.AreEqual(s.Config.ringInitialLevel, applied.ZoneLevel);
+            Assert.AreEqual(s.State.Map.ZoneInitialLevel(r5), applied.ZoneLevel);
             Assert.AreEqual(WeatherState.Storm, applied.Perceived);
             Assert.AreEqual(CrewLossCause.Storm, events.OfType<CrewLostEvent>().Single().Cause);
         }
