@@ -183,3 +183,42 @@ Riordino dei file (commit "chore: CLAUDE.md alla radice, README di radice"):
 - `CLAUDE.md` spostato da `Assets/` alla radice del repo (`git mv`), rimosso `Assets/CLAUDE.md.meta`. Nessun documento citava il percorso `Assets/CLAUDE.md`, né i miei né quelli in `tech/`.
 - `README.md` di radice: esiste già (contiene solo il titolo "# MareIgnoto"), quindi non l'ho creato né modificato. Il testo previsto per la radice oggi sta in `Assets/README.md`.
 - File e cartelle sotto `Assets/` senza `.meta` (controllo sul disco, escluse le voci nascoste e con `~` che Unity ignora): **nessuno**. Ogni file tracciato ha anche il suo `.meta` tracciato. Se in futuro la lista non è vuota, Bezi deve aggiornare l'Editor per generarli: non si scrivono a mano.
+
+### Claude Code — 2026-10-03 — commit 645131b
+
+**R-020/R-016** (patch `docs: patch Athena (R-016, R-020)`): tolto il vincolo che avevo aggiunto nella 0003, per cui un Nostromo bloccato ricevuto (Arrembaggio!, Reclutamento dopo un rimescolamento) poteva andare solo sopra coperta. Ora il blocco vale solo mentre il Nostromo è sopra coperta su una nave: ogni uscita dagli slot passa da `GameContext.TakeCrew` (perdita, Arrembaggio!, Commercio, sostituzione), che lo sblocca, e `CrewFlow.Receive` offre tutti gli slot. Restano invariati il Medico come unica via verso il basso, lo swap del proprietario, Spyglass! e Quartiermastro (che sposta solo tra slot sopra coperta, quindi il Nostromo resta bloccato anche sulla nave nuova). Chiude anche la mia domanda della 0004 sul Nostromo rimescolato e ripescato.
+
+- Invariante aggiornato: oltre a "sopra coperta ⇒ bloccato, sotto ⇒ mai bloccato", nessun Nostromo fuori dalle navi (mazzo, scarti, in transito) risulta bloccato o liberato.
+- Test: `AStolenLockedNostromoCanOnlyBeReceivedAbove_R016_R020` invertito in `AStolenNostromoCanBeReceivedBelowDeck_R020_R016`; nuovo `AReceivedNostromoIsLockedOnceItGoesAbove_R020_R016`. `RoundScenario.ClearSlot` sblocca la carta che toglie. `dotnet test Tools/RulesHarness` verde, 362 test.
+- Verificato che mordono: blocco che resta alla carta fuori dalla nave → 6 rossi (il test del furto e l'invariante nelle simulazioni). Rimettere il vecchio filtro alla ricezione non cambia più nulla, perché la carta arriva già sbloccata.
+
+**Gate rilanciato** (seed 1–1000 × 2/4/8, `maxRounds` 500, mappa di test, 51 s): **nessuna eccezione, nessuna violazione di invarianti**. Alcune partite cambiano percorso perché cambiano le opzioni di ricezione: interrotte 89 / 4 / 0 (prima 85 / 3 / 0).
+
+```
+Simulazione: seed 1-1000, maxRounds 500, bot casuale (seed del bot = seed della partita)
+
+2 giocatori: 1000 partite, 911 finite con l'Isola Sacra, 89 interrotte da maxRounds, 0 errori
+  round (partite finite): min 17, media 183.56, mediana 152, max 500
+  interrotte da maxRounds, seed: 12, 15, 18, 25, 36, 44, 50, 52, 54, 60, 76, 106, 125, 143, 175, 191, 193, 204, 207, 241, 285, 287, 310, 323, 346, 362, 367, 380, 393, 402, 425, 434, 437, 439, 440, 442, 455, 463, 487, 491, 493, 498, 526, 553, 566, 572, 591, 596, 612, 616, 620, 636, 646, 649, 654, 655, 694, 696, 711, 716, 720, 733, 734, 751, 776, 779, 782, 784, 802, 804, 811, 839, 850, 857, 867, 879, 882, 884, 894, 900, 905, 917, 919, 921, 939, 953, 977, 982, 995
+  taglia media per giocatore: 3.07 = battaglie 0.78 + missioni 1.55 + Tesoro 0.46 + monete 3.00 - missioni incomplete 2.75 + poker 0.04
+  quota delle fonti positive: battaglie 13.3%, missioni 26.6%, Tesoro 7.8%, monete 51.5%, poker 0.8%
+  missioni completate per partita: 1.61; vincitore: taglia media 6.92, ha preso il Tesoro nel 85.4% delle partite; parità al primo posto: 4
+  poker: HighCard 96.9%, Pair 2.9%, TwoPair 0.2%, ThreeOfAKind 0.1%
+
+4 giocatori: 1000 partite, 996 finite con l'Isola Sacra, 4 interrotte da maxRounds, 0 errori
+  round (partite finite): min 9, media 110.18, mediana 85, max 476
+  interrotte da maxRounds, seed: 468, 737, 826, 880
+  taglia media per giocatore: 2.05 = battaglie 0.70 + missioni 0.93 + Tesoro 0.25 + monete 2.16 - missioni incomplete 2.05 + poker 0.06
+  quota delle fonti positive: battaglie 17.2%, missioni 22.6%, Tesoro 6.1%, monete 52.8%, poker 1.4%
+  missioni completate per partita: 1.90; vincitore: taglia media 9.09, ha preso il Tesoro nel 94.2% delle partite; parità al primo posto: 4
+  poker: HighCard 95.9%, Pair 4.1%, ThreeOfAKind 0.0%
+
+8 giocatori: 1000 partite, 1000 finite con l'Isola Sacra, 0 interrotte da maxRounds, 0 errori
+  round (partite finite): min 7, media 60.65, mediana 50, max 310
+  taglia media per giocatore: 1.38 = battaglie 0.79 + missioni 0.64 + Tesoro 0.13 + monete 1.48 - missioni incomplete 1.70 + poker 0.05
+  quota delle fonti positive: battaglie 25.5%, missioni 20.7%, Tesoro 4.1%, monete 48.2%, poker 1.5%
+  missioni completate per partita: 2.65; vincitore: taglia media 11.54, ha preso il Tesoro nel 98.3% delle partite; parità al primo posto: 1
+  poker: HighCard 96.4%, Pair 3.6%, TwoPair 0.0%, ThreeOfAKind 0.0%, Straight 0.0%
+
+Errori: nessuno
+```
