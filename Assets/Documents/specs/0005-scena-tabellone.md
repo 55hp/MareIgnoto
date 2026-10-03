@@ -12,7 +12,7 @@ Documenti: `tech/05_mappa.md`, `tech/06_presentazione.md` §1–2, §4, §6
 
 Gerarchia e nomi: `06` §2 (parte `/GAME_BOOTSTRAP`, `/GAME_FLOW`, `/BOARD...`, `/CAMERA_Rig`, `/Directional Light`, `/UI_Canvas/UI_TopBar` col solo vento, `/UI_Canvas/UI_Log`).
 Prefab: `Tile_Sea`, `Tile_Island`, `Tile_Sacred`, `Tile_Border`, `Ship` in `Assets/Game/Content/Prefabs/`.
-`GameBootstrap` con "avvio diretto di test": tutti i posti bot casuali, seed nell'Inspector, numero giocatori nell'Inspector. `BoardView` mostra anche i segnalini isola (R-097) come dischi del colore del giocatore sopra la cella isola; `ZoneOverlayView` disegna ogni zona come forma con contorno lungo il perimetro delle sue celle e ne mostra il livello come numero quando è ≥ 1.
+`GameBootstrap` con "avvio diretto di test": tutti i posti bot casuali, seed nell'Inspector, numero giocatori nell'Inspector. `BoardView` mostra anche i segnalini isola (R-097) come dischi del colore del giocatore sopra la cella isola; `ZoneOverlayView` disegna ogni zona, sempre, come forma con contorno lungo il perimetro delle sue celle (riempimento quasi trasparente a livello 0, colorato da livello 1) e ne mostra il livello come numero quando è ≥ 1.
 
 Il lavoro si divide in tre passi:
 - **A (Bezi, in parallelo a 0002–0004)**: `MapLayout.asset` dal layout approvato in `05_mappa.md` §6; scena `Board.unity` con la gerarchia vuota del contratto; prefab placeholder delle tile e della nave (cubi/quad con materiali URP Lit colorati, `06` §6); camera e luce.
