@@ -121,6 +121,20 @@ namespace hp55games.MareIgnoto.Rules.Tests
         }
 
         [Test]
+        public void OnATieTheJokerStaysOutAlsoWithTheNostromoMultipliers_R145_R146()
+        {
+            // Nostromo e Jolly sopra coperta, un altro 9 sotto: (a) tris col Jolly, dimezzato; (b) coppia di 9 senza Jolly.
+            // Stesso punteggio prima dei Nostromi, quindi anche dopo (×4 in entrambe): vale (b).
+            PokerScore score = Poker(Card(9, H), Joker(), Card(9, D));
+            Assert.AreEqual(Config.PokerTokens(PokerHand.ThreeOfAKind) / Config.singleJokerPokerDivisor,
+                Config.PokerTokens(PokerHand.Pair), "le due letture sono pari");
+            Assert.AreEqual(PokerHand.Pair, score.Hand);
+            Assert.IsFalse(score.HalvedByJoker);
+            Assert.AreEqual(Config.nostromoPokerMultiplier * Config.nostromoPokerMultiplier, score.NostromoMultiplier);
+            Assert.AreEqual(Config.PokerTokens(PokerHand.Pair) * score.NostromoMultiplier, score.Score);
+        }
+
+        [Test]
         public void TheNostromoDoublesAfterTheJokerHalving_R145_R146()
         {
             // Nostromo e Jolly sopra coperta, Jolly nella combinazione: prima il dimezzamento (R-145), poi due raddoppi

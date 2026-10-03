@@ -58,8 +58,9 @@ namespace hp55games.MareIgnoto.Rules.Engine
                         withJoker = Better(withJoker, BestHand(withCard, cfg), cfg);
                     }
 
-                // R-146: se il Jolly non fa parte della combinazione (le altre carte valgono almeno quanto la combinazione
-                // col Jolly dimezzata) il dimezzamento non si applica.
+                // R-145: vale la lettura che dà più punti tra (a) Jolly nella combinazione, dimezzato, e (b) Jolly fuori,
+                // senza dimezzamento; a parità (b). Il confronto prima dei Nostromi basta: il moltiplicatore (R-146) è lo
+                // stesso nelle due letture, perché il Jolly accanto al Nostromo conta come Nostromo comunque.
                 PokerHand without = BestHand(cards, cfg);
                 int halvedScore = cfg.PokerTokens(withJoker) / cfg.singleJokerPokerDivisor;
                 halved = halvedScore > cfg.PokerTokens(without);
