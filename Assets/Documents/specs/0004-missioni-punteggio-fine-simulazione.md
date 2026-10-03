@@ -172,3 +172,7 @@ Errori: nessuno
 #### Domande
 
 - **R-146 — quando il Jolly "fa parte della combinazione"**: a parità (la combinazione col Jolly dimezzata vale quanto quella senza) lo tengo fuori. Il punteggio non cambia, cambia solo la combinazione mostrata (coppia invece di tris).
+
+### Claude Code — 2026-10-03 — commit 854f413
+
+R-145 (patch del 02/10 (5)): verificato, nessun comportamento nuovo. `Scoring.Poker` sceglie la lettura che dà il punteggio poker finale più alto e a parità lascia fuori il Jolly, anche con i Nostromi: il moltiplicatore di R-146 è identico nelle due letture, quindi confrontarle prima dei raddoppi dà lo stesso esito. Aggiunto `OnATieTheJokerStaysOutAlsoWithTheNostromoMultipliers_R145_R146` (morde: con `>=` al posto di `>` diventa rosso); `dotnet test Tools/RulesHarness` verde, 361 test.
