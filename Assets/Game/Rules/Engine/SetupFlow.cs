@@ -78,7 +78,8 @@ namespace hp55games.MareIgnoto.Rules.Engine
             state.TurnOrderList.AddRange(TurnOrder.FromOffers(ctx, offers));
             ctx.Emit(new TurnOrderSetEvent(1, state.TurnOrderList.ToArray()));
 
-            // R-038: d8 → la lancetta fa r scatti in senso orario da Nord (8 = Nord). Le zone partono Normali.
+            // R-038: d8 → la lancetta fa r scatti in senso orario da Nord (8 = Nord). Le zone partono dal livello del layout
+            // (nuvole 0, spicchi ringInitialLevel), già in GameState.
             TutorialOptions tutorial = ctx.Setup.Tutorial;
             state.Wind = tutorial != null && tutorial.InitialWind.HasValue
                 ? tutorial.InitialWind.Value
@@ -89,8 +90,10 @@ namespace hp55games.MareIgnoto.Rules.Engine
             {
                 foreach (ZoneSetup zone in tutorial.InitialZones)
                 {
-                    state.ZoneStates[zone.Zone] = zone.State;
-                    ctx.Emit(new ZoneChangedEvent(zone.Zone, zone.State));
+                    int index = state.Map.ZoneIndex(zone.ZoneId);
+                    int from = state.ZoneLevels[index];
+                    state.ZoneLevels[index] = zone.Level;
+                    ctx.Emit(new ZoneChangedEvent(index, zone.ZoneId, from, zone.Level));
                 }
             }
         }

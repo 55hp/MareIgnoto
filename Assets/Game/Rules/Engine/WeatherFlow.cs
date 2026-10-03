@@ -21,7 +21,7 @@ namespace hp55games.MareIgnoto.Rules.Engine
             {
                 PlayerState player = state.PlayerById(id);
 
-                // R-045: Svago, la nave è in porto e non subisce il meteo. R-082: isole e cornice non hanno zona.
+                // R-045: Svago, la nave è in porto e non subisce il meteo. R-082: isole, cornice e mare libero non hanno zona.
                 if (player.LeisureRound == state.Round) continue;
                 int zone = state.Map.ZoneOf(player.Position);
                 if (zone < 0) continue;
@@ -33,9 +33,9 @@ namespace hp55games.MareIgnoto.Rules.Engine
                     continue;
                 }
 
-                WeatherState zoneState = state.ZoneStates[zone];
-                WeatherState perceived = Perceived(zoneState, player, ctx.Config);
-                ctx.Emit(new WeatherAppliedEvent(id, zone, zoneState, perceived));
+                int level = state.ZoneLevels[zone];
+                WeatherState perceived = Perceived(level, player, ctx.Config);
+                ctx.Emit(new WeatherAppliedEvent(id, zone, level, perceived));
                 if (perceived == WeatherState.Normal) continue;
 
                 // R-083/R-084: rotazione oraria di r scatti (8 = nessun cambio); R-086: il Timoniere sceglie.
@@ -53,12 +53,14 @@ namespace hp55games.MareIgnoto.Rules.Engine
             }
         }
 
-        /// <summary>R-085: ogni Navigatore sopra coperta (Jolly compreso, R-015) abbassa l'intensità di un livello.</summary>
-        public static WeatherState Perceived(WeatherState zoneState, PlayerState player, RulesConfig config)
+        /// <summary>
+        /// R-085: ogni Navigatore sopra coperta (Jolly compreso, R-015) toglie <c>navigatorWeatherReduction</c> al livello
+        /// della zona (minimo 0); l'effetto è quello del livello che resta (R-081).
+        /// </summary>
+        public static WeatherState Perceived(int zoneLevel, PlayerState player, RulesConfig config)
         {
             int reduction = CrewEffects.EffectiveCount(player.CrewAbove, CrewCardId.Navigatore) * config.navigatorWeatherReduction;
-            int level = (int)zoneState - reduction;
-            return level <= (int)WeatherState.Normal ? WeatherState.Normal : (WeatherState)level;
+            return config.WeatherAt(System.Math.Max(0, zoneLevel - reduction));
         }
 
         /// <summary>

@@ -52,21 +52,23 @@ namespace hp55games.MareIgnoto.Unity.Tests
         }
 
         [Test]
-        public void NewMapLayoutAssetHasDefaultPresetsButNoIslandsUntilFilled()
+        public void NewMapLayoutAssetIs25x25AndEmptyUntilFilled()
         {
             var asset = Create<MapLayoutAsset>();
             try
             {
                 MapLayout layout = asset.ToLayout();
-                Assert.AreEqual(20, layout.width);
-                Assert.AreEqual(20, layout.height);
+                Assert.AreEqual(25, layout.width);
+                Assert.AreEqual(25, layout.height);
                 Assert.IsEmpty(layout.islandCells);
-                Assert.AreEqual(7, layout.spawnPresets.Count, "preset di default per N = 2..8 (05_mappa.md §4)");
+                Assert.IsEmpty(layout.zones);
+                Assert.IsEmpty(layout.spawnPresets, "il layout v4 si inserisce come dato (05_mappa.md §3–§6, spec 0005)");
 
                 MapValidationResult result = asset.Validate();
                 Assert.IsFalse(result.IsValid);
                 Assert.IsTrue(result.Has(MapValidationCode.NoSacredIsland));
-                Assert.AreEqual(1, result.Issues.Count, result.ToString());
+                Assert.IsTrue(result.Has(MapValidationCode.MissingSpawnPreset));
+                Assert.IsTrue(result.Has(MapValidationCode.RingSliceCount));
             }
             finally
             {
@@ -75,12 +77,14 @@ namespace hp55games.MareIgnoto.Unity.Tests
         }
 
         [Test]
-        public void MapLayoutAssetConvertsItsContentsAndValidates()
+        public void MapLayoutAssetConvertsZonesAndPresets()
         {
             var source = new MapLayout();
-            source.sacredIslandCells.Add(new LayoutCell(9, 9));
-            source.islandCells.Add(new LayoutIslandCell(4, 4, 0));
-            source.PresetFor(2).cells[1] = new LayoutCell(19, 18);
+            source.sacredIslandCells.Add(new LayoutCell(12, 12));
+            source.islandCells.Add(new LayoutIslandCell(2, 5, 1));
+            source.zones.Add(new LayoutZone("R1", ZoneKind.RingSlice, 5, new[] { new LayoutCell(15, 12), new LayoutCell(15, 13) }));
+            source.zones.Add(new LayoutZone("N1", ZoneKind.Cloud, 0, new[] { new LayoutCell(20, 10) }));
+            source.spawnPresets.Add(new SpawnPreset(2, new LayoutCell(1, 1), new LayoutCell(23, 23)));
 
             var asset = Create<MapLayoutAsset>();
             try
@@ -89,11 +93,15 @@ namespace hp55games.MareIgnoto.Unity.Tests
 
                 MapLayout layout = asset.ToLayout();
                 Assert.AreEqual(1, layout.sacredIslandCells.Count);
-                Assert.AreEqual(4, layout.islandCells[0].x);
-                Assert.AreEqual(7, layout.spawnPresets.Count);
-                Assert.AreEqual(new Coord(19, 18), layout.PresetFor(2).cells[1].ToCoord());
-                Assert.AreEqual(new Coord(19, 9), layout.PresetFor(8).cells[7].ToCoord());
-                Assert.IsTrue(asset.Validate().IsValid, asset.Validate().ToString());
+                Assert.AreEqual(1, layout.islandCells[0].islandId);
+                Assert.AreEqual(2, layout.zones.Count);
+                Assert.AreEqual("R1", layout.zones[0].id);
+                Assert.AreEqual(ZoneKind.RingSlice, layout.zones[0].kind);
+                Assert.AreEqual(5, layout.zones[0].initialLevel);
+                Assert.AreEqual(new Coord(15, 13), layout.zones[0].cells[1].ToCoord());
+                Assert.AreEqual(ZoneKind.Cloud, layout.zones[1].kind);
+                Assert.AreEqual(new Coord(23, 23), layout.PresetFor(2).cells[1].ToCoord());
+                Assert.AreEqual(source.Validate().ToString(), asset.Validate().ToString(), "stessi dati, stessa validazione");
             }
             finally
             {
@@ -113,7 +121,7 @@ namespace hp55games.MareIgnoto.Unity.Tests
         public void ProjectMapLayoutAssetIsValidIfPresent()
         {
             MapLayoutAsset asset = FindProjectAsset<MapLayoutAsset>();
-            if (asset == null) Assert.Ignore("MapLayout.asset non ancora creato (spec 0005, quando il layout è approvato: 05_mappa.md §6).");
+            if (asset == null) Assert.Ignore("MapLayout.asset non ancora creato (spec 0005, passo A: layout v4 di 05_mappa.md §3–§6).");
             MapValidationResult result = asset.Validate();
             Assert.IsTrue(result.IsValid, result.ToString());
         }

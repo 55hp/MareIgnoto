@@ -10,16 +10,20 @@ using NUnit.Framework;
 namespace hp55games.MareIgnoto.Rules.Tests
 {
     /// <summary>
-    /// Meteo della Fase 1 (02_regole.md §6). p0 in (2,2), zona 0; p1 lontano in (16,16) con meteo Normale.
-    /// Vento da Nord, rotte verso E: senza meteo p0 arriva in (3,2).
+    /// Meteo della Fase 1 (02_regole.md §6) sul layout v4. p0 in D11, dentro la nuvola N7; p1 lontano in Q16, mare libero.
+    /// Vento da Nord, rotte verso E: senza meteo p0 arriva in E11 (sempre N7).
     /// </summary>
     public class WeatherTests
     {
         private static readonly Heading[] East = { Heading.E, Heading.E };
+        private static readonly Coord Start = Coord.Parse("D11");
+
+        private static Coord C(string name) => Coord.Parse(name);
 
         private static RoundScenario InZone(WeatherState weather)
         {
-            return RoundScenario.Create(2).At(0, 2, 2).At(1, 16, 16).Order(0, 1).ZoneAt(2, 2, weather);
+            return RoundScenario.Create(2).At(0, Start.X, Start.Y).At(1, C("Q16").X, C("Q16").Y).Order(0, 1)
+                .ZoneAt(Start.X, Start.Y, weather);
         }
 
         [Test]
@@ -33,7 +37,7 @@ namespace hp55games.MareIgnoto.Rules.Tests
             var rotated = events.OfType<HeadingRotatedEvent>().Single();
             Assert.AreEqual(Heading.E, rotated.From);
             Assert.AreEqual(Heading.SE, rotated.To, "1 scatto in senso orario");
-            Assert.AreEqual(new Coord(3, 1), s.P(0).Position, "si muove con la rotta ruotata");
+            Assert.AreEqual(Start.Step(Heading.SE), s.P(0).Position, "si muove con la rotta ruotata");
 
             PendingDecision loss = s.Decisions.Single(d => d.Kind == DecisionKind.WeatherPirateLoss);
             Assert.IsTrue(loss.IsSecret);
@@ -50,7 +54,7 @@ namespace hp55games.MareIgnoto.Rules.Tests
             List<GameEvent> events = s.PlayRound(East);
 
             Assert.AreEqual(events.OfType<HeadingRotatedEvent>().Single().From, events.OfType<HeadingRotatedEvent>().Single().To);
-            Assert.AreEqual(new Coord(3, 2), s.P(0).Position);
+            Assert.AreEqual(Start.Step(Heading.E), s.P(0).Position);
         }
 
         [Test]
@@ -89,10 +93,45 @@ namespace hp55games.MareIgnoto.Rules.Tests
             Assert.IsFalse(s.Decisions.Any(d => d.Kind == DecisionKind.StormCrewLoss));
         }
 
-        [Test]
-        public void TheNavigatorLowersTheStormToRoughSea_R085()
+        [TestCase(0, WeatherState.Normal)]
+        [TestCase(1, WeatherState.RoughSea)]
+        [TestCase(2, WeatherState.Storm)]
+        [TestCase(5, WeatherState.Storm)]
+        public void TheLevelOfTheZoneGivesTheEffect_R081(int level, WeatherState effect)
         {
-            RoundScenario s = InZone(WeatherState.Storm);
+            RoundScenario s = InZone(WeatherState.Normal);
+            s.ZoneAt(Start.X, Start.Y, level);
+            s.Random.Enqueue(8);
+            List<GameEvent> events = s.PlayRound(East);
+
+            WeatherAppliedEvent applied = events.OfType<WeatherAppliedEvent>().Single(e => e.Player == 0);
+            Assert.AreEqual(level, applied.ZoneLevel);
+            Assert.AreEqual(effect, applied.Perceived);
+        }
+
+        [Test]
+        public void ARingSliceStartsAtLevelFiveAndIsAStorm_R038_R081()
+        {
+            // Senza azzerare le zone (come fa RoundScenario): lo spicchio R5 è al livello iniziale.
+            RoundScenario s = InZone(WeatherState.Normal).At(0, C("H9").X, C("H9").Y);
+            int r5 = s.State.Map.ZoneIndex("R5");
+            s.State.ZoneLevels[r5] = s.State.Map.ZoneInitialLevel(r5);
+            s.Crew(0, s.BelowSlot(0), CrewCardId.Mozzo);
+            s.Random.Enqueue(8);
+            List<GameEvent> events = s.PlayRound(new[] { Heading.O, Heading.E });
+
+            WeatherAppliedEvent applied = events.OfType<WeatherAppliedEvent>().Single(e => e.Player == 0);
+            Assert.AreEqual(s.Config.ringInitialLevel, applied.ZoneLevel);
+            Assert.AreEqual(WeatherState.Storm, applied.Perceived);
+            Assert.AreEqual(CrewLossCause.Storm, events.OfType<CrewLostEvent>().Single().Cause);
+        }
+
+        [Test]
+        public void TheNavigatorLowersTheLevelByOne_R085()
+        {
+            // Livello 2 → percepito 1: Mare Mosso (perde la carta Pirateria, non la crew).
+            RoundScenario s = InZone(WeatherState.Normal);
+            s.ZoneAt(Start.X, Start.Y, s.Config.stormLevel);
             s.Crew(0, s.AboveSlot(0), CrewCardId.Navigatore);
             s.Crew(0, s.BelowSlot(0), CrewCardId.Mozzo);
             s.Hand(0, PirateCardId.Bordata);
@@ -100,10 +139,24 @@ namespace hp55games.MareIgnoto.Rules.Tests
             List<GameEvent> events = s.PlayRound(East);
 
             var applied = events.OfType<WeatherAppliedEvent>().Single(e => e.Player == 0);
-            Assert.AreEqual(WeatherState.Storm, applied.ZoneState);
+            Assert.AreEqual(s.Config.stormLevel, applied.ZoneLevel);
             Assert.AreEqual(WeatherState.RoughSea, applied.Perceived);
             Assert.AreEqual(0, s.P(0).Hand.Count, "perde la carta Pirateria del Mare Mosso");
             Assert.IsNotNull(s.P(0).Crew[s.BelowSlot(0)], "non la crew della Tempesta");
+        }
+
+        [Test]
+        public void AtLevelFiveTheNavigatorStillFacesAStorm_R085()
+        {
+            RoundScenario s = InZone(WeatherState.Normal);
+            s.ZoneAt(Start.X, Start.Y, 5);
+            s.Crew(0, s.AboveSlot(0), CrewCardId.Navigatore);
+            s.Crew(0, s.AboveSlot(1), CrewCardId.Jolly);
+            s.Random.Enqueue(8);
+            List<GameEvent> events = s.PlayRound(East);
+
+            Assert.AreEqual(WeatherState.Storm, events.OfType<WeatherAppliedEvent>().Single(e => e.Player == 0).Perceived,
+                "5 - 2 = 3: ancora Tempesta");
         }
 
         [Test]
@@ -121,7 +174,7 @@ namespace hp55games.MareIgnoto.Rules.Tests
         }
 
         [Test]
-        public void JokerAndNavigatorCalmTheStorm_R085_R015()
+        public void JokerAndNavigatorCalmALevelTwoStorm_R085_R015()
         {
             RoundScenario s = InZone(WeatherState.Storm);
             s.Crew(0, s.AboveSlot(0), CrewCardId.Navigatore);
@@ -161,7 +214,7 @@ namespace hp55games.MareIgnoto.Rules.Tests
 
             Assert.AreEqual(WeatherSkipReason.Tailwind, events.OfType<WeatherSkippedEvent>().Single().Reason);
             Assert.IsFalse(events.OfType<WeatherAppliedEvent>().Any(e => e.Player == 0));
-            Assert.AreEqual(new Coord(3, 2), s.P(0).Position);
+            Assert.AreEqual(Start.Step(Heading.E), s.P(0).Position);
         }
 
         [Test]
@@ -175,42 +228,45 @@ namespace hp55games.MareIgnoto.Rules.Tests
         }
 
         [Test]
-        public void IslandsAndBorderHaveNoWeather_R080_R082()
+        public void IslandsBorderAndFreeSeaHaveNoWeather_R080_R082()
         {
-            // p0 sull'isola 0 (4,4), dentro il blocco della zona 7 in Tempesta; p1 sulla cornice accanto alla zona 0 in Tempesta.
-            RoundScenario s = RoundScenario.Create(2).At(0, 4, 4).At(1, 0, 2).Order(0, 1)
-                .ZoneAt(5, 5, WeatherState.Storm).ZoneAt(2, 2, WeatherState.Storm);
-            Assert.AreEqual(-1, s.State.Map.ZoneOf(new Coord(4, 4)));
-            List<GameEvent> events = s.PlayRound(new[] { Heading.N, Heading.E });
+            // p0 sull'isola D8, accanto a N7 e N8 in Tempesta; p1 sulla cornice A8, accanto a N8; p2 in H8, mare libero.
+            RoundScenario s = RoundScenario.Create(3).At(0, C("D8").X, C("D8").Y).At(1, C("A8").X, C("A8").Y)
+                .At(2, C("H8").X, C("H8").Y).Order(0, 1, 2).Zone("N7", 5).Zone("N8", 5);
+            Assert.AreEqual(-1, s.State.Map.ZoneOf(C("D8")));
+            Assert.AreEqual(-1, s.State.Map.ZoneOf(C("H8")));
+            List<GameEvent> events = s.PlayRound(new[] { Heading.N, Heading.E, Heading.E });
 
             Assert.IsFalse(events.OfType<WeatherAppliedEvent>().Any());
         }
 
         [Test]
-        public void WeatherIsTheOneOfTheZoneBeforeMoving_R082()
+        public void WeatherIsTheOneOfTheCellBeforeMoving_R082()
         {
-            // p0 in (3,2), zona 0 Normale, entra in (4,2), zona 1 in Tempesta: nessun effetto in questo round.
-            RoundScenario s = RoundScenario.Create(2).At(0, 3, 2).At(1, 16, 16).Order(0, 1).ZoneAt(4, 2, WeatherState.Storm);
+            // p0 in C11, mare libero, entra in D11, nella nuvola N7 in Tempesta: nessun effetto in questo round.
+            RoundScenario s = RoundScenario.Create(2).At(0, C("C11").X, C("C11").Y).At(1, C("Q16").X, C("Q16").Y).Order(0, 1);
+            s.Zone("N7", s.Config.stormLevel);
             List<GameEvent> events = s.PlayRound(East);
 
-            Assert.AreEqual(new Coord(4, 2), s.P(0).Position);
-            Assert.AreEqual(WeatherState.Normal, events.OfType<WeatherAppliedEvent>().Single(e => e.Player == 0).Perceived);
+            Assert.AreEqual(C("D11"), s.P(0).Position);
+            Assert.IsFalse(events.OfType<WeatherAppliedEvent>().Any(e => e.Player == 0));
         }
 
         [Test]
         public void ZonesDoNotDecay_R081()
         {
             RoundScenario s = InZone(WeatherState.Storm);
-            int zone = s.State.Map.ZoneOf(new Coord(2, 2));
+            int zone = s.State.Map.ZoneOf(Start);
             s.PlayRound(East);
             s.PlayRound(East);
-            Assert.AreEqual(WeatherState.Storm, s.Session.State.Zones[zone]);
+            Assert.AreEqual(s.Config.stormLevel, s.Session.State.ZoneLevels[zone]);
         }
 
         [Test]
         public void WeatherChoicesFollowTheTurnOrderOfTheRound_R042()
         {
-            RoundScenario s = RoundScenario.Create(2).At(0, 2, 2).At(1, 2, 3).Order(1, 0).ZoneAt(2, 2, WeatherState.RoughSea);
+            RoundScenario s = RoundScenario.Create(2).At(0, Start.X, Start.Y).At(1, C("D12").X, C("D12").Y).Order(1, 0)
+                .ZoneAt(Start.X, Start.Y, WeatherState.RoughSea);
             s.Hand(0, PirateCardId.Bordata, PirateCardId.Parle);
             s.Hand(1, PirateCardId.Bordata, PirateCardId.Parle);
             s.Random.Enqueue(8, 8);

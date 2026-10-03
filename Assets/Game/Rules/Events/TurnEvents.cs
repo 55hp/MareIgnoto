@@ -49,6 +49,26 @@ namespace hp55games.MareIgnoto.Rules.Events
         Mission,
         /// <summary>Commercio (R-094).</summary>
         Commerce,
+        /// <summary>Nessuna azione: il turno di porto finisce senza mettere il segnalino (R-097).</summary>
+        None,
+    }
+
+    /// <summary>Il segnalino isola del giocatore passa sull'isola dove ha compiuto un'azione di porto (R-097). Pubblico.</summary>
+    public sealed class IslandMarkerPlacedEvent : GameEvent
+    {
+        public int Player { get; }
+        public int IslandId { get; }
+        /// <summary>L'isola da cui è stato tolto; -1 se era il primo.</summary>
+        public int PreviousIslandId { get; }
+
+        public IslandMarkerPlacedEvent(int player, int islandId, int previousIslandId)
+        {
+            Player = player;
+            IslandId = islandId;
+            PreviousIslandId = previousIslandId;
+        }
+
+        public override string Describe() => "IslandMarker p" + Player + " " + PreviousIslandId + "->" + IslandId;
     }
 
     /// <summary>L'azione di porto scelta, con il costo effettivo pagato (R-095).</summary>

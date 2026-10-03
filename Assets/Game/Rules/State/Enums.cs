@@ -12,7 +12,7 @@ namespace hp55games.MareIgnoto.Rules.State
         Ended,
     }
 
-    /// <summary>Stato meteo di una zona (R-081).</summary>
+    /// <summary>Effetto meteo di un livello di zona (R-081): 0 Normale, 1 Mare Mosso, da 2 in su Tempesta.</summary>
     public enum WeatherState
     {
         Normal,

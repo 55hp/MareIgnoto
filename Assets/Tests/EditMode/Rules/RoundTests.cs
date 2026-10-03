@@ -68,7 +68,7 @@ namespace hp55games.MareIgnoto.Rules.Tests
         {
             RoundScenario s = RoundScenario.Create(2).Order(0, 1);
             int resting = 1 - s.Session.Pending.Player; // la decisione già in attesa è dell'altro giocatore
-            s.At(resting, 14, 5).At(1 - resting, 2, 2).ZoneAt(14, 6, WeatherState.Storm);
+            s.At(resting, 3, 11).At(1 - resting, 2, 2).ZoneAt(3, 11, WeatherState.Storm); // in Svago dentro la nuvola N7 in Tempesta
             s.P(resting).LeisureRound = s.Session.State.Round;
             List<GameEvent> events = s.PlayRound(new[] { Heading.E, Heading.E });
 
@@ -77,7 +77,7 @@ namespace hp55games.MareIgnoto.Rules.Tests
             Assert.AreEqual(0, events.OfType<MovementStartedEvent>().Single().Speeds[resting]);
             Assert.IsFalse(events.OfType<ShipMovedEvent>().Any(e => e.Player == resting));
             Assert.IsFalse(events.OfType<WeatherAppliedEvent>().Any(e => e.Player == resting));
-            Assert.AreEqual(new Coord(14, 5), s.P(resting).Position);
+            Assert.AreEqual(new Coord(3, 11), s.P(resting).Position);
         }
 
         [Test]
@@ -270,7 +270,9 @@ namespace hp55games.MareIgnoto.Rules.Tests
             Assert.Greater(events.OfType<PortActionEvent>().Count(), 0);
             Assert.Greater(events.OfType<CardPlayedEvent>().Count(), 0);
             Assert.Greater(events.OfType<FinalScoreEvent>().Count(), 0);
-            if (players > 2) Assert.Greater(events.OfType<AttackStartedEvent>().Count(), 0);
+            // Sulla 25×25 i bot casuali si incontrano di rado sotto gli 8 giocatori: gli attacchi si controllano lì.
+            if (players == 8) Assert.Greater(events.OfType<AttackStartedEvent>().Count(), 0);
+            Assert.Greater(events.OfType<IslandMarkerPlacedEvent>().Count(), 0, "R-097");
         }
 
         /// <summary>

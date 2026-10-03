@@ -31,5 +31,22 @@ namespace hp55games.MareIgnoto.Rules.Map
         public static bool operator !=(Coord a, Coord b) => !a.Equals(b);
 
         public override string ToString() => "(" + X + "," + Y + ")";
+
+        /// <summary>
+        /// Il nome della cella per documentazione, UI e log (05_mappa.md §1): lettera della colonna (A = 0) + riga, come
+        /// "B1" o "Y12". Il motore usa gli indici; oltre la Z ripiega su "(x,y)".
+        /// </summary>
+        public string Name => X >= 0 && X < 26 && Y >= 0 ? (char)('A' + X) + Y.ToString() : ToString();
+
+        /// <summary>La cella da un nome come "B1" o "M24" (05_mappa.md §1); lancia FormatException se non è valido.</summary>
+        public static Coord Parse(string name)
+        {
+            string text = name?.Trim() ?? "";
+            if (text.Length < 2 || char.ToUpperInvariant(text[0]) < 'A' || char.ToUpperInvariant(text[0]) > 'Z' ||
+                !int.TryParse(text.Substring(1), System.Globalization.NumberStyles.None,
+                    System.Globalization.CultureInfo.InvariantCulture, out int row))
+                throw new FormatException("Nome di cella non valido: '" + name + "' (atteso lettera + riga, come B1).");
+            return new Coord(char.ToUpperInvariant(text[0]) - 'A', row);
+        }
     }
 }

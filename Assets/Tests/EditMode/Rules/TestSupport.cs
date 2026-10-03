@@ -16,24 +16,8 @@ namespace hp55games.MareIgnoto.Rules.Tests
     /// <summary>Costruzione di scenari e pilotaggio delle partite, condivisi dai test.</summary>
     internal static class TestSupport
     {
-        /// <summary>Una mappa 20×20 valida per i test (non è la mappa vera del gioco, che arriva da MapLayout.asset).</summary>
-        public static MapLayout StandardMap()
-        {
-            var map = new MapLayout { width = 20, height = 20 };
-            map.sacredIslandCells.AddRange(new[]
-            {
-                new LayoutCell(9, 9), new LayoutCell(10, 9), new LayoutCell(9, 10), new LayoutCell(10, 10),
-            });
-            map.islandCells.AddRange(new[]
-            {
-                new LayoutIslandCell(4, 4, 0), new LayoutIslandCell(5, 4, 0), new LayoutIslandCell(4, 5, 0),
-                new LayoutIslandCell(14, 4, 1), new LayoutIslandCell(14, 5, 1),
-                new LayoutIslandCell(4, 14, 2),
-                new LayoutIslandCell(14, 14, 3), new LayoutIslandCell(15, 14, 3),
-            });
-            // Punti di partenza: i preset di default (05_mappa.md §4).
-            return map;
-        }
+        /// <summary>La mappa del gioco: il layout v4 approvato (05_mappa.md §6), da <see cref="LayoutV4"/>.</summary>
+        public static MapLayout StandardMap() => LayoutV4.Create();
 
         public static GameSession Start(int players, int seed, RulesConfig config = null, IRandomSource random = null,
             Action<GameSetup> customize = null)

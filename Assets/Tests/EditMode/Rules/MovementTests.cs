@@ -54,19 +54,19 @@ namespace hp55games.MareIgnoto.Rules.Tests
         [Test]
         public void WindIsNotAppliedLeavingAPortOrTheBorder_R062()
         {
-            // p0 sull'isola 1 (14,5), p1 sulla cornice (0,7): entrambi col vento in poppa, ma velocità base.
-            RoundScenario s = TwoShips(14, 5, 0, 7).Wind(Heading.E);
+            // p0 sull'isola C5, p1 sulla cornice A7: entrambi col vento in poppa, ma velocità base.
+            RoundScenario s = TwoShips(2, 5, 0, 7).Wind(Heading.E);
             List<GameEvent> events = s.PlayRound(new[] { Heading.E, Heading.E });
 
             CollectionAssert.AreEqual(new[] { s.Config.baseSpeed, s.Config.baseSpeed }, events.OfType<MovementStartedEvent>().Single().Speeds);
-            Assert.AreEqual(C(15, 5), s.P(0).Position);
+            Assert.AreEqual(C(3, 5), s.P(0).Position);
             Assert.AreEqual(C(1, 7), s.P(1).Position);
         }
 
         [Test]
         public void HelmsmanAddsSpeedAndTheJokerDuplicatesIt_R063_R015()
         {
-            RoundScenario s = TwoShips(2, 2, 2, 16);
+            RoundScenario s = TwoShips(2, 2, 2, 13);
             s.Crew(0, s.AboveSlot(0), CrewCardId.Timoniere);
             s.Crew(1, s.AboveSlot(0), CrewCardId.Timoniere);
             s.Crew(1, s.AboveSlot(1), CrewCardId.Jolly);
@@ -75,7 +75,7 @@ namespace hp55games.MareIgnoto.Rules.Tests
             int[] speeds = events.OfType<MovementStartedEvent>().Single().Speeds.ToArray();
             Assert.AreEqual(s.Config.baseSpeed + s.Config.helmsmanSpeedBonus, speeds[0]);
             Assert.AreEqual(s.Config.baseSpeed + 2 * s.Config.helmsmanSpeedBonus, speeds[1]);
-            Assert.AreEqual(C(2 + speeds[1], 16), s.P(1).Position);
+            Assert.AreEqual(C(2 + speeds[1], 13), s.P(1).Position);
         }
 
         [Test]
@@ -107,12 +107,12 @@ namespace hp55games.MareIgnoto.Rules.Tests
         [Test]
         public void ArrivingOnAnIslandStopsTheShip_R066()
         {
-            // Velocità 3 (vento + Timoniere): (2,4) → (3,4) → (4,4) isola, il terzo passo si perde.
-            RoundScenario s = TwoShips(2, 4, 16, 16).Wind(Heading.E);
+            // Velocità 3 (vento + Timoniere): D2 → E2 → F2 isola, il terzo passo si perde.
+            RoundScenario s = TwoShips(3, 2, 16, 16).Wind(Heading.E);
             s.Crew(0, s.AboveSlot(0), CrewCardId.Timoniere);
             List<GameEvent> events = s.PlayRound(new[] { Heading.E, Heading.N });
 
-            Assert.AreEqual(C(4, 4), s.P(0).Position);
+            Assert.AreEqual(C(5, 2), s.P(0).Position);
             var stop = events.OfType<ShipStoppedEvent>().Single(e => e.Player == 0);
             Assert.AreEqual(StopReason.Land, stop.Reason);
             Assert.AreEqual(2, stop.Step);
@@ -122,11 +122,12 @@ namespace hp55games.MareIgnoto.Rules.Tests
         [Test]
         public void EnteringTheSacredIslandStopsTheShipAndRecordsTheStep_R066_R141()
         {
-            RoundScenario s = TwoShips(7, 9, 16, 16).Wind(Heading.E);
+            // J12 → K12 → L12, Isola Sacra al passo 2.
+            RoundScenario s = TwoShips(9, 12, 16, 16).Wind(Heading.E);
             s.Crew(0, s.AboveSlot(0), CrewCardId.Timoniere);
             List<GameEvent> events = s.PlayRound(new[] { Heading.E, Heading.N });
 
-            Assert.AreEqual(C(9, 9), s.P(0).Position);
+            Assert.AreEqual(C(11, 12), s.P(0).Position);
             var entered = events.OfType<SacredIslandEnteredEvent>().Single();
             Assert.AreEqual(0, entered.Player);
             Assert.AreEqual(2, entered.Step);
@@ -204,11 +205,12 @@ namespace hp55games.MareIgnoto.Rules.Tests
         [Test]
         public void LandHostsSeveralShipsWithoutCollision_R068()
         {
-            RoundScenario s = TwoShips(3, 4, 4, 3);
+            // B5 verso E e C4 verso N: entrambe sull'isola C5.
+            RoundScenario s = TwoShips(1, 5, 2, 4);
             List<GameEvent> events = s.PlayRound(new[] { Heading.E, Heading.N });
 
-            Assert.AreEqual(C(4, 4), s.P(0).Position);
-            Assert.AreEqual(C(4, 4), s.P(1).Position);
+            Assert.AreEqual(C(2, 5), s.P(0).Position);
+            Assert.AreEqual(C(2, 5), s.P(1).Position);
             Assert.IsFalse(events.OfType<ShipStoppedEvent>().Any(e => e.Reason == StopReason.Collision));
             Assert.IsFalse(events.OfType<BoardingStartedEvent>().Any());
         }

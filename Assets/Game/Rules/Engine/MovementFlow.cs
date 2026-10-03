@@ -95,12 +95,24 @@ namespace hp55games.MareIgnoto.Rules.Engine
                 }
             }
 
-            // R-069
+            // R-069, R-097: arenata sulla cornice o arrivata sull'isola col proprio segnalino.
             foreach (PlayerState player in state.Players)
-                if (moved[player.Id] && map.KindAt(player.Position) == CellKind.Border)
-                    ctx.Emit(new ShipStrandedEvent(player.Id, player.Position));
+                if (moved[player.Id]) CheckStranded(ctx, player);
 
             ctx.Emit(new MovementEndedEvent(state.Players.Select(p => p.Position).ToArray()));
+        }
+
+        /// <summary>
+        /// Dopo un arrivo (movimento o riposizionamento da Abbordaggio): la cornice arena (R-069); l'isola con il proprio
+        /// segnalino vale per la nave come la cornice: arenata, e in Fase 2 il turno salta (R-097, R-053).
+        /// </summary>
+        public static void CheckStranded(GameContext ctx, PlayerState player)
+        {
+            GameMap map = ctx.State.Map;
+            CellKind kind = map.KindAt(player.Position);
+            bool ownIsland = kind == CellKind.Island && player.IslandMarker >= 0 && map.IslandIdAt(player.Position) == player.IslandMarker;
+            if (ownIsland) player.ArrivedOnOwnIsland = true;
+            if (kind == CellKind.Border || ownIsland) ctx.Emit(new ShipStrandedEvent(player.Id, player.Position));
         }
 
         /// <summary>

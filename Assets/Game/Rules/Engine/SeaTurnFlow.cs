@@ -184,12 +184,14 @@ namespace hp55games.MareIgnoto.Rules.Engine
                 case PirateCardId.IraGartya:
                 case PirateCardId.FavoreGartya:
                 {
-                    var zones = Enumerable.Range(0, state.ZoneStates.Length).Select(z => (DecisionOption)new ZoneOption(z)).ToList();
+                    var zones = Enumerable.Range(0, state.ZoneLevels.Length)
+                        .Select(z => (DecisionOption)new ZoneOption(z, state.Map.ZoneId(z))).ToList();
                     AskStep ask = ctx.Ask(DecisionKind.CardTarget, player.Id, false, zones);
                     yield return ask;
                     int zone = ask.Choice<ZoneOption>().Zone;
-                    state.ZoneStates[zone] = ZoneAfter(card.Id, state.ZoneStates[zone]);
-                    ctx.Emit(new ZoneChangedEvent(zone, state.ZoneStates[zone]));
+                    int from = state.ZoneLevels[zone];
+                    state.ZoneLevels[zone] = LevelAfter(card.Id, from, cfg);
+                    ctx.Emit(new ZoneChangedEvent(zone, state.Map.ZoneId(zone), from, state.ZoneLevels[zone]));
                     break;
                 }
 
@@ -199,13 +201,17 @@ namespace hp55games.MareIgnoto.Rules.Engine
             }
         }
 
-        private static WeatherState ZoneAfter(PirateCardId id, WeatherState current)
+        /// <summary>
+        /// R-088: Invocazione porta a <c>invocationLevel</c> e Ira a <c>wrathLevel</c>, solo da un livello più basso
+        /// (altrimenti la carta è sprecata, ma pagata); Favore abbassa di <c>favorLevelDrop</c>, fino a 0.
+        /// </summary>
+        private static int LevelAfter(PirateCardId id, int level, RulesConfig cfg)
         {
             switch (id)
             {
-                case PirateCardId.InvocazioneGartya: return WeatherState.RoughSea;
-                case PirateCardId.IraGartya: return WeatherState.Storm;
-                default: return current == WeatherState.Normal ? WeatherState.Normal : current - 1; // Favore di Gartya
+                case PirateCardId.InvocazioneGartya: return level < cfg.invocationLevel ? cfg.invocationLevel : level;
+                case PirateCardId.IraGartya: return level < cfg.wrathLevel ? cfg.wrathLevel : level;
+                default: return System.Math.Max(0, level - cfg.favorLevelDrop); // Favore di Gartya
             }
         }
     }

@@ -36,15 +36,16 @@ namespace hp55games.MareIgnoto.Rules.Setup
             card.Kind == Kind && (Suit == CrewSuit.None || card.Suit == Suit);
     }
 
+    /// <summary>Livello iniziale di una zona per il tutorial, per id di zona (05_mappa.md §3).</summary>
     public readonly struct ZoneSetup
     {
-        public readonly int Zone;
-        public readonly WeatherState State;
+        public readonly string ZoneId;
+        public readonly int Level;
 
-        public ZoneSetup(int zone, WeatherState state)
+        public ZoneSetup(string zoneId, int level)
         {
-            Zone = zone;
-            State = state;
+            ZoneId = zoneId;
+            Level = level;
         }
     }
 

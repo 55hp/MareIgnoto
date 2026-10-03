@@ -39,8 +39,37 @@ namespace hp55games.MareIgnoto.Rules.Engine
             }
 
             ctx.Emit(new TurnKindEvent(player.Id, port ? TurnKind.Port : TurnKind.Sea, byLookout));
-            if (port) yield return Flow.Call(Port(ctx, player));
+            if (port) yield return Flow.Call(Port(ctx, player, PortIsland(state, player, ctx.Config)));
             else yield return Flow.Call(SeaTurnFlow.Run(ctx, player));
+        }
+
+        /// <summary>
+        /// L'isola del turno di porto, dove va il segnalino (R-097): quella sotto la nave; in Svago in mare (Vedetta) quella
+        /// del segnalino messo con lo Svago; con la Vedetta la più vicina a tiro, a parità quella con l'id più basso.
+        /// </summary>
+        private static int PortIsland(GameState state, PlayerState player, RulesConfig config)
+        {
+            GameMap map = state.Map;
+            if (map.KindAt(player.Position) == CellKind.Island) return map.IslandIdAt(player.Position);
+            if (player.LeisureRound == state.Round && player.IslandMarker >= 0) return player.IslandMarker;
+
+            // TODO R-097: con la Vedetta, se più isole sono a tiro, 02 non dice su quale va il segnalino (domanda nel report della 0009).
+            int range = CrewEffects.EffectiveCount(player.CrewAbove, CrewCardId.Vedetta) * config.lookoutRange;
+            int best = -1, bestDistance = int.MaxValue;
+            for (int dx = -range; dx <= range; dx++)
+                for (int dy = -range; dy <= range; dy++)
+                {
+                    var cell = new Coord(player.Position.X + dx, player.Position.Y + dy);
+                    if (!map.IsInBounds(cell) || map.KindAt(cell) != CellKind.Island) continue;
+                    int distance = Coord.Distance(cell, player.Position), id = map.IslandIdAt(cell);
+                    if (distance < bestDistance || (distance == bestDistance && id < best))
+                    {
+                        best = id;
+                        bestDistance = distance;
+                    }
+                }
+
+            return best >= 0 ? best : player.IslandMarker;
         }
 
         /// <summary>
@@ -67,8 +96,11 @@ namespace hp55games.MareIgnoto.Rules.Engine
             return Math.Max(0, baseCost - discount);
         }
 
-        /// <summary>Turno in porto (R-054): una sola azione, poi il turno termina. In porto niente swap, attacchi né carte.</summary>
-        public static IEnumerable<FlowStep> Port(GameContext ctx, PlayerState player)
+        /// <summary>
+        /// Turno in porto (R-054): una sola azione, poi il turno termina. In porto niente swap, attacchi né carte. Un'azione
+        /// mette il segnalino del giocatore sull'isola <paramref name="island"/>; "nessuna azione" no (R-097).
+        /// </summary>
+        public static IEnumerable<FlowStep> Port(GameContext ctx, PlayerState player, int island)
         {
             RulesConfig cfg = ctx.Config;
             int leisure = PortCost(player, cfg.leisureCost, cfg);
@@ -87,12 +119,22 @@ namespace hp55games.MareIgnoto.Rules.Engine
             if (ctx.CanDraw(DeckKind.Corsair)) options.Add(new PortActionOption(PortAction.Mission, 0));
             foreach (int slot in Losses.OccupiedSlots(player))
                 options.Add(new PortActionOption(PortAction.Commerce, 0, slot, CrewEffects.CommerceValue(player.Crew[slot], cfg)));
+            options.Add(new PortActionOption(PortAction.None, 0)); // R-097: si può non agire, e il segnalino resta dov'è
 
             AskStep ask = ctx.Ask(DecisionKind.PortAction, player.Id, true, options);
             yield return ask;
             PortActionOption choice = ask.Choice<PortActionOption>();
 
             ctx.Emit(new PortActionEvent(player.Id, choice.Action, choice.Cost));
+            if (choice.Action == PortAction.None) yield break;
+
+            // R-097: il segnalino passa su quest'isola.
+            if (island >= 0)
+            {
+                int previous = player.IslandMarker;
+                player.IslandMarker = island;
+                ctx.Emit(new IslandMarkerPlacedEvent(player.Id, island, previous));
+            }
             if (choice.Cost > 0) ctx.ChangeCoins(player, -choice.Cost, CoinReason.PortCost); // escono dal gioco
 
             switch (choice.Action)

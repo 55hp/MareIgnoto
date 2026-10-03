@@ -14,9 +14,24 @@ namespace hp55games.MareIgnoto.Rules.Map
         DuplicateSpawnPreset,
         SpawnPresetOutOfRange,
         WrongSpawnCount,
-        SpawnNotOnBorder,
+        /// <summary>Punto di partenza né sulla cornice né su mare libero lontano dalle isole (05 §5).</summary>
+        SpawnNotAllowed,
         DuplicateSpawn,
         SpawnWithoutSea,
+        // ---- Zone (05 §3) ----
+        ZoneIdInvalid,
+        ZoneCellNotSea,
+        ZoneOverlap,
+        ZoneNotConnected,
+        /// <summary>Livello iniziale diverso da quello della regola (nuvole 0, spicchi <c>ringInitialLevel</c>; R-038, R-081).</summary>
+        ZoneInitialLevel,
+        /// <summary>Distanze tra nuvole, spicchi, isole e punti di partenza.</summary>
+        ZoneSpacing,
+        RingSliceCount,
+        /// <summary>Contatto tra spicchi: i consecutivi per uno spigolo solo, i non consecutivi lontani.</summary>
+        RingContact,
+        /// <summary>Le due celle del varco tra spicchi consecutivi non sono di mare libero.</summary>
+        RingGap,
     }
 
     public sealed class MapValidationIssue

@@ -169,13 +169,16 @@ namespace hp55games.MareIgnoto.Rules.Decisions
     public sealed class ZoneOption : DecisionOption
     {
         public int Zone { get; }
+        /// <summary>L'id della zona (05_mappa.md §3): le carte Meteo la bersagliano per id.</summary>
+        public string ZoneId { get; }
 
-        public ZoneOption(int zone)
+        public ZoneOption(int zone, string zoneId)
         {
             Zone = zone;
+            ZoneId = zoneId;
         }
 
-        public override string Describe() => "Zone " + Zone;
+        public override string Describe() => "Zone " + ZoneId;
     }
 
     /// <summary>Supplica a Gartya: scatti della lancetta del vento (+1 orario, -1 antiorario).</summary>

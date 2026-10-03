@@ -12,14 +12,15 @@ using NUnit.Framework;
 namespace hp55games.MareIgnoto.Rules.Tests
 {
     /// <summary>
-    /// Fine partita e punteggio (02_regole.md §9). Isola Sacra (9..10, 9..10); vento verso N. p0 parte da (8,9) verso E ed
-    /// entra al passo 1; le altre navi restano ferme (rotta S, contro vento) salvo dove indicato.
+    /// Fine partita e punteggio (02_regole.md §9) sul layout v4. Isola Sacra: M12, L12, N12, M11, M13; vento verso N.
+    /// p0 parte da K12 verso E ed entra in L12 al passo 1; le altre navi restano ferme (rotta S, contro vento) salvo dove
+    /// indicato.
     /// </summary>
     public class EndGameTests
     {
         private static RoundScenario Arrival(int players = 3)
         {
-            RoundScenario s = RoundScenario.Create(players).At(0, 8, 9).At(1, 2, 2);
+            RoundScenario s = RoundScenario.Create(players).At(0, 10, 12).At(1, 2, 2);
             if (players > 2) s.At(2, 16, 16);
             s.Order(Enumerable.Range(0, players).ToArray());
             foreach (PlayerState p in s.State.Players) p.Coins = 0;
@@ -76,9 +77,9 @@ namespace hp55games.MareIgnoto.Rules.Tests
         [Test]
         public void TheLowestStepTakesTheTreasure_R141()
         {
-            // p1 da (10,7) verso N col vento a favore: velocità 2, entra in (10,9) al passo 2.
+            // p1 da M9 verso N col vento a favore: velocità 2, entra in M11 al passo 2.
             RoundScenario s = Arrival();
-            s.At(1, 10, 7);
+            s.At(1, 12, 9);
             s.State.Treasure = 6;
             List<GameEvent> events = s.PlayRound(Headings(3, Heading.E, Heading.N));
 
@@ -91,9 +92,9 @@ namespace hp55games.MareIgnoto.Rules.Tests
         [Test]
         public void ATieOnTheStepSplitsTheCoinsAndGivesEachTheToken_R141()
         {
-            // p1 da (11,10) verso O entra in (10,10) al passo 1, come p0.
+            // p1 da O12 verso O entra in N12 al passo 1, come p0.
             RoundScenario s = Arrival();
-            s.At(1, 11, 10);
+            s.At(1, 14, 12);
             s.State.Treasure = 7;
             List<GameEvent> events = s.PlayRound(Headings(3, Heading.E, Heading.O));
 
@@ -106,13 +107,13 @@ namespace hp55games.MareIgnoto.Rules.Tests
         }
 
         /// <summary>
-        /// Abbordaggio vicino all'Isola Sacra, col vento verso S: p0 da (7,9) verso E e p1 da (8,10) verso S (velocità 2) si
-        /// scontrano in (8,9); con 3 navi anche p2 da (7,10) verso SE. I tiri sono accodati nell'ordine di turno.
+        /// Abbordaggio in L11, che tocca tre celle dell'Isola Sacra (L12 a N, M12 a NE, M11 a E). Col vento verso NO:
+        /// p0 da K11 verso E, p1 da L10 verso N, con 3 navi anche p2 da K10 verso NE. I tiri si accodano nell'ordine di turno.
         /// </summary>
         private static RoundScenario BoardingNextToTheIsland(int players)
         {
-            RoundScenario s = Arrival(players).At(0, 7, 9).At(1, 8, 10).Wind(Heading.S);
-            if (players > 2) s.At(2, 7, 10);
+            RoundScenario s = Arrival(players).At(0, 10, 11).At(1, 11, 10).Wind(Heading.NO);
+            if (players > 2) s.At(2, 10, 10);
             return s;
         }
 
@@ -121,8 +122,8 @@ namespace hp55games.MareIgnoto.Rules.Tests
         {
             RoundScenario s = BoardingNextToTheIsland(2);
             s.State.Treasure = 5;
-            s.Random.Enqueue(3, 7); // p0 verso E in (9,9), p1 verso O in (7,9)
-            List<GameEvent> events = s.PlayRound(new[] { Heading.E, Heading.S });
+            s.Random.Enqueue(1, 5); // p0 verso N in L12 (Isola Sacra), p1 verso S in L10
+            List<GameEvent> events = s.PlayRound(new[] { Heading.E, Heading.N });
 
             Assert.IsTrue(events.OfType<SacredIslandEnteredEvent>().Single().ByBoarding);
             TreasureTakenEvent taken = events.OfType<TreasureTakenEvent>().Single();
@@ -135,11 +136,11 @@ namespace hp55games.MareIgnoto.Rules.Tests
         [Test]
         public void AnArrivalByMovementBeatsAnArrivalByBoarding_R141()
         {
-            // p2 entra in movimento da (11,9) verso O al passo 1; p0 arriva dopo, per Abbordaggio.
-            RoundScenario s = BoardingNextToTheIsland(3).At(2, 11, 9);
+            // p2 entra in movimento da O12 verso O, in N12 al passo 1; p0 arriva dopo, per Abbordaggio.
+            RoundScenario s = BoardingNextToTheIsland(3).At(2, 14, 12);
             s.State.Treasure = 5;
-            s.Random.Enqueue(3, 7);
-            s.PlayRound(new[] { Heading.E, Heading.S, Heading.O });
+            s.Random.Enqueue(1, 5);
+            s.PlayRound(new[] { Heading.E, Heading.N, Heading.O });
 
             CollectionAssert.AreEqual(new[] { 2 }, s.Session.Result.TreasureTakers);
             Assert.AreEqual(0, s.P(0).BountyFrom(BountyReason.Treasure));
@@ -151,8 +152,8 @@ namespace hp55games.MareIgnoto.Rules.Tests
         {
             RoundScenario s = BoardingNextToTheIsland(3);
             s.State.Treasure = 7;
-            s.Random.Enqueue(3, 2, 7); // p0 in (9,9), p1 in (9,10): Isola Sacra; p2 in (7,9)
-            List<GameEvent> events = s.PlayRound(new[] { Heading.E, Heading.S, Heading.SE });
+            s.Random.Enqueue(1, 2, 5); // p0 in L12, p1 in M12: Isola Sacra; p2 in L10
+            List<GameEvent> events = s.PlayRound(new[] { Heading.E, Heading.N, Heading.NE });
 
             Assert.AreEqual(3, events.OfType<BoardingStartedEvent>().Single().Players.Count);
             CollectionAssert.AreEqual(new[] { 0, 1 }, s.Session.Result.TreasureTakers);

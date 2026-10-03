@@ -33,6 +33,7 @@ namespace hp55games.MareIgnoto.Rules.Engine
             {
                 player.ChosenHeading = null;
                 player.HeadingRevealed = false;
+                player.ArrivedOnOwnIsland = false; // R-097: conta solo l'arrivo di questo round
             }
 
             // R-040: scelta segreta e obbligatoria, da confermare sempre. R-045: chi è in Svago non sceglie.
@@ -89,6 +90,10 @@ namespace hp55games.MareIgnoto.Rules.Engine
                 if (state.Map.KindAt(player.Position) == CellKind.Border)
                 {
                     ctx.Emit(new TurnSkippedEvent(id)); // R-053, e niente Mozzo (R-052)
+                }
+                else if (player.ArrivedOnOwnIsland)
+                {
+                    ctx.Emit(new TurnSkippedEvent(id, TurnSkipReason.OwnIslandMarker)); // R-097, R-053, niente Mozzo
                 }
                 else
                 {

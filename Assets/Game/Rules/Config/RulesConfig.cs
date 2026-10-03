@@ -81,8 +81,15 @@ namespace hp55games.MareIgnoto.Rules.Config
         public int maxPlayers = 8;
         /// <summary>Lato minimo di una mappa valida (05_mappa.md §5).</summary>
         public int minMapSize = 5;
-        /// <summary>Lato di una zona meteo, in celle (R-080).</summary>
-        public int zoneSize = 3;
+
+        // ---- Costruzione delle zone meteo (05_mappa.md §3, controllate da MapLayout.Validate) ----
+        public int cloudMinSpacing = 2;
+        public int cloudRingMinDistance = 3;
+        public int cloudSpawnMinDistance = 2;
+        public int ringSliceCount = 8;
+        public int ringNonConsecutiveMinDistance = 2;
+        public int ringSacredMinDistance = 2;
+        public int ringIslandMinDistance = 3;
 
         // ---- Ciurma (R-010) ----
         public int slotsAbove = 2;
@@ -123,6 +130,20 @@ namespace hp55games.MareIgnoto.Rules.Config
         /// al massimo in un round; oltre, le navi restano dove sono e il motore emette un evento di diagnostica.
         /// </summary>
         public int maxAbbordaggioChain = 50;
+
+        // ---- Meteo: livelli delle zone (R-038, R-081, R-088) ----
+        /// <summary>Livello iniziale degli spicchi dell'anello (R-038, R-081); le nuvole partono da 0.</summary>
+        public int ringInitialLevel = 5;
+        /// <summary>Livello da cui una zona è Mare Mosso (R-081).</summary>
+        public int roughSeaLevel = 1;
+        /// <summary>Livello da cui una zona è Tempesta (R-081).</summary>
+        public int stormLevel = 2;
+        /// <summary>Invocazione di Gartya: livello raggiunto, solo da sotto (R-088).</summary>
+        public int invocationLevel = 1;
+        /// <summary>Ira di Gartya: livello raggiunto, solo da sotto (R-088).</summary>
+        public int wrathLevel = 2;
+        /// <summary>Favore di Gartya: livelli tolti, fino a 0 (R-088).</summary>
+        public int favorLevelDrop = 1;
 
         // ---- Meteo (R-083–R-085) ----
         public int roughSeaPirateLoss = 1;
@@ -243,6 +264,12 @@ namespace hp55games.MareIgnoto.Rules.Config
             };
         }
 
+        // ---- Meteo ----
+
+        /// <summary>L'effetto di un livello di zona (R-081): Normale, Mare Mosso o Tempesta.</summary>
+        public State.WeatherState WeatherAt(int level) =>
+            level >= stormLevel ? State.WeatherState.Storm : level >= roughSeaLevel ? State.WeatherState.RoughSea : State.WeatherState.Normal;
+
         // ---- Accesso per id ----
 
         public int ShipSlotCount => slotsAbove + slotsBelow;
@@ -281,7 +308,9 @@ namespace hp55games.MareIgnoto.Rules.Config
             if (minPlayers < 1) errors.Add("minPlayers deve essere almeno 1.");
             if (maxPlayers < minPlayers) errors.Add("maxPlayers non può essere minore di minPlayers.");
             if (minMapSize < 3) errors.Add("minMapSize deve essere almeno 3.");
-            if (zoneSize < 1) errors.Add("zoneSize deve essere almeno 1.");
+            if (roughSeaLevel < 1 || stormLevel <= roughSeaLevel) errors.Add("Serve 1 <= roughSeaLevel < stormLevel (R-081).");
+            if (ringInitialLevel < 0 || invocationLevel < 0 || wrathLevel < 0 || favorLevelDrop < 0)
+                errors.Add("I livelli delle zone non possono essere negativi.");
             if (slotsAbove < 1 || slotsBelow < 0) errors.Add("La ciurma richiede almeno 1 slot sopra coperta.");
             if (jokerCount < 0) errors.Add("jokerCount non può essere negativo.");
             if (courtTurnOrderValues == null || courtTurnOrderValues.Length != 3)

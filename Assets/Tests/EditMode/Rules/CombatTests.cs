@@ -262,14 +262,14 @@ namespace hp55games.MareIgnoto.Rules.Tests
         [Test]
         public void ShipsOnIslandsOrTheBorderCannotBeAttacked_R101()
         {
-            // p1 resta sull'isola 0 ((5,4) → O → (4,4)); p2 resta sulla cornice ((0,6) verso O). p0 in (5,5) e (1,6) non li vede.
-            RoundScenario s = Create(3).At(0, 5, 5).At(1, 5, 4).At(2, 0, 6).Order(0, 1, 2);
+            // p1 entra sull'isola C5 (da B5 verso E); p2 resta sulla cornice (A6 verso O). p0 in D4, con gittata 5, non li vede.
+            RoundScenario s = Create(3).At(0, 3, 4).At(1, 1, 5).At(2, 0, 6).Order(0, 1, 2);
             s.Crew(0, s.AboveSlot(0), CrewCardId.Culverin);
             s.Crew(0, s.AboveSlot(1), CrewCardId.Jolly);
             s.Hand(0, PirateCardId.Bordata, PirateCardId.Arrembaggio);
-            s.PlayRound(new[] { Heading.S, Heading.O, Heading.O });
+            s.PlayRound(new[] { Heading.S, Heading.E, Heading.O });
 
-            Assert.AreEqual(new Coord(4, 4), s.P(1).Position);
+            Assert.AreEqual(new Coord(2, 5), s.P(1).Position);
             Assert.IsFalse(s.DecisionsOf(DecisionKind.SeaAction, 0)[0].Options.OfType<AttackOption>().Any());
         }
 

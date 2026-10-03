@@ -45,7 +45,7 @@ namespace hp55games.MareIgnoto.Rules.Tests
     /// Uno scenario di round sulla mappa di <see cref="TestSupport.StandardMap"/>: dopo il setup (giocato dal bot) svuota
     /// ciurme e mani, poi il test mette navi, carte, vento e zone dove gli servono e gioca un round con rotte date.
     /// Le carte si prendono dai mazzi e tornano negli scarti, così la conservazione resta vera.
-    /// Mappa: isole 0 (4,4),(5,4),(4,5); 1 (14,4),(14,5); 2 (4,14); 3 (14,14),(15,14); Isola Sacra (9..10, 9..10).
+    /// Mappa: il layout v4 (LayoutV4, 05_mappa.md §6). Tutte le zone partono a livello 0, anello compreso.
     /// </summary>
     internal sealed class RoundScenario
     {
@@ -85,7 +85,8 @@ namespace hp55games.MareIgnoto.Rules.Tests
             state.MissionProgress.Clear();
 
             state.Wind = Heading.N;
-            for (int zone = 0; zone < state.ZoneStates.Length; zone++) state.ZoneStates[zone] = WeatherState.Normal;
+            // Tutte le zone a livello 0, anello compreso: ogni test imposta il meteo che gli serve.
+            for (int zone = 0; zone < state.ZoneLevels.Length; zone++) state.ZoneLevels[zone] = 0;
             return scenario;
         }
 
@@ -110,9 +111,23 @@ namespace hp55games.MareIgnoto.Rules.Tests
             return this;
         }
 
-        public RoundScenario ZoneAt(int x, int y, WeatherState weather)
+        /// <summary>Il livello della zona che contiene la cella (R-081).</summary>
+        public RoundScenario ZoneAt(int x, int y, int level)
         {
-            State.ZoneStates[State.Map.ZoneOf(new Coord(x, y))] = weather;
+            int zone = State.Map.ZoneOf(new Coord(x, y));
+            if (zone < 0) throw new InvalidOperationException(new Coord(x, y).Name + " non è in una zona meteo.");
+            State.ZoneLevels[zone] = level;
+            return this;
+        }
+
+        /// <summary>La zona che contiene la cella al livello più basso con quell'effetto (Normale 0, Mare Mosso, Tempesta).</summary>
+        public RoundScenario ZoneAt(int x, int y, WeatherState weather) =>
+            ZoneAt(x, y, weather == WeatherState.Storm ? Config.stormLevel : weather == WeatherState.RoughSea ? Config.roughSeaLevel : 0);
+
+        /// <summary>Il livello di una zona per id (05_mappa.md §3).</summary>
+        public RoundScenario Zone(string id, int level)
+        {
+            State.ZoneLevels[State.Map.ZoneIndex(id)] = level;
             return this;
         }
 

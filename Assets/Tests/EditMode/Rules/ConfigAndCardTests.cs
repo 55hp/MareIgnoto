@@ -29,7 +29,7 @@ namespace hp55games.MareIgnoto.Rules.Tests
             Assert.AreEqual(3, config.startingMissionsDrawn);
             Assert.AreEqual(1, config.startingMissionsMinKept);
             Assert.AreEqual(10, config.startingCoins);
-            Assert.AreEqual(3, config.zoneSize);
+            Assert.AreEqual(5, config.ringInitialLevel); // R-038, R-081
             Assert.AreEqual(0, config.maxRounds);
         }
 
@@ -133,7 +133,7 @@ namespace hp55games.MareIgnoto.Rules.Tests
             Assert.IsNotEmpty(new RulesConfig { maxPlayers = 1 }.Validate());
             Assert.IsNotEmpty(new RulesConfig { startingCrewCards = 4 }.Validate());
             Assert.IsNotEmpty(new RulesConfig { startingMissionsMinKept = 4 }.Validate());
-            Assert.IsNotEmpty(new RulesConfig { zoneSize = 0 }.Validate());
+            Assert.IsNotEmpty(new RulesConfig { stormLevel = 1 }.Validate());
         }
     }
 

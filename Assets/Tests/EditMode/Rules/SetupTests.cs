@@ -216,8 +216,12 @@ namespace hp55games.MareIgnoto.Rules.Tests
             Assert.That(roll.Value, Is.InRange(1, 8));
             Assert.AreEqual(Heading.N.Rotate(roll.Value), session.State.Wind);
             Assert.AreEqual(session.State.Wind, events.OfType<WindChangedEvent>().Single().Wind);
-            Assert.AreEqual(36, session.State.Zones.Count);
-            Assert.IsTrue(session.State.Zones.All(z => z == WeatherState.Normal));
+            // R-038, R-081: gli spicchi partono a ringInitialLevel, le nuvole a 0.
+            GameMap map = session.State.Map;
+            Assert.AreEqual(map.ZoneCount, session.State.ZoneLevels.Count);
+            for (int zone = 0; zone < map.ZoneCount; zone++)
+                Assert.AreEqual(map.ZoneKindOf(zone) == ZoneKind.RingSlice ? session.State.Config.ringInitialLevel : 0,
+                    session.State.ZoneLevels[zone], map.ZoneId(zone));
         }
 
         [TestCase(1, Heading.NE)]
@@ -415,17 +419,19 @@ namespace hp55games.MareIgnoto.Rules.Tests
             GameSession session = GameSession.Start(new GameSetup(players, 5), Config, TestSupport.StandardMap());
             Assert.AreEqual("Prima", session.State.Player(0).Name);
             Assert.AreEqual("Seconda", session.State.Player(1).Name);
-            Assert.AreEqual(new Coord(0, 0), session.State.Player(0).Position);
-            Assert.AreEqual(new Coord(19, 19), session.State.Player(1).Position);
+            Assert.AreEqual(Coord.Parse("B1"), session.State.Player(0).Position);
+            Assert.AreEqual(Coord.Parse("X23"), session.State.Player(1).Position);
         }
 
         [Test]
         public void StartingPointsComeFromThePresetForThePlayerCount_R031()
         {
             GameSession session = TestSupport.Start(3, 6);
-            Assert.AreEqual(new Coord(0, 0), session.State.Player(0).Position);
-            Assert.AreEqual(new Coord(19, 0), session.State.Player(1).Position);
-            Assert.AreEqual(new Coord(9, 19), session.State.Player(2).Position);
+            Assert.AreEqual(Coord.Parse("B1"), session.State.Player(0).Position);
+            Assert.AreEqual(Coord.Parse("X1"), session.State.Player(1).Position);
+            Assert.AreEqual(Coord.Parse("M24"), session.State.Player(2).Position);
+            Assert.AreEqual(CellKind.Sea, session.State.Map.KindAt(session.State.Player(0).Position), "gli angoli partono in mare");
+            Assert.AreEqual(CellKind.Border, session.State.Map.KindAt(session.State.Player(2).Position), "i lati sulla cornice");
         }
 
         [Test]
@@ -444,7 +450,7 @@ namespace hp55games.MareIgnoto.Rules.Tests
                     PirateDeckTop = new[] { PirateCardId.Bordata, PirateCardId.VentoInPoppa },
                     CorsairDeckTop = new[] { MissionId.Avido, MissionId.Barbanera },
                     InitialWind = Heading.SE,
-                    InitialZones = new[] { new ZoneSetup(7, WeatherState.Storm), new ZoneSetup(8, WeatherState.RoughSea) },
+                    InitialZones = new[] { new ZoneSetup("N1", 2), new ZoneSetup("R1", 1) },
                 };
             });
 
@@ -466,9 +472,10 @@ namespace hp55games.MareIgnoto.Rules.Tests
 
             TestSupport.PlayWithBot(session);
             Assert.AreEqual(Heading.SE, session.State.Wind);
-            Assert.AreEqual(WeatherState.Storm, session.State.Zones[7]);
-            Assert.AreEqual(WeatherState.RoughSea, session.State.Zones[8]);
-            Assert.AreEqual(WeatherState.Normal, session.State.Zones[0]);
+            GameMap zones = session.State.Map;
+            Assert.AreEqual(2, session.State.ZoneLevels[zones.ZoneIndex("N1")]);
+            Assert.AreEqual(1, session.State.ZoneLevels[zones.ZoneIndex("R1")]);
+            Assert.AreEqual(0, session.State.ZoneLevels[zones.ZoneIndex("N2")]);
         }
 
         [Test]
@@ -488,7 +495,7 @@ namespace hp55games.MareIgnoto.Rules.Tests
         public void TutorialZoneOutOfRangeIsRejected()
         {
             Assert.Throws<ArgumentException>(() => TestSupport.Start(2, 1, null, null, setup =>
-                setup.Tutorial = new TutorialOptions { InitialZones = new[] { new ZoneSetup(99, WeatherState.Storm) } }));
+                setup.Tutorial = new TutorialOptions { InitialZones = new[] { new ZoneSetup("Z9", 2) } }));
         }
     }
 }

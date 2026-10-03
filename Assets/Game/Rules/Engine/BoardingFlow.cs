@@ -149,7 +149,7 @@ namespace hp55games.MareIgnoto.Rules.Engine
             Coord to = from.Step(HeadingExtensions.FromD8(value));
             player.Position = to;
             ctx.Emit(new ShipRepositionedEvent(player.Id, value, from, to));
-            if (state.Map.KindAt(to) == CellKind.Border) ctx.Emit(new ShipStrandedEvent(player.Id, to));
+            MovementFlow.CheckStranded(ctx, player); // R-069, R-097 (R-073a)
             if (state.Map.KindAt(to) == CellKind.SacredIsland && !state.SacredIslandArrivals.ContainsKey(player.Id))
             {
                 // R-073a, R-140: arriva sull'Isola Sacra come in movimento, ma dopo tutti i passi (R-141).

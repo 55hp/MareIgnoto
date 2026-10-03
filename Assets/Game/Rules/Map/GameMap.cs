@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using hp55games.MareIgnoto.Rules.Config;
 
 namespace hp55games.MareIgnoto.Rules.Map
@@ -14,7 +15,9 @@ namespace hp55games.MareIgnoto.Rules.Map
         private readonly int[,] islandIds;
         private readonly int[,] zones;
         private readonly Dictionary<int, Coord[]> spawnPresets = new Dictionary<int, Coord[]>();
-        private readonly int zonesPerSide;
+        private readonly string[] zoneIds;
+        private readonly ZoneKind[] zoneKinds;
+        private readonly int[] zoneInitialLevels;
 
         public int Width { get; }
         public int Height { get; }
@@ -32,10 +35,6 @@ namespace hp55games.MareIgnoto.Rules.Map
             islandIds = new int[Width, Height];
             zones = new int[Width, Height];
 
-            int navigable = Width - 2;
-            zonesPerSide = (navigable + config.zoneSize - 1) / config.zoneSize;
-            ZoneCount = zonesPerSide * zonesPerSide;
-
             for (int x = 0; x < Width; x++)
             {
                 for (int y = 0; y < Height; y++)
@@ -43,7 +42,7 @@ namespace hp55games.MareIgnoto.Rules.Map
                     bool border = x == 0 || y == 0 || x == Width - 1 || y == Height - 1;
                     kinds[x, y] = border ? CellKind.Border : CellKind.Sea;
                     islandIds[x, y] = -1;
-                    zones[x, y] = border ? -1 : (y - 1) / config.zoneSize * zonesPerSide + (x - 1) / config.zoneSize;
+                    zones[x, y] = -1; // mare libero finché una zona non la reclama (R-080)
                 }
             }
 
@@ -51,14 +50,20 @@ namespace hp55games.MareIgnoto.Rules.Map
             {
                 kinds[cell.x, cell.y] = CellKind.Island;
                 islandIds[cell.x, cell.y] = cell.islandId;
-                zones[cell.x, cell.y] = -1;
             }
 
             foreach (LayoutCell cell in layout.sacredIslandCells)
-            {
                 kinds[cell.x, cell.y] = CellKind.SacredIsland;
-                zones[cell.x, cell.y] = -1;
-            }
+
+            // Zone nell'ordine del layout: l'indice è quello di stato, eventi e decisioni; l'id è quello di 05 §3.
+            var layoutZones = layout.zones.Where(z => z != null).ToList();
+            ZoneCount = layoutZones.Count;
+            zoneIds = layoutZones.Select(z => z.id).ToArray();
+            zoneKinds = layoutZones.Select(z => z.kind).ToArray();
+            zoneInitialLevels = layoutZones.Select(z => z.initialLevel).ToArray();
+            for (int i = 0; i < layoutZones.Count; i++)
+                foreach (LayoutCell cell in layoutZones[i].cells)
+                    zones[cell.x, cell.y] = i;
 
             foreach (SpawnPreset preset in layout.spawnPresets)
             {
@@ -97,11 +102,31 @@ namespace hp55games.MareIgnoto.Rules.Map
             return islandIds[c.X, c.Y];
         }
 
-        /// <summary>Indice della zona meteo (riga * zone per lato + colonna), -1 per cornice e isole (R-080).</summary>
+        /// <summary>Indice della zona meteo della cella; -1 per mare libero, cornice e isole (R-080).</summary>
         public int ZoneOf(Coord c)
         {
             if (!IsInBounds(c)) throw new ArgumentOutOfRangeException(nameof(c), c + " è fuori dalla mappa.");
             return zones[c.X, c.Y];
+        }
+
+        /// <summary>L'id della zona (05 §3), come "R1" o "N4".</summary>
+        public string ZoneId(int zone) => zoneIds[zone];
+
+        public ZoneKind ZoneKindOf(int zone) => zoneKinds[zone];
+
+        /// <summary>Livello di partenza della zona (R-038, R-081).</summary>
+        public int ZoneInitialLevel(int zone) => zoneInitialLevels[zone];
+
+        /// <summary>L'indice della zona con questo id; -1 se non esiste.</summary>
+        public int ZoneIndex(string id) => Array.IndexOf(zoneIds, id);
+
+        /// <summary>Id delle isole (non l'Isola Sacra), una volta ciascuno, in ordine crescente.</summary>
+        public IReadOnlyList<int> IslandIds()
+        {
+            var ids = new SortedSet<int>();
+            foreach (int id in islandIds)
+                if (id >= 0) ids.Add(id);
+            return ids.ToArray();
         }
 
         /// <summary>Terra ferma: cornice, isola, Isola Sacra. Ferma il movimento (R-066).</summary>

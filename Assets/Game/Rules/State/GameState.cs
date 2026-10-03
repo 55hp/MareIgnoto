@@ -20,7 +20,8 @@ namespace hp55games.MareIgnoto.Rules.State
         public DeckState<CrewCard> Crew { get; } = new DeckState<CrewCard>();
         public DeckState<PirateCard> Pirate { get; } = new DeckState<PirateCard>();
         public DeckState<MissionCard> Corsair { get; } = new DeckState<MissionCard>();
-        public WeatherState[] ZoneStates { get; }
+        /// <summary>Livello di ogni zona meteo, per indice di zona della mappa (R-081).</summary>
+        public int[] ZoneLevels { get; }
         public List<int> TurnOrderList { get; } = new List<int>();
 
         /// <summary>Vero dal movimento alla fine degli Abbordaggi: intanto le navi possono condividere celle di mare.</summary>
@@ -80,7 +81,8 @@ namespace hp55games.MareIgnoto.Rules.State
         {
             Config = config;
             Map = map;
-            ZoneStates = new WeatherState[map.ZoneCount];
+            ZoneLevels = new int[map.ZoneCount];
+            for (int zone = 0; zone < ZoneLevels.Length; zone++) ZoneLevels[zone] = map.ZoneInitialLevel(zone); // R-038
         }
 
         public int NextUid() => nextUid++;
@@ -126,7 +128,7 @@ namespace hp55games.MareIgnoto.Rules.State
         public IReadOnlyPlayerState Player(int id) => PlayerById(id);
         GameMap IReadOnlyGameState.Map => Map;
         IReadOnlyList<int> IReadOnlyGameState.TurnOrder => TurnOrderList;
-        IReadOnlyList<WeatherState> IReadOnlyGameState.Zones => ZoneStates;
+        IReadOnlyList<int> IReadOnlyGameState.ZoneLevels => ZoneLevels;
         public DeckInfo CrewDeck => Crew.Info(DeckKind.Crew);
         public DeckInfo PirateDeck => Pirate.Info(DeckKind.Pirate);
         public DeckInfo CorsairDeck => Corsair.Info(DeckKind.Corsair);

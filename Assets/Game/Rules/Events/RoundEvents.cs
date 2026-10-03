@@ -99,18 +99,26 @@ namespace hp55games.MareIgnoto.Rules.Events
         public override string Describe() => "WindChanged " + Wind;
     }
 
+    /// <summary>Il livello di una zona cambia per una carta Meteo (R-088) o per il setup del tutorial.</summary>
     public sealed class ZoneChangedEvent : GameEvent
     {
         public int Zone { get; }
-        public WeatherState State { get; }
+        /// <summary>L'id della zona (05_mappa.md §3), come "N4".</summary>
+        public string ZoneId { get; }
+        public int FromLevel { get; }
+        public int ToLevel { get; }
+        /// <summary>Falso per una carta Meteo sprecata (R-088): pagata, ma il livello non cambia.</summary>
+        public bool Changed => FromLevel != ToLevel;
 
-        public ZoneChangedEvent(int zone, WeatherState state)
+        public ZoneChangedEvent(int zone, string zoneId, int fromLevel, int toLevel)
         {
             Zone = zone;
-            State = state;
+            ZoneId = zoneId;
+            FromLevel = fromLevel;
+            ToLevel = toLevel;
         }
 
-        public override string Describe() => "ZoneChanged " + Zone + " " + State;
+        public override string Describe() => "ZoneChanged " + ZoneId + " " + FromLevel + "->" + ToLevel;
     }
 
     /// <summary>Un giocatore ha scelto la rotta (R-040). Gli altri non vedono quale (R-041).</summary>

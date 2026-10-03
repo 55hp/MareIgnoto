@@ -26,6 +26,11 @@ namespace hp55games.MareIgnoto.Rules.Engine
 
             if (state.Treasure < 0) errors.Add("Il Tesoro è negativo: " + state.Treasure);
 
+            var islandIds = new HashSet<int>(state.Map.IslandIds());
+            foreach (PlayerState player in state.Players)
+                if (player.IslandMarker != -1 && !islandIds.Contains(player.IslandMarker))
+                    errors.Add("p" + player.Id + ": il segnalino è su un'isola inesistente (" + player.IslandMarker + ").");
+
             CheckBountyAndMissions(state, errors);
             if (state.Phase == GamePhase.Ended && state.Result == null) errors.Add("Partita finita senza esito.");
 

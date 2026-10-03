@@ -11,8 +11,8 @@ using static hp55games.MareIgnoto.Rules.Tests.RoundScenario;
 namespace hp55games.MareIgnoto.Rules.Tests
 {
     /// <summary>
-    /// Turno di Fase 2 (02_regole.md §4, §7.1) ed effetti crew del turno. In porto: p0 parte da (3,4) verso E e attracca
-    /// sull'isola 0 (4,4); p1 resta ferma in (16,16). Monete fissate a 10.
+    /// Turno di Fase 2 (02_regole.md §4, §7.1) ed effetti crew del turno. In porto (layout v4): p0 parte da B5 verso E e attracca
+    /// sull'isola 1 in C5; p1 resta ferma in Q16. Monete fissate a 10.
     /// </summary>
     public class PortAndTurnTests
     {
@@ -20,7 +20,7 @@ namespace hp55games.MareIgnoto.Rules.Tests
 
         private static RoundScenario InPort()
         {
-            RoundScenario s = Create(2).At(0, 3, 4).At(1, 16, 16).Order(0, 1);
+            RoundScenario s = Create(2).At(0, 1, 5).At(1, 16, 16).Order(0, 1);
             s.P(0).Coins = 10;
             s.P(1).Coins = 7;
             return s;
@@ -51,7 +51,7 @@ namespace hp55games.MareIgnoto.Rules.Tests
             s.Random.Enqueue(5);
             List<GameEvent> events = s.PlayRound(ToPort);
 
-            Assert.AreEqual(new Coord(4, 4), s.P(0).Position);
+            Assert.AreEqual(new Coord(2, 5), s.P(0).Position);
             Assert.AreEqual(TurnKind.Port, events.OfType<TurnKindEvent>().Single(e => e.Player == 0).Kind);
             Assert.AreEqual(1, s.DecisionsOf(DecisionKind.PortAction, 0).Count);
             Assert.IsTrue(s.DecisionsOf(DecisionKind.PortAction, 0)[0].IsSecret);
@@ -83,7 +83,7 @@ namespace hp55games.MareIgnoto.Rules.Tests
             Assert.IsFalse(s.Decisions.Any(d => d.Kind == DecisionKind.ChooseHeading && d.Player == 0 && s.Decisions.IndexOf(d) > 0
                                                && round2.OfType<RoundStartedEvent>().Any()), "nel round 2 p0 non sceglie la rotta");
             Assert.IsFalse(round2.OfType<ShipMovedEvent>().Any(e => e.Player == 0));
-            Assert.AreEqual(new Coord(4, 4), s.P(0).Position);
+            Assert.AreEqual(new Coord(2, 5), s.P(0).Position);
             Assert.AreEqual(TurnKind.Port, round2.OfType<TurnKindEvent>().Single(e => e.Player == 0).Kind, "gioca di nuovo un turno di porto");
         }
 
@@ -230,7 +230,7 @@ namespace hp55games.MareIgnoto.Rules.Tests
         [Test]
         public void OnTheSacredIslandThereIsNoPortAction_R055()
         {
-            RoundScenario s = Create(2).At(0, 8, 9).At(1, 16, 16).Order(0, 1);
+            RoundScenario s = Create(2).At(0, 10, 12).At(1, 16, 16).Order(0, 1);
             List<GameEvent> events = s.PlayRound(new[] { Heading.E, Heading.S });
 
             Assert.AreEqual(TurnSkipReason.SacredIsland, events.OfType<TurnSkippedEvent>().Single().Reason);
@@ -362,7 +362,7 @@ namespace hp55games.MareIgnoto.Rules.Tests
         [Test]
         public void TheLookoutMayTreatASeaTurnNextToAnIslandAsAPortTurn_R058()
         {
-            RoundScenario s = Create(2).At(0, 6, 5).At(1, 16, 16).Order(0, 1);
+            RoundScenario s = Create(2).At(0, 3, 5).At(1, 16, 16).Order(0, 1);
             s.Crew(0, s.AboveSlot(0), CrewCardId.Vedetta);
             s.Random.Enqueue(3);
             List<GameEvent> events = s.PlayTurns(Pick(Opt<TurnKindOption>(0, o => o.Kind == TurnKind.Port), Opt<PortActionOption>(0, o => o.Action == PortAction.Plunder)));
@@ -373,14 +373,14 @@ namespace hp55games.MareIgnoto.Rules.Tests
             TurnKindEvent kind = events.OfType<TurnKindEvent>().Single(e => e.Player == 0);
             Assert.AreEqual(TurnKind.Port, kind.Kind);
             Assert.IsTrue(kind.ByLookout);
-            Assert.AreEqual(new Coord(6, 5), s.P(0).Position, "la nave resta dov'è");
+            Assert.AreEqual(new Coord(3, 5), s.P(0).Position, "la nave resta dov'è");
             Assert.IsTrue(s.DecisionsOf(DecisionKind.PortAction, 0).Any());
         }
 
         [Test]
         public void TheLookoutCanStillPlayAtSea_R058()
         {
-            RoundScenario s = Create(2).At(0, 6, 5).At(1, 16, 16).Order(0, 1);
+            RoundScenario s = Create(2).At(0, 3, 5).At(1, 16, 16).Order(0, 1);
             s.Crew(0, s.AboveSlot(0), CrewCardId.Vedetta);
             s.PlayTurns(Pick(Opt<TurnKindOption>(0, o => o.Kind == TurnKind.Sea)));
             Assert.IsTrue(s.DecisionsOf(DecisionKind.SeaAction, 0).Any());
@@ -390,11 +390,11 @@ namespace hp55games.MareIgnoto.Rules.Tests
         [Test]
         public void WithoutLookoutOrWithItBelowThereIsNoChoice_R058_R011()
         {
-            RoundScenario none = Create(2).At(0, 6, 5).At(1, 16, 16).Order(0, 1);
+            RoundScenario none = Create(2).At(0, 3, 5).At(1, 16, 16).Order(0, 1);
             none.PlayTurns();
             Assert.IsFalse(none.DecisionsOf(DecisionKind.LookoutChoice, 0).Any());
 
-            RoundScenario below = Create(2).At(0, 6, 5).At(1, 16, 16).Order(0, 1);
+            RoundScenario below = Create(2).At(0, 3, 5).At(1, 16, 16).Order(0, 1);
             below.Crew(0, below.BelowSlot(0), CrewCardId.Vedetta);
             below.PlayTurns();
             Assert.IsFalse(below.DecisionsOf(DecisionKind.LookoutChoice, 0).Any());
@@ -403,13 +403,13 @@ namespace hp55games.MareIgnoto.Rules.Tests
         [Test]
         public void JokerAndLookoutReachAnIslandTwoCellsAway_R058_R015()
         {
-            // (7,6) dista 2 dall'isola 0 in (5,4).
-            RoundScenario plain = Create(2).At(0, 7, 6).At(1, 16, 16).Order(0, 1);
+            // E5 dista 2 dall'isola C5.
+            RoundScenario plain = Create(2).At(0, 4, 5).At(1, 16, 16).Order(0, 1);
             plain.Crew(0, plain.AboveSlot(0), CrewCardId.Vedetta);
             plain.PlayTurns();
             Assert.IsFalse(plain.DecisionsOf(DecisionKind.LookoutChoice, 0).Any());
 
-            RoundScenario joker = Create(2).At(0, 7, 6).At(1, 16, 16).Order(0, 1);
+            RoundScenario joker = Create(2).At(0, 4, 5).At(1, 16, 16).Order(0, 1);
             joker.Crew(0, joker.AboveSlot(0), CrewCardId.Vedetta);
             joker.Crew(0, joker.AboveSlot(1), CrewCardId.Jolly);
             joker.PlayTurns();

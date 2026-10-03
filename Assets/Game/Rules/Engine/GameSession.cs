@@ -130,8 +130,12 @@ namespace hp55games.MareIgnoto.Rules.Engine
             TutorialOptions tutorial = setup.Tutorial;
             if (tutorial?.InitialZones == null) return;
             foreach (ZoneSetup zone in tutorial.InitialZones)
-                if (zone.Zone < 0 || zone.Zone >= map.ZoneCount)
-                    throw new ArgumentException("Zona meteo inesistente nel setup del tutorial: " + zone.Zone + ".", nameof(setup));
+            {
+                if (map.ZoneIndex(zone.ZoneId) < 0)
+                    throw new ArgumentException("Zona meteo inesistente nel setup del tutorial: " + zone.ZoneId + ".", nameof(setup));
+                if (zone.Level < 0)
+                    throw new ArgumentException("Livello negativo per la zona " + zone.ZoneId + " nel setup del tutorial.", nameof(setup));
+            }
         }
     }
 }

@@ -154,13 +154,13 @@ namespace hp55games.MareIgnoto.Rules.Tests
         [Test]
         public void RepositioningOntoAnIslandPutsTheShipInPort_R073a()
         {
-            // Incontro in (5,5): p0 da (5,6) verso S, p1 da (6,5) verso O. p0 tira 6 (SO) → (4,4), isola 0.
-            RoundScenario s = RoundScenario.Create(2).At(0, 5, 6).At(1, 6, 5).Order(0, 1).Wind(Heading.NE);
-            s.Random.Enqueue(6, 3);
+            // Incontro in D4: p0 da D5 verso S, p1 da E4 verso O. p0 tira 8 (NO) → C5, isola 1.
+            RoundScenario s = RoundScenario.Create(2).At(0, 3, 5).At(1, 4, 4).Order(0, 1).Wind(Heading.NE);
+            s.Random.Enqueue(8, 3);
             List<GameEvent> events = s.PlayRound(new[] { Heading.S, Heading.O });
 
-            Assert.AreEqual(C(5, 5), events.OfType<BoardingStartedEvent>().Single().Cell);
-            Assert.AreEqual(C(4, 4), s.P(0).Position);
+            Assert.AreEqual(C(3, 4), events.OfType<BoardingStartedEvent>().Single().Cell);
+            Assert.AreEqual(C(2, 5), s.P(0).Position);
             Assert.AreEqual(CellKind.Island, s.State.Map.KindAt(s.P(0).Position));
             Assert.AreEqual(1, events.OfType<BoardingStartedEvent>().Count(), "l'isola è zona franca: nessun nuovo Abbordaggio");
         }

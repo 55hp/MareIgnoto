@@ -84,7 +84,7 @@ namespace hp55games.MareIgnoto.Rules.Tests
         public void TheMedicoDoesNotCoverBelowDeckLosses_R023_R084()
         {
             // Tempesta: si perde una crew sotto coperta, il Medico non c'entra.
-            RoundScenario storm = Create(2).At(0, 2, 2).At(1, 16, 16).Order(0, 1).ZoneAt(2, 2, WeatherState.Storm);
+            RoundScenario storm = Create(2).At(0, 3, 11).At(1, 16, 16).Order(0, 1).ZoneAt(3, 11, WeatherState.Storm); // D11, nuvola N7
             storm.Crew(0, storm.BelowSlot(0), CrewCardId.Medico);
             storm.Crew(0, storm.BelowSlot(1), CrewCardId.Mozzo);
             storm.Random.Enqueue(8);

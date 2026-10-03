@@ -184,8 +184,8 @@ namespace hp55games.MareIgnoto.Rules.Tests
             Assert.AreEqual(done, Done(s, 0, card), "soglia " + Threshold(s, MissionId.NaveCorsara));
         }
 
-        /// <summary>p0 da (3,4) entra nel porto dell'isola (4,4) e sceglie l'azione; in Svago resta lì nei round dopo.</summary>
-        private static RoundScenario InPort() => Create(2).At(0, 3, 4).At(1, 16, 16).Order(0, 1);
+        /// <summary>p0 da B5 entra nel porto dell'isola C5 e sceglie l'azione; in Svago resta lì nei round dopo.</summary>
+        private static RoundScenario InPort() => Create(2).At(0, 1, 5).At(1, 16, 16).Order(0, 1);
 
         private static List<GameEvent> PortTurn(RoundScenario s, PortAction action) =>
             s.PlayRound(new[] { Heading.E, Heading.S }, Pick(Opt<PortActionOption>(0, a => a.Action == action)));

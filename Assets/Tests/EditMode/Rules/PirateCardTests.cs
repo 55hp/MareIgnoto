@@ -192,25 +192,34 @@ namespace hp55games.MareIgnoto.Rules.Tests
             Assert.AreEqual(10, s.P(0).Coins, "costa 0");
         }
 
-        [TestCase(PirateCardId.InvocazioneGartya, WeatherState.Normal, WeatherState.RoughSea)]
-        [TestCase(PirateCardId.IraGartya, WeatherState.Normal, WeatherState.Storm)]
-        [TestCase(PirateCardId.FavoreGartya, WeatherState.Storm, WeatherState.RoughSea)]
-        [TestCase(PirateCardId.FavoreGartya, WeatherState.RoughSea, WeatherState.Normal)]
-        [TestCase(PirateCardId.FavoreGartya, WeatherState.Normal, WeatherState.Normal)]
-        public void ZoneCardsChangeAnyZoneAndPayTheTreasure_R121(PirateCardId card, WeatherState before, WeatherState after)
+        // R-088 coi livelli di default: Invocazione porta a 1 solo da 0, Ira a 2 solo da 0 o 1, Favore toglie 1 fino a 0.
+        [TestCase(PirateCardId.InvocazioneGartya, 0, 1)]
+        [TestCase(PirateCardId.InvocazioneGartya, 1, 1)]
+        [TestCase(PirateCardId.InvocazioneGartya, 3, 3)]
+        [TestCase(PirateCardId.IraGartya, 0, 2)]
+        [TestCase(PirateCardId.IraGartya, 1, 2)]
+        [TestCase(PirateCardId.IraGartya, 2, 2)]
+        [TestCase(PirateCardId.IraGartya, 5, 5)]
+        [TestCase(PirateCardId.FavoreGartya, 5, 4)]
+        [TestCase(PirateCardId.FavoreGartya, 1, 0)]
+        [TestCase(PirateCardId.FavoreGartya, 0, 0)]
+        public void ZoneCardsSetTheLevelOfAnyZoneByIdAndAreAlwaysPaid_R088_R121(PirateCardId card, int before, int after)
         {
-            // La zona bersaglio è lontana dalla nave: le carte Meteo bersagliano qualsiasi zona.
+            // La zona bersaglio (N3, lontana dalla nave) si sceglie per id; una carta sprecata si paga comunque.
             RoundScenario s = Table();
             s.P(0).Coins = 20;
-            s.ZoneAt(17, 17, before);
-            int zone = s.State.Map.ZoneOf(new Coord(17, 17));
+            s.Zone("N3", before);
+            int zone = s.State.Map.ZoneIndex("N3");
             int treasure = s.State.Treasure;
             s.Hand(0, card);
-            List<GameEvent> events = s.PlayTurns(Pick(Play(card), Opt<ZoneOption>(0, o => o.Zone == zone)));
+            List<GameEvent> events = s.PlayTurns(Pick(Play(card), Opt<ZoneOption>(0, o => o.ZoneId == "N3")));
 
-            Assert.AreEqual(after, s.State.ZoneStates[zone]);
-            Assert.AreEqual(zone, events.OfType<ZoneChangedEvent>().Single().Zone);
-            Assert.AreEqual(s.State.ZoneStates.Length, s.DecisionsOf(DecisionKind.CardTarget, 0).Single().Options.Count);
+            Assert.AreEqual(after, s.State.ZoneLevels[zone]);
+            ZoneChangedEvent changed = events.OfType<ZoneChangedEvent>().Single();
+            Assert.AreEqual("N3", changed.ZoneId);
+            Assert.AreEqual(before, changed.FromLevel);
+            Assert.AreEqual(before != after, changed.Changed);
+            Assert.AreEqual(s.State.Map.ZoneCount, s.DecisionsOf(DecisionKind.CardTarget, 0).Single().Options.Count);
             int cost = s.Config.PirateCost(card);
             Assert.AreEqual(20 - cost, s.P(0).Coins);
             Assert.AreEqual(treasure + cost, s.State.Treasure);
@@ -235,7 +244,7 @@ namespace hp55games.MareIgnoto.Rules.Tests
             s.PlayTurns(Pick(Play(PirateCardId.VentoInPoppa)));
             Assert.AreEqual(2, s.P(0).TailwindRound);
 
-            s.ZoneAt(5, 7, WeatherState.Storm);
+            s.At(0, 3, 11).ZoneAt(3, 11, WeatherState.Storm); // D11, nella nuvola N7
             List<GameEvent> round2 = s.PlayTurns();
             Assert.AreEqual(WeatherSkipReason.Tailwind, round2.OfType<WeatherSkippedEvent>().Single(e => e.Player == 0).Reason);
         }

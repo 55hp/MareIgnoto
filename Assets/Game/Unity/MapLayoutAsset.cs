@@ -5,7 +5,7 @@ using UnityEngine;
 namespace hp55games.MareIgnoto.Unity
 {
     /// <summary>
-    /// La mappa come asset (05_mappa.md §5): dimensioni, isole, Isola Sacra, punti di partenza.
+    /// La mappa come asset (05_mappa.md §5): dimensioni, isole, Isola Sacra, zone meteo, punti di partenza.
     /// L'Inspector (assembly Editor) mostra l'esito di <see cref="Validate"/>.
     /// </summary>
     [CreateAssetMenu(menuName = "MareIgnoto/Map Layout", fileName = "MapLayout")]

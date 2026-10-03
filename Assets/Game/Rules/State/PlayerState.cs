@@ -40,6 +40,15 @@ namespace hp55games.MareIgnoto.Rules.State
         /// <summary>Round nella cui Fase 1 la nave è immune al meteo per Vento in Poppa (R-087); 0 se nessuno.</summary>
         public int TailwindRound { get; set; }
 
+        /// <summary>Id dell'isola con il segnalino del giocatore (R-097); -1 se non l'ha ancora messo.</summary>
+        public int IslandMarker { get; set; } = -1;
+
+        /// <summary>
+        /// Vero se in questo round la nave è arrivata (movimento o Abbordaggio) sull'isola con il proprio segnalino:
+        /// per lei vale come la cornice (R-097, R-053, R-069). Si azzera all'inizio di ogni round.
+        /// </summary>
+        public bool ArrivedOnOwnIsland { get; set; }
+
         public PlayerState(int id, string name, int slotsAbove, int slotsBelow)
         {
             Id = id;

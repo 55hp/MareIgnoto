@@ -10,20 +10,20 @@ namespace hp55games.MareIgnoto.Rules.Events
     {
         public int Player { get; }
         public int Zone { get; }
-        /// <summary>Lo stato della zona.</summary>
-        public WeatherState ZoneState { get; }
-        /// <summary>L'intensità percepita dopo il Navigatore (R-085).</summary>
+        /// <summary>Livello della zona (R-081).</summary>
+        public int ZoneLevel { get; }
+        /// <summary>L'effetto percepito, dopo il Navigatore (R-085).</summary>
         public WeatherState Perceived { get; }
 
-        public WeatherAppliedEvent(int player, int zone, WeatherState zoneState, WeatherState perceived)
+        public WeatherAppliedEvent(int player, int zone, int zoneLevel, WeatherState perceived)
         {
             Player = player;
             Zone = zone;
-            ZoneState = zoneState;
+            ZoneLevel = zoneLevel;
             Perceived = perceived;
         }
 
-        public override string Describe() => "WeatherApplied p" + Player + " z" + Zone + " " + ZoneState + "->" + Perceived;
+        public override string Describe() => "WeatherApplied p" + Player + " z" + Zone + " L" + ZoneLevel + "->" + Perceived;
     }
 
     public enum WeatherSkipReason
@@ -382,6 +382,8 @@ namespace hp55games.MareIgnoto.Rules.Events
         Border,
         /// <summary>Nave sull'Isola Sacra: nessuna azione di porto (R-055).</summary>
         SacredIsland,
+        /// <summary>Nave arrivata sull'isola con il proprio segnalino: vale come la cornice (R-097, R-053).</summary>
+        OwnIslandMarker,
     }
 
     /// <summary>Il turno termina subito (R-053, R-055).</summary>

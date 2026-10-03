@@ -27,6 +27,10 @@ namespace hp55games.MareIgnoto.Rules.State
         int LeisureRound { get; }
         /// <summary>Round nella cui Fase 1 la nave è immune al meteo per Vento in Poppa (R-087); 0 se nessuno.</summary>
         int TailwindRound { get; }
+        /// <summary>Id dell'isola con il segnalino del giocatore (R-097), pubblico; -1 se non l'ha ancora messo.</summary>
+        int IslandMarker { get; }
+        /// <summary>Arrivata in questo round sull'isola col proprio segnalino: salta la Fase 2 (R-097, R-053).</summary>
+        bool ArrivedOnOwnIsland { get; }
         int HandCount { get; }
         int MissionsInHandCount { get; }
         /// <summary>Missioni completate: rivelate al completamento (R-132).</summary>
@@ -50,8 +54,8 @@ namespace hp55games.MareIgnoto.Rules.State
 
         /// <summary>Direzione verso cui soffia il vento dominante (R-061).</summary>
         Heading Wind { get; }
-        /// <summary>Stato di ogni zona meteo, per indice di zona (05_mappa.md §3).</summary>
-        IReadOnlyList<WeatherState> Zones { get; }
+        /// <summary>Livello di ogni zona meteo, per indice di zona (R-081; id e celle in Map). L'effetto: RulesConfig.WeatherAt.</summary>
+        IReadOnlyList<int> ZoneLevels { get; }
         /// <summary>Monete del Tesoro dell'Isola Sacra (R-036).</summary>
         int Treasure { get; }
 
