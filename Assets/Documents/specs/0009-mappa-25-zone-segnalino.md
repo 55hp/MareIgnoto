@@ -331,3 +331,42 @@ La mappa è più grande e i punti di partenza sono a 11 celle dall'Isola Sacra, 
 - Le carte Meteo bersagliano una zona per id, ma la decisione resta un elenco di tutte le 20 zone (anche quelle dove la carta sarebbe sprecata): sprecarla è legale (R-088).
 - "Adiacente a un'isola" per i punti di partenza in mare (`05` §5) comprende anche l'Isola Sacra.
 - `ShipStrandedEvent` per l'isola del segnalino porta la cella dell'isola: Gamba di legno conta celle distinte di cornice e di isola (R-069, `03`).
+
+### Claude Code — 2026-10-03 — commit 3600e40
+
+Risposte alle due domande della voce precedente (patch `1f52a93`, "docs: patch Athena (R-097 Vedetta, livello anello)").
+
+- **R-097 — Vedetta con più isole a portata**: ora sceglie il giocatore. Nuova decisione `LookoutIsland` (segreta, opzioni `IslandOption` con l'id dell'isola, in ordine crescente), chiesta subito dopo aver scelto il turno di porto con la Vedetta e solo se le isole a portata sono più di una; con una sola isola il motore la applica da solo. Il segnalino va sull'isola scelta. Tolti il `// TODO R-097` e la scelta "più vicina, poi id più basso". Sul layout v4 succede solo con Vedetta + Jolly (portata 2): le isole distano almeno 3 tra loro. Test: `WithOneIslandInReachTheLookoutDoesNotAsk_R058_R097`, `WithSeveralIslandsInReachThePlayerChooses_R058_R097` (morde: prendere sempre la prima isola lo fa diventare rosso), `ChoosingTheSeaTurnAsksNoIsland_R058`.
+- **Livello iniziale degli spicchi**: tolto `RulesConfig.ringInitialLevel` e il confronto in `Validate()`. Il livello iniziale di ogni zona viene solo dal layout; `Validate()` controlla soltanto che non sia negativo (R-081), con lo stesso codice `ZoneInitialLevel`. `RulesConfigAsset` non ha un campo suo: serializza `RulesConfig` intera, quindi il campo sparisce con la classe (in `RulesConfig.asset`, se c'era, Unity lo ignora). `LayoutV4` porta il livello di ogni zona dalla tabella di `05` §3. Test: `TheInitialLevelComesOnlyFromTheLayout_05_3`.
+- `dotnet test Tools/RulesHarness` verde, 398 test.
+
+**Gate** (seed 1–1000 × 2/4/8, `maxRounds` 500, layout v4, 1 min 19 s): **nessuna eccezione, nessuna violazione di invarianti**. Rispetto al gate precedente cambia poco: la decisione nuova consuma scelte del bot e sposta qualche partita (interrotte 157 / 19 / 0 invece di 158 / 19 / 0).
+
+```
+Simulazione: seed 1-1000, maxRounds 500, bot casuale (seed del bot = seed della partita)
+
+2 giocatori: 1000 partite, 843 finite con l'Isola Sacra, 157 interrotte da maxRounds, 0 errori
+  round (partite finite): min 15, media 198.28, mediana 174, max 498
+  interrotte da maxRounds, seed: 10, 11, 17, 24, 32, 56, 58, 79, 82, 83, 85, 91, 93, 96, 116, 117, 118, 120, 133, 151, 152, 161, 165, 166, 177, 197, 209, 210, 211, 215, 216, 224, 227, 228, 229, 230, 245, 248, 250, 251, 255, 279, 287, 291, 297, 303, 304, 328, 330, 339, 340, 341, 343, 344, 348, 349, 354, 356, 368, 374, 383, 399, 407, 414, 418, 425, 427, 433, 445, 454, 461, 468, 482, 491, 492, 501, 504, 510, 512, 516, 520, 532, 544, 546, 549, 568, 573, 576, 587, 589, 596, 626, 669, 671, 673, 680, 681, 694, 699, 700, 701, 709, 712, 713, 717, 728, 735, 736, 749, 750, 760, 766, 768, 769, 782, 800, 809, 811, 826, 832, 836, 840, 848, 852, 860, 861, 864, 866, 875, 878, 881, 882, 886, 889, 890, 894, 899, 900, 915, 919, 923, 929, 931, 933, 935, 943, 944, 948, 954, 956, 957, 958, 964, 969, 973, 983, 986
+  taglia media per giocatore: 2.99 = battaglie 0.34 + missioni 1.47 + Tesoro 0.42 + monete 3.45 - missioni incomplete 2.70 + poker 0.02
+  quota delle fonti positive: battaglie 5.9%, missioni 25.8%, Tesoro 7.4%, monete 60.5%, poker 0.3%
+  missioni completate per partita: 1.47; vincitore: taglia media 7.44, ha preso il Tesoro nel 81.1% delle partite; parità al primo posto: 15
+  poker: HighCard 99.0%, Pair 1.0%, TwoPair 0.1%
+
+4 giocatori: 1000 partite, 981 finite con l'Isola Sacra, 19 interrotte da maxRounds, 0 errori
+  round (partite finite): min 9, media 147.32, mediana 124, max 494
+  interrotte da maxRounds, seed: 12, 52, 123, 155, 189, 201, 203, 318, 332, 369, 389, 408, 491, 540, 562, 706, 714, 760, 930
+  taglia media per giocatore: 2.73 = battaglie 0.48 + missioni 1.04 + Tesoro 0.25 + monete 3.18 - missioni incomplete 2.24 + poker 0.03
+  quota delle fonti positive: battaglie 9.6%, missioni 20.9%, Tesoro 4.9%, monete 64.0%, poker 0.6%
+  missioni completate per partita: 2.07; vincitore: taglia media 12.85, ha preso il Tesoro nel 94.5% delle partite; parità al primo posto: 3
+  poker: HighCard 98.2%, Pair 1.8%, ThreeOfAKind 0.0%
+
+8 giocatori: 1000 partite, 1000 finite con l'Isola Sacra, 0 interrotte da maxRounds, 0 errori
+  round (partite finite): min 10, media 91.34, mediana 74, max 444
+  taglia media per giocatore: 2.05 = battaglie 0.72 + missioni 0.72 + Tesoro 0.13 + monete 2.23 - missioni incomplete 1.79 + poker 0.04
+  quota delle fonti positive: battaglie 18.7%, missioni 18.8%, Tesoro 3.3%, monete 58.2%, poker 1.0%
+  missioni completate per partita: 2.96; vincitore: taglia media 17.00, ha preso il Tesoro nel 99.6% delle partite; parità al primo posto: 0
+  poker: HighCard 97.4%, Pair 2.6%, TwoPair 0.0%, ThreeOfAKind 0.0%, Straight 0.0%, FullHouse 0.0%
+
+Errori: nessuno
+```
