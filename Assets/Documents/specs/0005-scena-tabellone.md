@@ -25,16 +25,17 @@ _da compilare (passo B)_
 
 ## Lato Editor (Bezi) — checklist
 
-Passo A:
-- [ ] `Assets/Game/Content/Config/MapLayout.asset` (`Create/MareIgnoto/Map Layout`) con le isole e l'Isola Sacra del layout approvato (`05_mappa.md` §6) e i preset di partenza di `05` §4. Esito di `Validate()` riportato.
+Passo A (`MapLayout.asset` non è più un compito di Bezi: lo genera il comando Editor, vedi "Per Franci"):
 - [ ] `Assets/Scenes/Board.unity` con la gerarchia del contratto (oggetti vuoti, nomi esatti).
 - [ ] Prefab placeholder in `Assets/Game/Content/Prefabs/` e materiali in `Assets/Game/Content/Materials/`.
-- [ ] Camera ortografica dall'alto, inclinata, che inquadra tutta la mappa a 1920×1080.
+- [ ] Camera ortografica dall'alto, inclinata, che inquadra tutta la mappa **25×25** a 1920×1080 (centro della mappa in world (12, 0, 12) con celle da 1, `05` §1). La camera fatta nel passo A è tarata sulla 20×20 (centro (9.5, 0, 9.5), report di Bezi): va rifatta.
+- [ ] Pipeline URP: in `ProjectSettings/GraphicsSettings.asset` `m_CustomRenderPipeline` non è assegnato (nota del report di Bezi), quindi i materiali URP Lit restano magenta. Va assegnato l'asset della pipeline URP del progetto (anche nei livelli di Quality, se lo richiedono).
 
 Passo C: _da compilare da Claude Code nel passo B_.
 
 ## Per Franci — modifiche isolate
 
+- **`MapLayout.asset` (passo A, primo punto)**: nell'Editor eseguire **MareIgnoto > Create MapLayout v4**. Il comando crea `Assets/Game/Content/Config/MapLayout.asset` dal layout v4 (`LayoutV4`, `05` §3–§6); se il file esiste chiede prima di sovrascriverlo. Controllare che la Console dica `[MapLayout] … Validate OK`, poi committare `MapLayout.asset` e il suo `.meta`. Test Runner → EditMode: `MapLayoutV4AssetTests` non deve più risultare "Ignorato" ed essere verde.
 - Aggiungere `Board.unity` alle Build Settings.
 
 ## Verifica
@@ -87,3 +88,19 @@ Prefab creati (nessuno script associato):
 - Assets/Game/Content/Prefabs/Ship.prefab: radice Ship con Transform localPosition (0, 0, 0), localRotation (0, 0, 0), localScale (1, 1, 1) (pivot alla base). Figlio /Ship/Visual con Transform localPosition (0, 0.25, 0), localScale (0.4, 0.5, 0.7), MeshFilter (Cube), BoxCollider size (1, 1, 1), MeshRenderer con Mat_Ship.mat.
 
 Nota a margine (valore non coperto dal task): in ProjectSettings/GraphicsSettings.asset il campo m_CustomRenderPipeline risulta attualmente non assegnato (fileID: 0, Built-in active), pertanto i materiali URP Lit vengono renderizzati in magenta nelle anteprime isolate finche l asset pipeline URP non viene assegnato alla configurazione grafica del progetto.
+
+### Claude Code — 2026-10-03 — commit fea3daf
+
+Passo A, primo punto: il generatore di `MapLayout.asset` (l'asset non l'ho creato: nasce quando Franci esegue il comando).
+
+- **Dati**: `LayoutV4` è passato da `Assets/Tests/EditMode/Rules/` all'assembly Rules (`Assets/Game/Rules/Map/LayoutV4.cs`, pubblico, namespace `hp55games.MareIgnoto.Rules.Map`), spostato con il suo `.meta` (stesso GUID). È l'unica copia del layout v4: la usano i test delle regole e il generatore; la partita legge `MapLayout.asset`.
+- **Comando** `MareIgnoto/Create MapLayout v4` (`Assets/Game/Editor/MapLayoutV4Generator.cs`): costruisce il layout da `LayoutV4.Create()` (isole con id, Isola Sacra, zone con tipo e livello iniziale, preset per N = 2..8) e lo salva in `Assets/Game/Content/Config/MapLayout.asset`. Se l'asset esiste chiede conferma e lo sovrascrive sul posto (stesso GUID, con Undo); se a quel percorso c'è un file di altro tipo si ferma con un errore. Poi esegue `Validate()` con `RulesConfig.asset` (o i default se manca) e scrive in Console `Validate OK`, oppure un errore con i primi 10 problemi. Per scrivere l'asset ho aggiunto `MapLayoutAsset.EditorReplaceLayout`, compilato solo nell'Editor (`#if UNITY_EDITOR`).
+- **Test EditMode** (`Assets/Tests/EditMode/Unity/MapLayoutV4AssetTests.cs`): carica l'asset, controlla `Validate()` e lo confronta con `LayoutV4` cella per cella (tipo, id isola, zona), poi ordine, tipo e livello iniziale delle zone e i preset per N = 2..8. Senza asset è ignorato con il messaggio "eseguire MareIgnoto > Create MapLayout v4". Il test già esistente `ProjectMapLayoutAssetIsValidIfPresent` resta.
+- **Spec**: tolto dalla checklist di Bezi il punto su `MapLayout.asset`, sostituito dal passo "Per Franci". Nella checklist non c'erano voci separate per la camera 25×25 e per la pipeline URP: ho aggiornato la voce della camera (era per la mappa senza dimensioni; quella fatta da Bezi è tarata sulla 20×20) e aggiunto la voce URP dalla nota del report di Bezi.
+- `dotnet test Tools/RulesHarness` verde, 398 test (i test Rules usano `LayoutV4` dal nuovo posto).
+
+**Non verificato**: il codice Unity (generatore, `EditorReplaceLayout`, test EditMode) non si può compilare qui. Da controllare in Console dopo l'import:
+- nessun errore di compilazione in `hp55games.MareIgnoto.Editor`, `hp55games.MareIgnoto.Unity` e `hp55games.MareIgnoto.Unity.Tests`;
+- il menu **MareIgnoto > Create MapLayout v4** compare nella barra dei menu;
+- dopo averlo eseguito: il messaggio `[MapLayout] Assets/Game/Content/Config/MapLayout.asset creato dal layout v4: Validate OK (con Assets/Game/Content/Config/RulesConfig.asset).`, nessun errore rosso;
+- `.meta` nuovi da committare: `MapLayoutV4Generator.cs`, `MapLayoutV4AssetTests.cs` e, dopo il comando, `MapLayout.asset`.
