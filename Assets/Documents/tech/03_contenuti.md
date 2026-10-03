@@ -20,7 +20,7 @@ Riferimenti alle regole: `02_regole.md`.
 | 6 | `Navigatore` | Navigatore | Sopra | −1 intensità meteo percepita | R-085 |
 | 7 | `Cannoniere` | Cannoniere | Sopra | Una Bordata! gratuita per combattimento | R-105 |
 | 8 | `Timoniere` | Timoniere | Sopra | +1 velocità; sceglie l'esito invece di tirare il dado (rotazione meteo, riposizionamento); nell'Abbordaggio sceglie per ultimo | R-063, R-086, R-073b |
-| 9 | `Nostromo` | Nostromo | Sopra | Vincendo una battaglia ruba 1 carta Pirateria al perdente; a fine partita raddoppia il punteggio poker; una volta sopra non torna sotto | R-109, R-146, R-016 |
+| 9 | `Nostromo` | Nostromo | Sopra | Vincendo una battaglia ruba 1 carta Pirateria al perdente; a fine partita raddoppia il punteggio poker; una volta sopra non torna sotto, salvo il Medico (R-023) | R-109, R-146, R-016 |
 | 10 | `Quartiermastro` | Quartiermastro | Sopra | Scartando una Bordata! scambia una propria carta sopra coperta con una di un avversario a tiro; quel turno niente battaglia | R-111 |
 | J (11) | `Falconet` | Falconet | Sopra | +1 gittata; ogni scontro che inizia diventa Duello obbligatorio | R-100, R-106 |
 | Q (12) | `Saker` | Saker | Sopra | +1 gittata; vittoria con Bordata! su difensore senza Parlè! raddoppia il guadagno | R-100, R-107 |

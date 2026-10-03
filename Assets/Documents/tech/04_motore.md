@@ -90,4 +90,4 @@ Le informazioni segrete (carte sotto coperta, mano, missioni) si leggono attrave
 - Monete mai negative; monete totali in gioco + Tesoro cambiano solo per effetti che creano o distruggono monete (Saccheggio, Mozzo, Pesca Fortunata!, Commercio creano; costi pagati vanno al Tesoro o spariscono come da regola).
 - Mai due navi sulla stessa cella di mare a inizio Fase 2, salvo il caso R-071 / R-073a.
 - La Fase 2 di ogni round dà un turno a ogni giocatore esattamente una volta.
-- Il Nostromo, una volta sopra coperta, non torna mai sotto.
+- Il Nostromo, una volta sopra coperta, torna sotto solo per l'intervento del Medico (R-016, R-023): nessun altro effetto, né lo swap del proprietario, lo sposta sotto.
